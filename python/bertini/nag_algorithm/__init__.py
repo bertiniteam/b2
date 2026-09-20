@@ -784,6 +784,12 @@ def HomotopySolver(homotopy, start_points, target, *, mptype='adaptive', precisi
     endgame : {'cauchy', 'powerseries'}
 
     Returns a solver: call ``.solve()`` then ``.all_solutions()`` as for any solver.
+
+    Whether the homotopy is projective is settled where it was *built* -- see
+    :func:`straight_line_homotopy` and :func:`moving_homotopy`, which projectivize by default.
+    This function only tracks what it is given.  Start points written in your own (affine)
+    coordinates are lifted onto the homotopy's patch for you, so an earlier affine solve's
+    solutions feed a projective homotopy directly.
     """
     mptype = _precision_model(mptype, precision)
     prec = {'double': 'double', 'multiple': 'multiple', 'fixed_multiple': 'multiple',
@@ -815,7 +821,37 @@ def HomotopySolver(homotopy, start_points, target, *, mptype='adaptive', precisi
     # it throws from inside the tracking loop (possibly on a worker thread), where the exception
     # cannot propagate: the process aborts with no traceback, taking every computation in flight
     # with it (issues #369, #383).  A mismatch is a caller error, so it must be a Python exception.
+    # The homotopy settles whether this solve is projective, because that was decided where it was
+    # built (b2#382).  Bring the target into the SAME coordinates rather than making the caller do
+    # it: homogenize a clone -- never their system, whose content is its identity and keys its
+    # records -- and take the patch FROM the homotopy, since a fresh draw would be a different
+    # patch and so different coordinates.
+    if homotopy.is_homogeneous() and not target.is_homogeneous() and target.is_polynomial():
+        from bertini import system as _bsys
+        try:
+            projective_target = _bsys.clone(target)
+            projective_target.homogenize()
+            projective_target.copy_patches(homotopy)
+            target = projective_target
+        except RuntimeError:
+            pass        # cannot be written projectively; the consistency check below will speak
+
     n_vars = homotopy.num_variables()
+    # A projective homotopy has more coordinates than the user writes -- one homogenizing
+    # coordinate per affine group -- and its points live on a patch.  A caller holding solutions
+    # from an affine solve has the shorter vectors, and lifting them is mechanical, so do it here
+    # rather than make them find homogenize_point (b2#382).  A point that is already the full
+    # length is left alone.
+    import numpy as _np
+
+    def _lift(p):
+        if len(p) == n_vars:
+            return p
+        try:
+            return homotopy.homogenize_point(_np.asarray(p))
+        except Exception:
+            return p        # not a liftable length either; the check below says so, in Python
+    points = [_lift(p) for p in points]
     for k, p in enumerate(points):
         if len(p) != n_vars:
             raise ValueError(
@@ -856,10 +892,72 @@ def HomotopySolver(homotopy, start_points, target, *, mptype='adaptive', precisi
 
 def user_homotopy(homotopy, start_points, target, *, mptype='adaptive', precision=None, endgame='powerseries'):
     """Thin forwarder to :func:`HomotopySolver`, kept for back-compatibility."""
-    return HomotopySolver(homotopy, start_points, target, mptype=mptype, precision=precision, endgame=endgame)
+    return HomotopySolver(homotopy, start_points, target, mptype=mptype, precision=precision,
+                          endgame=endgame)
 
 
-def straight_line_homotopy(target, start, *, path_variable='t', gamma=None):
+def _projectivize_operands(systems):
+    """Clones of the systems a homotopy is about to be built from, homogenized and patched.
+
+    This is the only moment at which a homotopy can be made projective: once the blend exists its
+    operands are fixed and cannot be homogenized (ADR-0020, ADR-0026, b2#463), which is why the
+    option lives on the builders rather than on the solver.  :func:`ZeroDimSolver` does the same
+    thing at the same point, being a builder too.
+
+    Clones, never the caller's systems.  A System's identity is its content, and records key a
+    solve on that identity, so homogenizing one in place would silently change what the caller's
+    own system *is* and stop an earlier solve of it being recalled.
+
+    The patch is a random draw, so exactly one clone draws it and the rest copy: independent draws
+    would put the operands in different coordinates.
+
+    Parameters
+    ----------
+    systems : sequence of System
+        The operand systems, sharing a variable structure.
+
+    Returns
+    -------
+    list of System
+        Projectivized clones, or the originals when this family cannot be written projectively.
+    """
+    from bertini import system as _bsys
+
+    live = [s for s in systems if s is not None]
+    if not live:
+        return list(systems)
+
+    homogeneous = [s.is_homogeneous() for s in live]
+    if any(homogeneous):
+        # All of them: nothing to do.  SOME of them: leave it alone rather than quietly convert
+        # the rest, and let the builder refuse.  A caller who hands over one projective system and
+        # one affine one has made a mistake far more often than they have made a request, and
+        # repairing it here would hide the mistake in the cases where it is one.
+        return list(systems)
+    if not all(s.is_polynomial() for s in live):
+        return list(systems)    # homogenizing is about degrees, which these have not got
+
+    # Not every block can homogenize -- a products-of-linears block over more than one affine group
+    # refuses -- and a refusal partway through would leave some operands projective and some not.
+    # Convert them all or hand back what we were given.
+    clones = [_bsys.clone(s) for s in live]
+    try:
+        for s in clones:
+            s.homogenize()
+    except RuntimeError:
+        return list(systems)    # this family cannot be written projectively; build it as authored
+
+    clones[0].auto_patch()
+    for s in clones[1:]:
+        s.copy_patches(clones[0])
+
+    out, it = [], iter(clones)
+    for s in systems:
+        out.append(next(it) if s is not None else None)
+    return out
+
+
+def straight_line_homotopy(target, start, *, path_variable='t', gamma=None, projectivize=True):
     """Form the straight-line homotopy H = (1-t)*target + gamma*t*start.
 
     The linear deformation from a start system to a target: at t=1 it is ``gamma*start``, whose
@@ -900,6 +998,18 @@ def straight_line_homotopy(target, start, *, path_variable='t', gamma=None):
         should be genuinely generic (random complex), which is what keeps the straight path off
         the (measure-zero) singular locus.
 
+    projectivize : bool, default True
+        Homogenize and patch ``target`` and ``start`` before combining them, so the homotopy is
+        tracked over projective coordinates and infinity is an ordinary place a path can reach
+        instead of somewhere it runs off to.  This is what :func:`ZeroDimSolver` does with the
+        systems it builds for itself.  It works on clones, so the systems you pass are untouched,
+        and :func:`HomotopySolver` brings your affine target and start points into the homotopy's
+        coordinates for you.  Pass False to build the homotopy affinely exactly as written -- the
+        right choice when the affine coordinates are the point, as in all-real tracking.
+
+        The two must be in the SAME coordinates to begin with: mixing a projective system with an
+        affine one is refused rather than quietly repaired.
+
     Returns
     -------
     System
@@ -909,10 +1019,14 @@ def straight_line_homotopy(target, start, *, path_variable='t', gamma=None):
     if isinstance(gamma, int) and not isinstance(gamma, bool):
         from bertini.symbolics import Integer
         gamma = Integer(gamma)
+    # a mismatched variable structure -- one end projective and the other affine, say -- is
+    # refused by the native builder, which every caller goes through
+    if projectivize:
+        target, start = _projectivize_operands([target, start])
     return _system.make_homotopy(target, start, path_variable, gamma)
 
 
-def moving_homotopy(fixed, start_moving, end_moving, *, path_variable='t', gamma=None):
+def moving_homotopy(fixed, start_moving, end_moving, *, path_variable='t', gamma=None, projectivize=True):
     """Form a homotopy that moves ONLY the moving rows, leaving the fixed system evaluated once.
 
     The regeneration / moving-slice homotopy:
@@ -936,11 +1050,25 @@ def moving_homotopy(fixed, start_moving, end_moving, *, path_variable='t', gamma
     Any of ``fixed``, ``start_moving`` and ``end_moving`` may be a :class:`~bertini.Slice`; it is
     taken as the system of its linear forms (a moving slice is the common case, issue #381).
 
+    ``projectivize`` (default True) homogenizes and patches the three systems before they are
+    combined, so the homotopy is tracked projectively and infinity is a place a path can reach --
+    the same thing :func:`ZeroDimSolver` does with the systems it builds for itself.  It works on
+    clones, so the systems you pass are untouched, and :func:`HomotopySolver` brings your affine
+    target and start points into the homotopy's coordinates for you.  ``False`` builds the homotopy
+    affinely exactly as written, which is what you want when the affine coordinates are the point,
+    as in all-real tracking.
+
+    The three must be in the SAME coordinates: mixing a projective system with an affine one is
+    refused rather than quietly repaired, since it is a mistake far more often than a request.
+
     Returns the homotopy System; pair it with :func:`user_homotopy` and your start points to solve.
     """
     from bertini._pybertini import system as _system
     fixed, start_moving, end_moving = (s.as_system() if isinstance(s, _pybnalag.Slice) else s
                                        for s in (fixed, start_moving, end_moving))
+    # as in straight_line_homotopy, the native builder refuses a mismatched variable structure
+    if projectivize:
+        fixed, start_moving, end_moving = _projectivize_operands([fixed, start_moving, end_moving])
     return _system.make_moving_homotopy(fixed, start_moving, end_moving, path_variable, gamma)
 
 

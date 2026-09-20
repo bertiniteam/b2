@@ -107,14 +107,44 @@ never differentiated as the slice moves -- while only the moving row is nonzero:
 
 .. testcode::
 
+    # affine here, so the rows line up with the three equations above: the builder projectivizes
+    # by default, which adds a homogenizing coordinate and a patch row (see below).
+    Haff = nag_algorithm.moving_homotopy(fixed, start_moving, end_moving, gamma=gamma,
+                                         projectivize=False)
     pt = np.array([bertini.multiprec.complex_mp('0.3'),
                    bertini.multiprec.complex_mp('0.4'),
                    bertini.multiprec.complex_mp('0.5')])
     # H evaluates at the precision of the point it is given; nothing to align first.
-    dHdt = H.eval_time_derivative(pt, bertini.multiprec.complex_mp('0.5'))
+    dHdt = Haff.eval_time_derivative(pt, bertini.multiprec.complex_mp('0.5'))
     assert abs(complex(dHdt[0])) == 0.0      # sphere row: out of dH/dt
     assert abs(complex(dHdt[1])) == 0.0      # static slice row: out of dH/dt
     assert abs(complex(dHdt[2])) > 0.0       # only the moving slice carries t
+
+Projective by default
+=====================
+
+The homotopy above is built over **projective** coordinates: the builder homogenizes and patches
+the three systems before combining them, so a path heading to infinity reaches an ordinary point
+instead of running off. That is what the zero-dimensional solver has always done with the systems
+it builds for itself, and a homotopy can only be made projective where it is *built* -- once its
+blend exists, the operand systems are fixed.
+
+You see it in the shape: a homogenizing coordinate per affine group, and a patch row.
+
+.. testcode::
+
+    assert H.is_homogeneous()
+    assert H.num_variables() == 4            # x, y, z, and the homogenizing coordinate
+    assert H.num_functions() == 4            # the three rows, plus the patch
+
+    # your own systems are untouched -- the builder works on clones
+    assert not fixed.is_homogeneous()
+
+The solver bridges the two for you: hand it your affine target and affine start points, as above,
+and it brings both into the homotopy's coordinates. Pass ``projectivize=False`` to build the
+homotopy exactly as written, which is what you want when the affine coordinates are the point --
+all-real tracking, for instance. Mixing the two, a projective system with an affine one, is
+refused rather than quietly repaired.
 
 Deform a product of linears into a polynomial
 =============================================

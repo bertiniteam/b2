@@ -134,7 +134,10 @@ def test_moving_homotopy_accepts_slices_for_the_moving_rows():
     fixed.add_function(x * x + y * y - 1)
     start = pb.Slice.from_coefficients([[0, 1, 0]], [x, y])   # y = 0
     end = pb.Slice.from_coefficients([[-1, 1, 0]], [x, y])    # y - x = 0
-    H = na.moving_homotopy(fixed, start, end, gamma=pb.coefficient(pb.multiprec.complex_mp('0.6', '0.8')))
+    # affine on purpose: this checks that a Slice is accepted where a System is expected, and the
+    # builder's projectivize default (b2#382) would change the row count the assertions pin
+    H = na.moving_homotopy(fixed, start, end, projectivize=False,
+                           gamma=pb.coefficient(pb.multiprec.complex_mp('0.6', '0.8')))
     assert H.num_functions() == 2
     target = pb.system.concatenate(fixed, end.as_system())
     solver = na.HomotopySolver(H, [[1, 0], [-1, 0]], target, mptype='double')

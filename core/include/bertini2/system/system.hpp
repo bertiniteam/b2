@@ -2502,6 +2502,28 @@ namespace bertini {
                         std::shared_ptr<node::Node> const& gamma = nullptr);
 
     /**
+    \brief Throw unless two systems describe points the same way, so that combining them is meaningful.
+
+    Checks the variable structure -- variable count, homogenizing-variable count, variable-group
+    count -- and, when both are patched, that they carry the same patch.  An unpatched system is
+    free to adopt the other's, which is what `System+=System` does.
+
+    Combining a projective system with an affine one, or two projective systems on different
+    patches, produces something whose ends do not correspond; the shapes still agree and the
+    tracking still runs, so nothing downstream notices.  This is the check that notices.
+
+    \param a The first system.
+    \param b The second system.
+    \param operation The name of the operation being attempted, for the message.
+    \param a_name How to refer to `a` in the message, e.g. "the target system".
+    \param b_name How to refer to `b` in the message.
+    \throws std::runtime_error If the two cannot meaningfully be combined.
+    */
+    void CheckVariableStructuresMatch(System const& a, System const& b,
+                                      std::string const& operation,
+                                      std::string const& a_name, std::string const& b_name);
+
+    /**
     \brief Form a homotopy that moves ONLY some rows, leaving the rest fixed and evaluated once.
 
     The "regeneration" homotopy: `fixed` holds the equations that do not move (the polynomial system

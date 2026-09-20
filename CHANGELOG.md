@@ -355,6 +355,34 @@ A correctness fix to the `MakeMovingHomotopy` guards: they decided function iden
   numbers, and a plain list, exactly as start points already did; the conversion lives in one place
   rather than in each seam that owns one.  An object array of anything else is still refused rather
   than reinterpreted.
+- **The homotopy builders projectivize by default** (#382).  `straight_line_homotopy` and
+  `moving_homotopy` now homogenize and patch the systems they are given before combining them, so
+  a homotopy is tracked over projective coordinates and infinity is an ordinary place a path can
+  reach rather than somewhere it runs off to.  That is what `ZeroDimSolver` has always done with
+  the systems it builds for itself, and the reason the option lives on the builders rather than on
+  the solver: once a blend block exists its operand systems are fixed and cannot be homogenized,
+  so the moment a homotopy is built is the only moment this can happen.  The operands are converted
+  **in place**, which is what keeps the target you hand the solver in the same coordinates as the
+  homotopy; pass clones to keep your originals, or `projectivize=False` to build the homotopy
+  affinely as written -- the right choice when the affine coordinates are the point, as in all-real
+  tracking.  `HomotopySolver` lifts start points written in your own coordinates onto the patch for
+  you, so an affine solve's solutions feed a projective homotopy directly.  A family that cannot be
+  written projectively at all -- a products-of-linears block over more than one affine group -- is
+  built affinely rather than half-converted.
+- **Combining systems that describe points differently is refused** (#382).  A homotopy whose two
+  ends are one projective system and one affine one deforms between points that do not correspond,
+  and nothing downstream notices: the shapes agree, the tracking runs, the answers are wrong.  The
+  variable-structure check `System+=System` already made -- variable count, homogenizing-variable
+  count, variable-group count, and a common patch where both are patched -- is now a named function
+  that `MakeHomotopy` and `MakeMovingHomotopy` make too, so every caller gets it rather than only
+  the addition operator.  A projective/affine mix is diagnosed as such rather than reported as a
+  variable count that happens to differ.
+- **Homogenizing a system that contains a blend block is refused** (#463).  A blend's operands are
+  fixed when it is built, so its own homogenization is a no-op; converting the system's other
+  blocks around it left the parts disagreeing about how many variables there were.  The system
+  reported the new count, evaluated against the old, and said nothing until the first evaluation
+  failed with a message about variable counts that did not name the mistake.  It now refuses, and
+  says that the operands must be homogenized before the homotopy is built.
 - **The first start point after a precision change is no longer short of digits** (#461).  Rescaling
   a point onto a patch read the patch's *working* coefficients without first bringing them to the
   precision of the point.  Every other evaluable path self-aligns that way (ADR-0057); this one

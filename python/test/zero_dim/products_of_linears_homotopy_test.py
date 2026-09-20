@@ -102,7 +102,9 @@ def test_gamma_one_homotopy_does_not_drop_a_structured_start():
     # hand-picked example (which is exactly why the gamma trick is the default), so a track here
     # would be flaky -- but the homotopy is still correct.
     T, S = _target(), _start()
-    H = nag_algorithm.straight_line_homotopy(T, S, gamma=1)
+    # affine on purpose: this case is about the BLEND -- that a structured start is not dropped --
+    # and the builder's projectivize default (b2#382) would fold the rows into one patched block
+    H = nag_algorithm.straight_line_homotopy(T, S, gamma=1, projectivize=False)
     assert H.have_path_variable()
     assert H.num_functions() == 2
 

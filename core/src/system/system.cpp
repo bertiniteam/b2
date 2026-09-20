@@ -427,6 +427,23 @@ namespace bertini
         if (!IsPolynomial())
             throw std::runtime_error("trying to homogenize a non-polynomial system.");
 
+        // A blend's operands are shared_ptr<const System>: fixed at construction and not ours to
+        // homogenize (ADR-0020, ADR-0026).  BlendBlock::Homogenize is therefore a no-op -- which
+        // is right, but silently doing the OTHER blocks and the variable group leaves a system
+        // whose parts disagree about how many variables there are: it reports the new count,
+        // evaluates against the old, and says nothing until the first evaluation fails with a
+        // message about variable counts that does not name the mistake (b2#463).  Refuse instead,
+        // and say where homogenizing actually belongs.
+        for (auto const& b : blocks_)
+            if (std::holds_alternative<blocks::BlendBlock<System>>(b))
+                throw std::runtime_error("trying to homogenize a system that contains a blend "
+                    "block (a homotopy).  A blend's operand systems are fixed when it is built and "
+                    "cannot be homogenized afterwards, so homogenizing this system would convert "
+                    "its other blocks and leave the blend describing different variables.  "
+                    "Homogenize the operand systems BEFORE building the homotopy from them -- "
+                    "which is what ZeroDimSolver does, and what the projectivize option on the "
+                    "homotopy builders does for you.");
+
         bool already_had_homvars = NumHomVariables()!=0;
 
         if (already_had_homvars && NumHomVariables()!=NumVariableGroups())
@@ -1736,20 +1753,49 @@ namespace bertini
     ///////////////////
 
 
+    void CheckVariableStructuresMatch(System const& a, System const& b,
+                                      std::string const& operation,
+                                      std::string const& a_name, std::string const& b_name)
+    {
+        auto complain = [&](std::string const& what, size_t na, size_t nb)
+        {
+            std::stringstream ss;
+            ss << operation << " needs systems with the same variable structure, but " << a_name
+               << " has " << na << " " << what << " and " << b_name << " has " << nb << ".";
+            if (what == "homogenizing variables" && (na==0) != (nb==0))
+                ss << "  One of them is projective and the other is affine, so they describe"
+                      " points differently and nothing later would notice; homogenize and patch"
+                      " them together before combining them.";
+            throw std::runtime_error(ss.str());
+        };
+
+        // homogenizing variables FIRST: a projective/affine mix also shows up as a variable-count
+        // difference, and "one is projective and the other is affine" is the useful diagnosis
+        if (a.NumHomVariables() != b.NumHomVariables())
+            complain("homogenizing variables", a.NumHomVariables(), b.NumHomVariables());
+        if (a.NumVariables() != b.NumVariables())
+            complain("variables", a.NumVariables(), b.NumVariables());
+        if (a.NumTotalVariableGroups() != b.NumTotalVariableGroups())
+            complain("variable groups", a.NumTotalVariableGroups(), b.NumTotalVariableGroups());
+
+        // A patch chooses which representative of a projective point is meant, so two patched
+        // systems carrying different patches are not describing the same points.  An unpatched
+        // one adopts the other's, which is what operator+= has always done.
+        if (a.IsPatched() && b.IsPatched() && a.GetPatch() != b.GetPatch())
+            throw std::runtime_error(operation + " cannot combine two patched systems whose "
+                "patches differ: a patch chooses which representative of a projective point is "
+                "meant, so these are not describing the same points.  Give them a common patch "
+                "(System::CopyPatches) before combining them.");
+    }
+
+
     System& System::operator+=(System const& rhs)
     {
         ThrowIfSealed("operator+= (append functions)");
         if (this->NumTotalFunctions()!=rhs.NumTotalFunctions())
             throw std::runtime_error("cannot add two Systems with differing numbers of functions");
 
-        if (this->NumVariables()!=rhs.NumVariables())
-            throw std::runtime_error("cannot add two Systems with differing numbers of variables");
-
-        if (this->NumHomVariables()!=rhs.NumHomVariables())
-            throw std::runtime_error("cannot add two Systems with differing numbers of homogenizing variables");
-
-        if (this->NumTotalVariableGroups()!=rhs.NumTotalVariableGroups())
-            throw std::runtime_error("cannot add two Systems with differing total numbers of variable groups");
+        CheckVariableStructuresMatch(*this, rhs, "System+=System", "the left system", "the right system");
 
 
         //
@@ -1760,9 +1806,7 @@ namespace bertini
 
         // the condition (this->IsPatched() && !rhs.IsPatched()) is ok.  nothing to do.
         // the condition (!this->IsPatched() && !rhs.IsPatched()) is ok.  nothing to do.
-        else if (this->IsPatched() && rhs.IsPatched())
-            if (this->patch_ != rhs.patch_)
-                throw std::runtime_error("System+=System cannot combine two patched systems whose patches differ.");
+        // two patched systems with DIFFERENT patches were refused above.
 
         // make NEW Function wrappers rather than calling SetRoot on the existing
         // ones: the existing Function nodes are shared_ptrs, SHARED with whatever
@@ -1906,6 +1950,12 @@ namespace bertini
                         std::string const& path_variable_name,
                         std::shared_ptr<node::Node> const& gamma)
     {
+        // The two ends of a homotopy must describe points the same way, or the deformation runs
+        // between things that do not correspond -- and nothing downstream notices, because the
+        // shapes still agree and the tracking still runs.  Same check System+=System makes.
+        CheckVariableStructuresMatch(target, start, "MakeHomotopy",
+                                     "the target system", "the start system");
+
         // Empty name means "choose a safe one": never inject a bare `t` that could
         // collide with a user variable of the same name.
         std::string const effective_name = path_variable_name.empty()
@@ -1957,8 +2007,13 @@ namespace bertini
     {
         if (start_moving.NumNaturalFunctions() != end_moving.NumNaturalFunctions())
             throw std::runtime_error("MakeMovingHomotopy: start_moving and end_moving must have the same number of functions (they are the two endpoints of the moving rows).");
-        if (fixed.NumVariables() != start_moving.NumVariables() || fixed.NumVariables() != end_moving.NumVariables())
-            throw std::runtime_error("MakeMovingHomotopy: fixed, start_moving and end_moving must share the same variable structure.");
+        // Same variable structure across all three, including whether they are projective and
+        // which patch they carry: a homotopy whose ends describe points differently deforms
+        // between things that do not correspond, and nothing downstream notices.
+        CheckVariableStructuresMatch(fixed, start_moving, "MakeMovingHomotopy",
+                                     "the fixed system", "the start moving system");
+        CheckVariableStructuresMatch(fixed, end_moving, "MakeMovingHomotopy",
+                                     "the fixed system", "the end moving system");
         if (start_moving.HavePathVariable() || end_moving.HavePathVariable() || fixed.HavePathVariable())
             throw std::runtime_error("MakeMovingHomotopy: the fixed and moving systems must not already have a path variable.");
 

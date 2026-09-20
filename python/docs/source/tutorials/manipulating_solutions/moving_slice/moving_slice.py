@@ -65,15 +65,24 @@ def static_and_moving_slice(gamma):
     r = round(1 / np.sqrt(2), 4)
     assert roots == sorted([(r, r, 0.0), (-r, -r, 0.0)])
 
-    # The fixed system is left out of the motion: dH/dt is zero on the fixed blocks.
+    # The fixed system is left out of the motion: dH/dt is zero on the fixed blocks.  Affine here,
+    # so the rows line up with the three equations; the builder projectivizes by default, which
+    # adds a homogenizing coordinate and a patch row.
+    Haff = nag_algorithm.moving_homotopy(fixed, start_moving, end_moving, gamma=gamma,
+                                         projectivize=False)
     pt = np.array([bertini.multiprec.complex_mp('0.3'),
                    bertini.multiprec.complex_mp('0.4'),
                    bertini.multiprec.complex_mp('0.5')])
     # H evaluates at the precision of the point it is given; nothing to align first.
-    dHdt = H.eval_time_derivative(pt, bertini.multiprec.complex_mp('0.5'))
+    dHdt = Haff.eval_time_derivative(pt, bertini.multiprec.complex_mp('0.5'))
     assert abs(complex(dHdt[0])) == 0.0      # sphere row: out of dH/dt
     assert abs(complex(dHdt[1])) == 0.0      # static slice row: out of dH/dt
     assert abs(complex(dHdt[2])) > 0.0       # only the moving slice carries t
+
+    # projective by default: a homogenizing coordinate per affine group, plus a patch row
+    assert H.is_homogeneous()
+    assert H.num_variables() == 4 and H.num_functions() == 4
+    assert not fixed.is_homogeneous()        # your own systems are untouched
 
 
 def deform_product_into_polynomial(gamma):
