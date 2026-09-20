@@ -1619,6 +1619,38 @@ BOOST_AUTO_TEST_CASE(final_tolerance_has_one_owner_and_nothing_reverts_it)
     BOOST_CHECK_CLOSE(double(zd.GetEndgame().FinalTolerance()), 1e-8, 1e-9);
 }
 
+
+// b2#457.  The tracker's own settings are a config, so a solve reaching them is the ordinary
+// config surface rather than a method call on a sub-object.  DefaultSetup used to hand the
+// tracker a hard-coded truncation threshold and predictor along with the phase tolerance it
+// really does own, so a value set on the tracker was silently replaced.
+BOOST_AUTO_TEST_CASE(the_trackers_own_settings_survive_the_solvers_setup)
+{
+    using namespace bertini;
+    using namespace bertini::tracking;
+    using TrackerT = DoublePrecisionTracker;
+    auto x = Variable::Make("x");
+    System sys;
+    sys.AddVariableGroup(VariableGroup{x});
+    sys.AddFunction(x*x - 1);
+    auto zd = algorithm::ZeroDimSolver<TrackerT, endgame::EndgameSelector<TrackerT>::Cauchy, System>(sys);
+    zd.DefaultSetup();
+
+    auto cfg = zd.GetTracker().Get<TrackerConfig>();
+    cfg.path_truncation_threshold = 1e3;
+    cfg.predictor = Predictor::HeunEuler;
+    zd.GetTracker().Set(cfg);
+
+    zd.DefaultSetup();
+    BOOST_CHECK_EQUAL(zd.GetTracker().InfiniteTruncationTolerance(), 1e3);
+    BOOST_CHECK(zd.GetTracker().GetPredictor() == Predictor::HeunEuler);
+
+    zd.Solve();
+    BOOST_CHECK_EQUAL(zd.GetTracker().InfiniteTruncationTolerance(), 1e3);
+    BOOST_CHECK(zd.GetTracker().GetPredictor() == Predictor::HeunEuler);
+    BOOST_CHECK_EQUAL(zd.FiniteSolutions().size(), 2ul);
+}
+
 /**
 The midpath checker reads the SOLVER's MidPathConfig, not a copy of its own (b2#364).
 
