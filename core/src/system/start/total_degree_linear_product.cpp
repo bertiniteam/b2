@@ -204,11 +204,22 @@ namespace bertini {
             Mat<T> A = Mat<T>::Zero(n, n);
             Vec<T> b = Vec<T>::Zero(n);
 
-            // coefficients come from linear_coeffs_ (mpfr master); cast each to the working type T
-            // (a no-op widen for mpfr, a narrowing for complex_dbl).
+            // Coefficients come from linear_coeffs_ (the mpfr master, stored at MaxPrecisionAllowed);
+            // bring each to the WORKING precision before it enters the solve.  Boost's
+            // variable-precision backend computes at the operands' precision, so leaving the masters
+            // at their storage precision ran the whole n^3 LU at hundreds of digits and then threw
+            // the extra digits away in the rounding at the end of this function (b2#351, the same
+            // shape as b2#346).  The masters are untouched, so regenerating this index at a higher
+            // working precision still refines toward the same point.
             auto as_T = [](complex_mp const& z) -> T {
-                if constexpr (std::is_same<T, complex_dbl>::value) return complex_dbl(z);
-                else return z;
+                if constexpr (std::is_same<T, complex_dbl>::value)
+                    return complex_dbl(z);
+                else
+                {
+                    T w{z};
+                    w.precision(DefaultPrecision());
+                    return w;
+                }
             };
 
             for (Eigen::Index ii = 0; ii < n; ++ii)
