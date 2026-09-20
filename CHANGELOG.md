@@ -355,8 +355,21 @@ A correctness fix to the `MakeMovingHomotopy` guards: they decided function iden
   numbers, and a plain list, exactly as start points already did; the conversion lives in one place
   rather than in each seam that owns one.  An object array of anything else is still refused rather
   than reinterpreted.
-- **The homotopy builders projectivize by default** (#382).  `straight_line_homotopy` and
-  `moving_homotopy` now homogenize and patch the systems they are given before combining them, so
+- **One homotopy builder, and it hands back both ends** (#382).  `moving_homotopy` is **gone**;
+  `straight_line_homotopy(target, start, fixed=None)` does both jobs, because they were always one
+  construction -- with no `fixed` the whole system deforms, and with it only the rest does, the held
+  rows evaluated once rather than blended and carrying no path-variable dependence at all.  The
+  moving rows may be given as complete systems, as a `Slice`, or as a plain list of functions when
+  `fixed` supplies the variable structure.
+  It returns a `StraightLineHomotopy` -- an inert record with `.homotopy`, `.target`, `.start`,
+  `.fixed`, `.gamma` and `.path_variable` -- rather than a bare System, so **neither end system is
+  yours to assemble**.  That is a correctness matter rather than a convenience: the rows must come
+  held-first, and nothing would have caught it if they had not.  `.start` is the system whose
+  solutions are the start points, `.target` is what the answers satisfy, and `.gamma` is the
+  coefficient actually used, random default included, so a path can be reproduced.  Pass the record
+  straight to `HomotopySolver` or `bertini.solve(homotopy=...)` and the target comes with it.
+- **The homotopy builder projectivizes by default** (#382).  `straight_line_homotopy` now
+  homogenizes and patches the systems it is given before combining them, so
   a homotopy is tracked over projective coordinates and infinity is an ordinary place a path can
   reach rather than somewhere it runs off to.  That is what `ZeroDimSolver` has always done with
   the systems it builds for itself, and the reason the option lives on the builders rather than on

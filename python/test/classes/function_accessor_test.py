@@ -98,8 +98,8 @@ def test_function_blend_block():
     fx = pb.System(); fx.add_variable_group(_vg(x, y)); fx.add_function(x * x + y * y - 1)
     sm = pb.System(); sm.add_variable_group(_vg(x, y)); sm.add_function(y)
     em = pb.System(); em.add_variable_group(_vg(x, y)); em.add_function(y - x)
-    H = na.moving_homotopy(fx, sm, em,
-                           gamma=pb.coefficient(pb.multiprec.complex_mp('0.6', '0.8')))
+    H = na.straight_line_homotopy(em, sm, fixed=fx,
+                                  gamma=pb.coefficient(pb.multiprec.complex_mp('0.6', '0.8'))).homotopy
     _all_functions_are_nodes(H)               # a BlendBlock row expands recursively
 
 

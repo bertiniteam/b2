@@ -12,15 +12,20 @@ system, plus "below" linear slices that cut the dimension -- and only a small pa
 the path variable. The fixed equations should be evaluated **once** per step: never duplicated,
 never scaled by the path coefficient, never differentiated in :math:`t`.
 
-:func:`~bertini.nag_algorithm.moving_homotopy` builds exactly that. You hand it the **fixed** system
-and the two endpoints of the **moving** rows, and it returns
+:func:`~bertini.nag_algorithm.straight_line_homotopy` builds exactly that. Hand it the two endpoints
+of the rows that move and, as ``fixed=``, the equations that do not, and it returns
 
 .. math::
 
-   H \;=\; \bigl[\; \text{fixed's blocks} \;;\; (1-t)\,\text{end} + \gamma\,t\,\text{start} \;\bigr],
+   H \;=\; \bigl[\; \text{fixed's blocks} \;;\; (1-t)\,\text{target} + \gamma\,t\,\text{start} \;\bigr],
 
-keeping the fixed equations as their own evaluation blocks and moving only the rest. Pair it with
-:func:`~bertini.HomotopySolver` and the start points you already know.
+keeping the fixed equations as their own evaluation blocks and deforming only the rest. Those rows
+are the whole of the path-variable dependence: they are evaluated once per step rather than blended,
+and contribute exactly zero to :math:`dH/dt`.
+
+It hands back the homotopy **and the systems at both ends** -- ``.homotopy``, ``.target``,
+``.start`` -- so neither end is yours to assemble. That matters for more than typing: the rows must
+come fixed-first, and nothing would catch it if they did not.
 
 Move one slice
 ==============
@@ -48,13 +53,12 @@ intersections with it, :math:`(\pm 1, 0)`; at :math:`t=0` the slice is the diago
 .. testcode::
 
     gamma = bertini.coefficient(bertini.multiprec.complex_mp('0.6', '0.8'))   # off the real axis
-    H = nag_algorithm.moving_homotopy(fixed, start_moving, end_moving, gamma=gamma)
+    b = nag_algorithm.straight_line_homotopy(end_moving, start_moving, fixed=fixed, gamma=gamma)
 
-    target = bertini.system.concatenate(fixed, end_moving)   # the t=0 system: circle + diagonal
     start_points = [np.array([bertini.multiprec.complex_mp('1'),  bertini.multiprec.complex_mp('0')]),
                     np.array([bertini.multiprec.complex_mp('-1'), bertini.multiprec.complex_mp('0')])]
 
-    solver = bertini.HomotopySolver(H, start_points, target)
+    solver = bertini.HomotopySolver(b, start_points)          # b.target comes with it
     solver.solve()
     roots = sorted((round(complex(s[0]).real, 4), round(complex(s[1]).real, 4))
                    for s in solver.all_solutions())
@@ -89,12 +93,11 @@ slice); only the moving slice carries :math:`t`:
 
 .. testcode::
 
-    H = nag_algorithm.moving_homotopy(fixed, start_moving, end_moving, gamma=gamma)
-    target = bertini.system.concatenate(fixed, end_moving)
+    b = nag_algorithm.straight_line_homotopy(end_moving, start_moving, fixed=fixed, gamma=gamma)
     start_points = [np.array([bertini.multiprec.complex_mp(str(a)), bertini.multiprec.complex_mp('0'),
                               bertini.multiprec.complex_mp('0')]) for a in (1, -1)]
 
-    solver = bertini.HomotopySolver(H, start_points, target)
+    solver = bertini.HomotopySolver(b, start_points)
     solver.solve()
     roots = sorted((round(complex(s[0]).real, 4), round(complex(s[1]).real, 4), round(complex(s[2]).real, 4))
                    for s in solver.all_solutions())
@@ -109,8 +112,8 @@ never differentiated as the slice moves -- while only the moving row is nonzero:
 
     # affine here, so the rows line up with the three equations above: the builder projectivizes
     # by default, which adds a homogenizing coordinate and a patch row (see below).
-    Haff = nag_algorithm.moving_homotopy(fixed, start_moving, end_moving, gamma=gamma,
-                                         projectivize=False)
+    Haff = nag_algorithm.straight_line_homotopy(end_moving, start_moving, fixed=fixed,
+                                                gamma=gamma, projectivize=False).homotopy
     pt = np.array([bertini.multiprec.complex_mp('0.3'),
                    bertini.multiprec.complex_mp('0.4'),
                    bertini.multiprec.complex_mp('0.5')])
@@ -133,9 +136,9 @@ You see it in the shape: a homogenizing coordinate per affine group, and a patch
 
 .. testcode::
 
-    assert H.is_homogeneous()
-    assert H.num_variables() == 4            # x, y, z, and the homogenizing coordinate
-    assert H.num_functions() == 4            # the three rows, plus the patch
+    assert b.homotopy.is_homogeneous()
+    assert b.homotopy.num_variables() == 4   # x, y, z, and the homogenizing coordinate
+    assert b.homotopy.num_functions() == 4   # the three rows, plus the patch
 
     # your own systems are untouched -- the builder works on clones
     assert not fixed.is_homogeneous()
@@ -169,12 +172,11 @@ moving row is :math:`\gamma\,(x-1)(x+1)`, whose roots on the slice are :math:`(\
 
 .. testcode::
 
-    H = nag_algorithm.moving_homotopy(fixed, start_moving, end_moving, gamma=gamma)
-    target = bertini.system.concatenate(fixed, end_moving)
+    b = nag_algorithm.straight_line_homotopy(end_moving, start_moving, fixed=fixed, gamma=gamma)
     start_points = [np.array([bertini.multiprec.complex_mp(str(a)), bertini.multiprec.complex_mp('0.5')])
                     for a in (1, -1)]
 
-    solver = bertini.HomotopySolver(H, start_points, target)
+    solver = bertini.HomotopySolver(b, start_points)
     solver.solve()
     roots = sorted((round(complex(s[0]).real, 4), round(complex(s[1]).real, 4))
                    for s in solver.all_solutions())

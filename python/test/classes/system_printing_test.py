@@ -144,12 +144,14 @@ def test_products_of_linears_block():
     assert '*' in verbose and 'x' in verbose                        # actual product of factors
 
 
-def test_moving_homotopy_blend_and_path_variable():
+def test_held_rows_and_blend_and_path_variable():
     x, y = pb.Variable('x'), pb.Variable('y')
     fx = pb.System(); fx.add_variable_group(_vg(x, y)); fx.add_function(x*x + y*y - 1)
     sm = pb.System(); sm.add_variable_group(_vg(x, y)); sm.add_function(y)
     em = pb.System(); em.add_variable_group(_vg(x, y)); em.add_function(y - x)
-    H = na.moving_homotopy(fx, sm, em, gamma=pb.coefficient(pb.multiprec.complex_mp('0.6', '0.8')))
+    # affine: the printed row shapes below are the point, and a patch row would add one
+    H = na.straight_line_homotopy(em, sm, fixed=fx, projectivize=False,
+                                  gamma=pb.coefficient(pb.multiprec.complex_mp('0.6', '0.8'))).homotopy
 
     terse = str(H)
     assert 'f_0 = x**2+y**2-1' in terse              # the fixed row is a plain polynomial, shown

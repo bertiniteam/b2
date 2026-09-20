@@ -65,8 +65,8 @@ _GAMMA = mp.complex_mp('0.6', '0.8')
 
 def test_user_authored_product_of_linears_solves_to_known_roots():
     T, S = _target(), _start()
-    H = nag_algorithm.straight_line_homotopy(T, S, gamma=pb.coefficient(_GAMMA))
-    solver = nag_algorithm.user_homotopy(H, _start_points(), T)
+    b = nag_algorithm.straight_line_homotopy(T, S, gamma=pb.coefficient(_GAMMA))
+    solver = nag_algorithm.user_homotopy(b, _start_points())
     solver.solve()
     sols = solver.all_solutions()
 
@@ -82,8 +82,8 @@ def test_user_authored_product_of_linears_solves_to_known_roots():
 
 def test_metadata_splits_real_and_complex():
     T, S = _target(), _start()
-    H = nag_algorithm.straight_line_homotopy(T, S, gamma=pb.coefficient(_GAMMA))
-    solver = nag_algorithm.user_homotopy(H, _start_points(), T)
+    b = nag_algorithm.straight_line_homotopy(T, S, gamma=pb.coefficient(_GAMMA))
+    solver = nag_algorithm.user_homotopy(b, _start_points())
     solver.solve()
 
     md = solver.solution_metadata()
@@ -104,7 +104,7 @@ def test_gamma_one_homotopy_does_not_drop_a_structured_start():
     T, S = _target(), _start()
     # affine on purpose: this case is about the BLEND -- that a structured start is not dropped --
     # and the builder's projectivize default (b2#382) would fold the rows into one patched block
-    H = nag_algorithm.straight_line_homotopy(T, S, gamma=1, projectivize=False)
+    H = nag_algorithm.straight_line_homotopy(T, S, gamma=1, projectivize=False).homotopy
     assert H.have_path_variable()
     assert H.num_functions() == 2
 
@@ -142,8 +142,8 @@ def test_multi_affine_group_products_of_linears_solves():
 
     start_points = [np.array([mp.complex_mp(str(a)), mp.complex_mp(str(b))])
                     for a, b in itertools.product([1, -1], [1, -1])]
-    H = nag_algorithm.straight_line_homotopy(T, S, gamma=pb.coefficient(_GAMMA))
-    solver = nag_algorithm.user_homotopy(H, start_points, T)
+    b = nag_algorithm.straight_line_homotopy(T, S, gamma=pb.coefficient(_GAMMA))
+    solver = nag_algorithm.user_homotopy(b, start_points)
     solver.solve()
     sols = solver.all_solutions()
 

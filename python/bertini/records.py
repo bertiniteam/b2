@@ -401,7 +401,7 @@ def solve(system, seed=None, directory=None, mptype='adaptive', precision=None, 
         deterministically from ``set_random_seed``'s master when one was set.)
     directory : str, optional
         Records directory override; default is ambient (see ``records_dir``).
-    homotopy : System, optional
+    homotopy : System or StraightLineHomotopy, optional
         A homotopy you built (e.g. :func:`bertini.nag_algorithm.straight_line_homotopy`), for a
         CHAINED solve: its paths run from your ``start`` points at t=1 to ``system``'s
         solutions at t=0.  Requires ``start``.
@@ -431,6 +431,10 @@ def solve(system, seed=None, directory=None, mptype='adaptive', precision=None, 
     if (homotopy is None) != (start is None):
         raise ValueError("solve: homotopy= and start= go together (a chained solve "
                          "needs both the homotopy and where its paths start)")
+    # the builders hand back a record of the whole construction; the homotopy is the part of it
+    # this tracks, and `system` stays the target, since that is what the caller asked about
+    if isinstance(homotopy, _nag.StraightLineHomotopy):
+        homotopy = homotopy.homotopy
     if seed is None:
         # derive this solve's own effective seed: the run's recorded seed must
         # reproduce the run STANDALONE, never depend on the session's earlier draw

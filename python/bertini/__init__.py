@@ -74,6 +74,7 @@ VariableGroup = symbolics.VariableGroup
 Named = symbolics.NamedExpression            # Named(expr, "a"): a user-named subexpression
 System = system.System
 default_precision = multiprec.default_precision
+max_precision = multiprec.max_precision
 precision = multiprec.precision                   # get/set the precision of a whole vector/matrix
 is_distinct_up_to = multiprec.is_distinct_up_to   # tolerance point-inequality, infinity norm (#304)
 
@@ -179,7 +180,7 @@ __all__ = ['solve','save','load','annotate','solutions_of','provenance','recordi
            'Variable','variables','gather_variables','VariableGroup','Named','system','System',
            'jacobian','randomize','linalg','random_matrix','random_vector','random_real','random_complex','coefficient','coefficients',
            'complex_mp','real_mp','int_mp','rational_mp',
-           'nag_algorithm','default_precision','precision','is_distinct_up_to',
+           'nag_algorithm','default_precision','max_precision','precision','is_distinct_up_to',
            'request_stop','clear_stop_request','stop_requested',
            'real','imag','conj','arg','norm','is_real',
            'tracking','endgame','logging','symbolics','parse','multiprec','random','parallel',
