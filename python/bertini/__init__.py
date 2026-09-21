@@ -160,6 +160,10 @@ _numpy_guard.install()
 from . import _matplotlib_bridge as _matplotlib_bridge
 _matplotlib_bridge.install()
 
+# printing an object says what it is and where it has got to, rather than its address
+from . import _repr as _repr
+_repr.install()
+
 real = _numpy_helpers.real
 imag = _numpy_helpers.imag
 conj = _numpy_helpers.conj
