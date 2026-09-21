@@ -387,7 +387,7 @@ def _chained_solver(system, homotopy, start, where, *, mptype, endgame):
 # --- the three verbs ------------------------------------------------------------------
 
 def solve(system, seed=None, directory=None, mptype='adaptive', precision=None, endgame='powerseries',
-          homotopy=None, start=None):
+          homotopy=None, start=None, show_progress=True):
     """Solve a polynomial system, recording and resuming automatically.
 
     Ensure-answered semantics: the solve consults the ambient records directory first;
@@ -426,6 +426,10 @@ def solve(system, seed=None, directory=None, mptype='adaptive', precision=None, 
         deprecated old spelling of ``mptype`` and warns.
     endgame : str
         Passed through to :func:`bertini.nag_algorithm.ZeroDimSolver`.
+    show_progress : bool
+        Report how far the solve has got.  On by default, and silent unless the solve runs
+        past a few seconds *and* stderr is a terminal -- so a script, a pipeline or a test
+        run sees nothing either way.  Pass False to be certain of silence.
 
     Returns
     -------
@@ -487,7 +491,7 @@ def solve(system, seed=None, directory=None, mptype='adaptive', precision=None, 
     # A bare solve() already returns a SolveResult built from the solver's own records state
     # (the solver records itself); the free function differs only in the setup + recall
     # orchestration above and the auto-declare below.  Same result type either way.
-    result = zd.solve()
+    result = zd.solve(show_progress=show_progress)
     if result.run_id:
         # top-level solves auto-declare their deliverable: "what were my solutions?"
         save("solutions [run %s]" % result.run_id, result,

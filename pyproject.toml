@@ -6,7 +6,7 @@ name = "bertini2"
 dynamic = ["version"]
 requires-python = ">= 3.10"
 readme = "README.md"
-dependencies = ["numpy"]
+dependencies = ["numpy", "tqdm"]
 authors = [
     {name="Bertini Team"}
 ]
