@@ -87,6 +87,10 @@ Bertini defends every spelling it can reach:
   :func:`numpy.imag` / :func:`numpy.angle`: on a plain mp-complex array they raise a
   ``TypeError`` naming the right tool, instead of silently returning wrong values.
   All other inputs pass straight through to numpy.
+* **Drawing the wrong values is refused.**  Complex data handed to a matplotlib axis
+  raises rather than plotting, which catches the ``scatter(z.real, z.imag)`` spelling
+  at the point where its zeros would have become a picture.  See
+  :ref:`the plotting tutorial <plotting-solutions-and-paths>`.
 
 .. warning::
 
