@@ -88,7 +88,12 @@ namespace bertini{
             class_<PathComplete<AZ>, bases<AlgorithmEvent<AZ>>, boost::noncopyable>("PathComplete", no_init)
                 .def("path_index", &PathComplete<AZ>::PathIndex, "index of the solution path that finished")
                 .def("tracker", complete_tracker, return_value_policy<reference_existing_object>(),
-                     "the tracker that ran this path -- detach the per-path observer from it here");
+                     "the tracker that ran this path -- detach the per-path observer from it here")
+                .def("outcome", &PathComplete<AZ>::Outcome,
+                     "how this path ended, as a SuccessCode.  Tally these as they arrive rather than "
+                     "reading metadata a worker thread is still writing.  Success is not the same as "
+                     "a finite solution: whether an endpoint is finite, at infinity or singular is "
+                     "settled after every path is done.");
         }
 
         void ExportZeroDim(){

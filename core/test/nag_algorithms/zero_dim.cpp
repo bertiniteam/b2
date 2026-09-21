@@ -1987,6 +1987,82 @@ BOOST_AUTO_TEST_CASE(zerodim_emits_lifecycle_events)
 }
 
 
+BOOST_AUTO_TEST_CASE(an_algorithm_is_observable_through_its_type_erased_base)
+{
+    using namespace bertini;
+    using namespace tracking;
+
+    auto sys = system::Precon::GriewankOsborn();
+    auto zd = algorithm::ZeroDimSolver<TrackerT, bertini::endgame::EndgameSelector<TrackerT>::Cauchy,
+                                 decltype(sys)>(sys);
+    zd.DefaultSetup();
+
+    // being watchable is a property of being an algorithm: a caller holding nothing but
+    // AnyAlgorithm can attach, without knowing which algorithm it has or how it is templated
+    algorithm::AnyAlgorithm& any = zd;
+
+    ZeroDimLifecycleCounter counter;
+    any.AddObserver(counter);
+
+    any.Run();
+
+    BOOST_CHECK_EQUAL(counter.started,   1);
+    BOOST_CHECK_EQUAL(counter.completed, 1);
+    BOOST_CHECK_GT(counter.path_begin, 0);
+
+    // and one observer list, not two: removing through the base detaches what the base attached
+    any.RemoveObserver(counter);
+    any.Run();
+    BOOST_CHECK_EQUAL(counter.started, 1);
+}
+
+
+BOOST_AUTO_TEST_CASE(a_completed_path_reports_how_it_ended)
+{
+    using namespace bertini;
+    using namespace tracking;
+
+    struct OutcomeCollector : public bertini::AnyObserver
+    {
+        std::map<std::size_t, SuccessCode> outcomes;
+
+        bertini::ObserveResult Observe(bertini::AnyEvent const& e) override
+        {
+            using namespace bertini::algorithm;
+            if (auto const* done = dynamic_cast<const PathComplete<AnyZeroDim>*>(&e))
+                outcomes[done->PathIndex()] = done->Outcome();
+            return bertini::ObserveResult::KeepObserving;
+        }
+    };
+
+    auto sys = system::Precon::GriewankOsborn();
+    auto zd = algorithm::ZeroDimSolver<TrackerT, bertini::endgame::EndgameSelector<TrackerT>::Cauchy,
+                                 decltype(sys)>(sys);
+    zd.DefaultSetup();
+
+    OutcomeCollector collector;
+    zd.AddObserver(collector);
+    zd.Solve();
+    zd.RemoveObserver(collector);
+
+    auto const& md = zd.SolutionMetadata();
+    BOOST_CHECK_EQUAL(collector.outcomes.size(), md.size());
+
+    // what the event said, as each path finished, is what the solver recorded for it -- a
+    // watcher can tally outcomes live instead of reading metadata a worker is still writing.
+    // Not every path of this system succeeds; that it ends SOMEWHERE definite is the point.
+    for (auto const& [index, said] : collector.outcomes)
+    {
+        auto const& recorded = md[index];
+        auto const wrote = recorded.pre_endgame_success_code == SuccessCode::Success
+                         ? recorded.endgame_success_code
+                         : recorded.pre_endgame_success_code;
+        BOOST_CHECK(said == wrote);
+        BOOST_CHECK(said != SuccessCode::NeverStarted);
+    }
+}
+
+
 BOOST_AUTO_TEST_CASE(zerodim_rejects_a_tracker_observer)
 {
     using namespace bertini;

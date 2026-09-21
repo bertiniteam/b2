@@ -11,6 +11,41 @@ every predictor-corrector step the tracker checks whether a stop has been reques
 whether its wall-clock deadline has passed, and if so returns there with its position intact.
 The overrun is at most the step in flight.
 
+Seeing that it is stuck
+=======================
+
+A solve reports how far it has got, so the pathological path is visible rather than inferred
+from an absence of output::
+
+    paths:  61%|██████     | 39/64 [00:41<00:26]  37 ok, 2 diverged
+
+This is on by default and shows itself only when it would help: nothing is drawn until the
+solve has been running a few seconds, and nothing at all when stderr is not a terminal, so
+scripts, pipelines, notebooks-as-jobs and test runs are unaffected.  Pass
+``show_progress=False`` to any ``solve`` to be certain of silence.
+
+A bar that stops advancing is the symptom the rest of this page is about: one path is not
+finishing.  ``max_path_wall_clock_duration`` below is what gets the solve past it.
+
+Recalled paths are reported separately, because a solve that finds its answers in the records
+tracks nothing and so has no progress to show::
+
+    recalled 64 of 64 paths from the records
+
+At very large path counts the display redraws every so many paths rather than on each one --
+by default often enough for a couple of hundred updates across the whole solve.  To set the
+interval yourself, or to watch a solver you are driving directly, attach a
+:class:`bertini.ProgressReport`:
+
+.. code-block:: python
+
+   report = bertini.ProgressReport(solver, every=1000)
+   solver.add_observer(report)
+   solver.solve(show_progress=False)      # the one being watched is yours
+   solver.remove_observer(report)
+
+   report.tally_text()        # '37 ok, 2 diverged'
+
 Ctrl-C works
 ============
 

@@ -35,6 +35,7 @@ type.
 
 #include "bertini2/detail/events.hpp"
 #include "bertini2/detail/observable.hpp"   // Observable: the executing tracker is carried as one
+#include "bertini2/common/config.hpp"       // SuccessCode: how a completed path ended
 
 #include <cstddef>
 
@@ -117,9 +118,12 @@ namespace bertini {
             \param obs The observed object emitting the event.
             \param path_index The index of the solution path that has completed.
             \param tracker The tracker that executed this path (see Tracker()); may be null.
+            \param outcome How the path ended (see Outcome()).
             */
-            PathComplete(HeldT obs, std::size_t path_index, Observable const* tracker = nullptr)
-                : AlgorithmEvent<ObservedT>(obs), path_index_(path_index), tracker_(tracker)
+            PathComplete(HeldT obs, std::size_t path_index, Observable const* tracker = nullptr,
+                         SuccessCode outcome = SuccessCode::Success)
+                : AlgorithmEvent<ObservedT>(obs), path_index_(path_index), tracker_(tracker),
+                  outcome_(outcome)
             {}
 
             /// \return The index of the solution path this event concerns.
@@ -129,11 +133,25 @@ namespace bertini {
             /// detaches its per-path sub-observer from this same tracker on PathComplete.
             Observable const* Tracker() const { return tracker_; }
 
+            /**
+            \brief How this path ended.
+
+            The endgame's code for a path that reached the endgame, and the pre-endgame code for
+            one that did not get that far -- in both cases the code already written to this path's
+            own metadata slot.  Carried on the event so a watcher can tally outcomes as they
+            happen, rather than reaching into metadata another thread is still filling in.
+
+            Success here is not the same as a finite solution: classification (finite, at
+            infinity, singular) happens after every path is done.
+            */
+            SuccessCode Outcome() const { return outcome_; }
+
             virtual ~PathComplete() = default;
             PathComplete() = delete;
         private:
             std::size_t path_index_;
             Observable const* tracker_ = nullptr;
+            SuccessCode outcome_ = SuccessCode::Success;
         };
 
     } // namespace algorithm

@@ -279,6 +279,18 @@ A correctness fix to the `MakeMovingHomotopy` guards: they decided function iden
   settings.  Configs and metadata keep the `SteppingConfig(initial_step_size=...)` form they
   already had.  A test walks every public class and fails if one prints an address, so the next
   binding arrives with a description.  See ADR-0065.
+- **A solve says how far it has got** (#359).  `paths: 61%|██████ | 39/64 [00:41<00:26] 37 ok, 2
+  diverged`, riding the path events the solver already emits.  On by default, and shown only
+  when it would help: nothing is drawn for the first few seconds, nothing at all when stderr is
+  not a terminal, and only the manager rank draws under MPI -- so scripts, pipelines and test
+  runs are unaffected.  `show_progress=False` on any `solve` is the certain silence.  Recalled
+  paths are reported separately (`recalled 64 of 64 paths from the records`), since a recalled
+  solve tracks nothing and has no progress to show.  Redrawing is throttled to about two hundred
+  updates over the whole solve however many paths there are, which is what b1's
+  `printpathprogress` was for.  tqdm is now a dependency.
+- **`PathComplete` carries how the path ended**, as a `SuccessCode`, so a watcher can tally
+  outcomes as they arrive rather than reading metadata that a worker thread is still writing.
+  A solver also reports `num_paths()`, the count it is working through.
 
 ### Changed
 

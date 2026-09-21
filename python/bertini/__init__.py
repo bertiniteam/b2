@@ -161,6 +161,11 @@ _matplotlib_bridge.install()
 from . import _repr as _repr
 _repr.install()
 
+# how far a solve has got, while it is still running.  solve(show_progress=...) is the
+# everyday switch; the class is here for a caller who wants to set the redraw interval or
+# watch a solver they are driving themselves.
+from ._progress import ProgressReport
+
 real = _numpy_helpers.real
 imag = _numpy_helpers.imag
 conj = _numpy_helpers.conj
@@ -189,7 +194,7 @@ __all__ = ['solve','save','load','annotate','solutions_of','provenance','recordi
            'jacobian','randomize','linalg','random_matrix','random_vector','random_real','random_complex','coefficient','coefficients',
            'complex_mp','real_mp','int_mp','rational_mp',
            'nag_algorithm','default_precision','max_precision','precision','is_distinct_up_to',
-           'request_stop','clear_stop_request','stop_requested',
+           'request_stop','clear_stop_request','stop_requested','ProgressReport',
            'real','imag','conj','arg','norm','is_real',
            'tracking','endgame','logging','symbolics','parse','multiprec','random','parallel',
            'operators',

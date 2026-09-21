@@ -553,7 +553,7 @@ jobs:
           # fails, revert to the import smoke test per ADR-0003 (kept there as fallback).
           # mpi4py builds against the image's OpenMPI, so the MPI test modules run (at 1 rank)
           # instead of skipping -- 0 skiptests on Linux, matching Windows/macOS.
-          CIBW_TEST_REQUIRES_LINUX: "pytest pytest-timeout numpy sympy pandas networkx matplotlib mpi4py"
+          CIBW_TEST_REQUIRES_LINUX: "pytest pytest-timeout numpy tqdm sympy pandas networkx matplotlib mpi4py"
           # The explicit `bertini2 --version` up front is a permanent smoke test of the
           # BUNDLED CLI BINARY: wheel repair rewrites its ELF metadata (patchelf via
           # auditwheel), and a bad rewrite segfaults in the dynamic loader before main()
@@ -714,7 +714,9 @@ jobs:
 
       - name: Install wheel
         run: |
-          pip install numpy
+          # bertini2's own runtime dependencies, fetched from the index first: the wheel
+          # install below is --no-index and can resolve nothing on its own
+          pip install numpy tqdm
           pip install --no-index --find-links dist/ bertini2
 
       - name: Run Python tests
@@ -760,6 +762,8 @@ jobs:
           conda info
           conda install -y python=${{ matrix.python-version }} --update-deps
           $py = "C:\Miniconda\envs\b2-windows\python.exe"
+          # runtime dependencies first: the wheel install is --no-index and resolves nothing
+          & $py -m pip install numpy tqdm
           & $py -m pip install --no-index --find-links dist/ bertini2
           & $py -m pip install pytest pytest-timeout numpy sympy pandas networkx matplotlib
           & $py -m pytest python/test/ -v
@@ -790,7 +794,7 @@ jobs:
         run: |
           python -m pip install --upgrade pip
           pip install sphinx furo sphinxcontrib-bibtex gitpython \
-            scikit-build-core build numpy matplotlib pandas sympy networkx
+            scikit-build-core build numpy tqdm matplotlib pandas sympy networkx
 
       - name: Download built wheel
         uses: actions/download-artifact@v5

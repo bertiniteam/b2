@@ -456,20 +456,27 @@ def _solver_repr(self):
 
 
 def _make_solve_returning_result(native_solve):
-    def solve(self, communicator=None, settings=None, **field_settings):
+    def solve(self, communicator=None, settings=None, show_progress=True, **field_settings):
         # settings= : a dict of config fields; **field_settings: the same by keyword.  Both are
-        # applied via set() before solving -- collapsing make/set/solve to one line.  communicator
-        # and settings are reserved names (MPI is a solve-time opt-in), never config fields.
+        # applied via set() before solving -- collapsing make/set/solve to one line.  communicator,
+        # settings and show_progress are reserved names (MPI and display are solve-time choices,
+        # never config fields -- they must not touch the settings digest).
         combined = dict(settings or {}, **field_settings)
         if combined:
             self.set(**combined)
-        native_solve(self, communicator)
+
+        from bertini._progress import watching
+        with watching(self, show_progress):
+            native_solve(self, communicator)
         return self.result()
     solve.__name__ = 'solve'
     solve.__doc__ = ((getattr(native_solve, '__doc__', '') or '') +
         "\n\nSettings: pass config fields either as a dict (settings={'final_tolerance': 1e-13}) or by "
         "keyword (solve(final_tolerance=1e-13)); each is applied via set() before solving, so "
         "make/set/solve becomes a single call.  communicator= is reserved for MPI (never a setting).\n\n"
+        "show_progress=True (the default) reports how far the solve has got.  It draws nothing "
+        "unless the solve runs past a few seconds AND stderr is a terminal, so scripts, pipelines "
+        "and test runs see nothing; pass show_progress=False to be certain of silence.\n\n"
         "Returns a bertini.records.SolveResult -- the finite solutions plus this solve's records "
         "ticket (run id, directory, recall count), read from the solver's own records (the solver "
         "records itself, on by default).  Drop it freely: solver.result() re-derives it, and the "
