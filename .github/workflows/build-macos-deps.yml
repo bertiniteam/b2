@@ -48,8 +48,18 @@ jobs:
           - {runner: macos-15-intel, arch: x86_64, name: macos15-x86_64}
     steps:
       - uses: actions/checkout@v5
+      # Source it and export the keys by name, as build_and_test.yml and build-ci-image.yml
+      # both do.  Appending the file wholesale put its COMMENT lines into $GITHUB_ENV, which
+      # rejects them -- "Invalid format '# Single source of truth for...'" -- and every job
+      # here died in its second step, on both architectures.
       - name: Load dep versions
-        run: cat .github/ci-deps-versions.env >> "$GITHUB_ENV"
+        run: |
+          set -a; . .github/ci-deps-versions.env; set +a
+          {
+            echo "BOOST_VERSION=$BOOST_VERSION"
+            echo "EIGEN_VERSION=$EIGEN_VERSION"
+            echo "EIGENPY_VERSION=$EIGENPY_VERSION"
+          } >> "$GITHUB_ENV"
       - uses: actions/setup-python@v5
         with:
           python-version: ${{ matrix.python-version }}
