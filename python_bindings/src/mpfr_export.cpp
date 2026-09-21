@@ -395,6 +395,62 @@ namespace bertini{
 
 
 
+        namespace {
+
+            // A python int is arbitrary precision, so an exact conversion goes through the
+            // decimal spelling rather than through a C integer, which would cap the value
+            // at 64 bits.  Any fractional part has already been removed by the caller; this
+            // trims a trailing ".0" left by fixed-point formatting.
+            boost::python::object PythonIntFromDigits(std::string digits)
+            {
+                auto const point = digits.find('.');
+                if (point != std::string::npos)
+                    digits.erase(point);
+
+                PyObject* as_int = PyLong_FromString(digits.c_str(), nullptr, 10);
+                if (as_int == nullptr)
+                    boost::python::throw_error_already_set();
+
+                return boost::python::object(boost::python::handle<>(as_int));
+            }
+
+            // Truncate toward zero, as python's int() does for a float, and refuse the two
+            // values python refuses -- with the same exception types it uses.
+            boost::python::object PythonIntTruncating(real_mp const& x)
+            {
+                if (boost::multiprecision::isnan(x))
+                {
+                    PyErr_SetString(PyExc_ValueError, "cannot convert float NaN to integer");
+                    boost::python::throw_error_already_set();
+                }
+
+                if (boost::multiprecision::isinf(x))
+                {
+                    PyErr_SetString(PyExc_OverflowError, "cannot convert float infinity to integer");
+                    boost::python::throw_error_already_set();
+                }
+
+                return PythonIntFromDigits(real_mp(boost::multiprecision::trunc(x)).str(0, std::ios_base::fixed));
+            }
+
+            // python raises OverflowError when an exact integer or rational is too big for a
+            // double, rather than handing back an infinity; match it.
+            template <typename T>
+            double PythonFloatOrOverflow(T const& value)
+            {
+                double const as_double = value.template convert_to<double>();
+                if (std::isinf(as_double))
+                {
+                    PyErr_SetString(PyExc_OverflowError, "value too large to convert to float");
+                    boost::python::throw_error_already_set();
+                }
+
+                return as_double;
+            }
+
+        }
+
+
         void ExposeInt()
         {
             using T = mpz_int;
@@ -403,6 +459,13 @@ namespace bertini{
             .def(init<int>((arg("self"),arg("val")),"Construct an arbitrary-precision integer from an integer."))
             .def(init<T>((arg("self"),arg("val")),"Construct an arbitrary-precision integer from another."))
             .def(init<std::string>((arg("self"),arg("val")),"Construct an arbitrary-precision integer from a string of digits."))
+
+            .def("__int__", +[](T const& n) { return PythonIntFromDigits(n.str()); }, (arg("self")), "convert to a python int.  exact, regardless of how many digits it has: a python int is arbitrary precision too.")
+            .def("__index__", +[](T const& n) { return PythonIntFromDigits(n.str()); }, (arg("self")), "use as a sequence index or a slice bound, as any other integer.")
+            .def("__float__", +[](T const& n) { return PythonFloatOrOverflow(n); }, (arg("self")), "convert to a python float.  truncates to double precision, losing digits beyond the 16th, and raises OverflowError for a value too big for a double.")
+            // without this, python's default applies and every value is true, zero included
+            .def("__bool__", +[](T const& n) { return n != T(0); }, (arg("self")), "false for zero, true otherwise, as for any other number.")
+
             .def(RealStrVisitor<T>())
             .def(RingSelfVisitor<T>())
             .def(PowVisitor<T,int>())
@@ -445,6 +508,14 @@ namespace bertini{
             .def(init<std::string>((arg("self"),arg("val")),"Construct an arbitrary-precision rational number from a string, e.g. '1/3'."))
             .def_pickle(RationalStringPickle())
             .def(init<mpq_rational>((arg("self"),arg("val")),"Construct an arbitrary-precision rational number from an arbitrary-precision integer."))
+
+            .def("__float__", +[](T const& q) { return PythonFloatOrOverflow(q); }, (arg("self")), "convert to a python float.  truncates to double precision, so 1/3 comes back as the nearest double, and raises OverflowError for a value too big for a double.")
+            // integer division of a boost rational's parts truncates toward zero, which is
+            // what python's int() does to a Fraction
+            .def("__int__", +[](T const& q) { return PythonIntFromDigits(mpz_int(numerator(q) / denominator(q)).str()); }, (arg("self")), "convert to a python int, truncating toward zero.")
+            // without this, python's default applies and every value is true, zero included
+            .def("__bool__", +[](T const& q) { return q != T(0); }, (arg("self")), "false for zero, true otherwise, as for any other number.")
+
             .def(RealStrVisitor<T>())
             .def(FieldSelfVisitor<T>())
             .def(FieldVisitor<T, mpz_int>())
@@ -506,6 +577,14 @@ namespace bertini{
             // without an explicit __float__, CPython's float()/complex() fall into the
             // numpy user-dtype dispatch and recurse until the C stack overflows (SIGSEGV)
             .def("__float__", +[](T const& x) { return x.convert_to<double>(); }, (arg("self")), "convert to a python float.  truncates to double precision, losing digits beyond the 16th -- for full precision, use strings.")
+            // numpy.generic, which this type inherits from once its dtype is registered,
+            // supplies an __int__ that reaches for a cast function to int64 nobody
+            // registered, and segfaults (issue #389)
+            .def("__int__", +[](T const& x) { return PythonIntTruncating(x); }, (arg("self")), "convert to a python int, truncating toward zero.  exact, regardless of how many digits are before the point.")
+            // numpy.generic's byteswap reads the scalar's payload at the offset numpy
+            // uses for its own scalars, which is not where Boost.Python keeps this one,
+            // and aborts inside mpfr on the garbage it finds (issue #389)
+            .def("byteswap", +[](T const&, bool) -> boost::python::object { PyErr_SetString(PyExc_TypeError, "a multiprecision value has no byte order to swap"); boost::python::throw_error_already_set(); return boost::python::object(); }, (arg("self"), arg("inplace")=false), "raises TypeError: the value is a handle to digits held elsewhere, so it has no byte order.")
 
             .def(RealStrVisitor<T>())
             .def(PrecisionVisitor<T>())
@@ -537,6 +616,7 @@ namespace bertini{
             eigenpy::HardenDotfunc<T>(); // np.dot/np.inner guard — see eigenpy_interaction.hpp
             eigenpy::HardenCompare<T>();   // element compare slot: np.sort/argsort/searchsorted
             eigenpy::HardenArgMinMax<T>(); // argmax/argmin slots
+            eigenpy::HardenCopyswap<T>();  // null src on in-place byteswap — see eigenpy_interaction.hpp
 
             // casts must be registered BEFORE the ufunc loops: registering the
             // mixed mp-vs-double ordering loops makes numpy query the mp<->double
@@ -618,6 +698,11 @@ namespace bertini{
             .def("__complex__", +[](T const& z) { return std::complex<double>(z.real().convert_to<double>(), z.imag().convert_to<double>()); }, (arg("self")), "convert to a python complex.  truncates to double precision, losing digits beyond the 16th -- for full precision, use strings.")
             // raise the TypeError ourselves; the slot-less fallback path crashes the same way
             .def("__float__", +[](T const&) -> double { PyErr_SetString(PyExc_TypeError, "can't convert Complex to float; use complex(), or .real/.imag"); boost::python::throw_error_already_set(); return 0.0; }, (arg("self")), "raises TypeError, as for python complex")
+            // likewise int(): the inherited numpy.generic one segfaults (issue #389)
+            .def("__int__", +[](T const&) -> boost::python::object { PyErr_SetString(PyExc_TypeError, "can't convert Complex to int; use complex(), or .real/.imag"); boost::python::throw_error_already_set(); return boost::python::object(); }, (arg("self")), "raises TypeError, as for python complex")
+            // and byteswap, which reads the scalar's payload where numpy keeps its own
+            // and aborts inside mpc on the garbage it finds (issue #389)
+            .def("byteswap", +[](T const&, bool) -> boost::python::object { PyErr_SetString(PyExc_TypeError, "a multiprecision value has no byte order to swap"); boost::python::throw_error_already_set(); return boost::python::object(); }, (arg("self"), arg("inplace")=false), "raises TypeError: the value is a handle to digits held elsewhere, so it has no byte order.")
 
             .def(ComplexVisitor<T>())
 
@@ -646,6 +731,7 @@ namespace bertini{
             eigenpy::registerNewType<T>();
             eigenpy::HardenSetitem<T>(); // zero slots before assignment — see eigenpy_interaction.hpp & ADR-0003
             eigenpy::HardenDotfunc<T>(); // np.dot/np.inner guard — see eigenpy_interaction.hpp
+            eigenpy::HardenCopyswap<T>();  // null src on in-place byteswap — see eigenpy_interaction.hpp
 
             // casts before ufunc loops — see the note in ExposeFloat.
 

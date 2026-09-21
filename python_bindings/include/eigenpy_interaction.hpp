@@ -193,6 +193,48 @@ namespace eigenpy
             slot = std::move(val); // move into the sentinel: steals val's limbs, frees nothing
         }
 
+
+        // ----- copyswap / copyswapn ----------------------------------------------
+        // numpy asks a dtype to byteswap a slot in place by calling copyswap with
+        // src == NULL.  eigenpy's SpecialMethods<T, NPY_USERDEF>::copyswap guards
+        // the copy with `if (src != NULL)` and then dereferences src anyway in its
+        // `if (swap)` branch, so arr.byteswap() reaches a null dereference (and its
+        // copyswapn walks srcptr forward from NULL, so the guard would not hold past
+        // the first element even if that branch checked).
+        //
+        // A byte order is meaningless for these types: the slot holds a handle to
+        // limbs allocated on the heap, not a little- or big-endian number, and this
+        // dtype never reports a non-native byte order.  So a swap request is a plain
+        // copy, and an in-place swap request is nothing at all.
+        template <typename NumT>
+        struct guarded_copyswap
+        {
+            static void run(void *dst, void *src, int /*swap*/, void * /*array*/)
+            {
+                if (src == nullptr || dst == nullptr)
+                    return;
+
+                static const NumT zero(0);
+                slot_write(*static_cast<NumT*>(dst),
+                           value_or_zero(*static_cast<NumT*>(src), zero));
+            }
+
+            static void runn(void *dst, npy_intp dstride, void *src, npy_intp sstride,
+                             npy_intp n, int swap, void *array)
+            {
+                char *dstptr = static_cast<char*>(dst);
+                char *srcptr = static_cast<char*>(src);
+
+                for (npy_intp i = 0; i < n; ++i)
+                {
+                    run(dstptr, srcptr, swap, array);
+                    dstptr += dstride;
+                    if (srcptr != nullptr)
+                        srcptr += sstride;
+                }
+            }
+        };
+
         struct op_add           { template <typename T> static T    apply(T const& x, T const& y) { return T(x + y); } };
         struct op_subtract      { template <typename T> static T    apply(T const& x, T const& y) { return T(x - y); } };
         struct op_multiply      { template <typename T> static T    apply(T const& x, T const& y) { return T(x * y); } };
@@ -776,6 +818,18 @@ namespace eigenpy
         PyArray_ArrFuncs *funcs = PyDataType_GetArrFuncs(descr);
         internal::zeroinit_setitem<NumT>::original = funcs->setitem;
         funcs->setitem = &internal::zeroinit_setitem<NumT>::run;
+    }
+
+    // Install the guarded copyswap/copyswapn slots for an MPFR-backed dtype, replacing
+    // eigenpy's, which dereference a null src on an in-place byteswap request.  Call
+    // immediately after eigenpy::registerNewType<NumT>().  See internal::guarded_copyswap.
+    template <typename NumT>
+    void HardenCopyswap()
+    {
+        PyArray_Descr *descr = Register::getPyArrayDescr<NumT>();
+        PyArray_ArrFuncs *funcs = PyDataType_GetArrFuncs(descr);
+        funcs->copyswap = reinterpret_cast<PyArray_CopySwapFunc*>(&internal::guarded_copyswap<NumT>::run);
+        funcs->copyswapn = reinterpret_cast<PyArray_CopySwapNFunc*>(&internal::guarded_copyswap<NumT>::runn);
     }
 
     // Install the guarded numpy dot/inner loop for an MPFR-backed dtype, replacing
