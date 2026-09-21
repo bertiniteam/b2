@@ -59,7 +59,7 @@ on:
         required: false
         type: choice
         default: all
-        options: [all, linux, macos, windows]
+        options: [all, linux, macos, macos-intel, windows]
 
 concurrency:
   group: build-${{ github.head_ref || github.ref_name }}
@@ -111,24 +111,27 @@ jobs:
       - name: Set OS matrix
         id: matrix
         run: |
-          # macos-15-intel is intentionally omitted: an MPFR/Boost interaction
-          # causes SIGABRT in pytest that we cannot reproduce locally (no Intel
-          # Mac available to the maintainer). Intel macOS support is paused
-          # pending a reproducer or an upstream fix. Re-add "macos-15-intel"
-          # below when ready to revisit.
+          # macos-15-intel is back in the matrix, on trial (#215).  It was dropped because
+          # pytest died there with SIGABRT and the crash was never reproduced locally, there
+          # being no intel mac to hand; the suspicion is that it was one of the
+          # eigenpy-boundary faults since fixed -- uninitialized mp slots, unguarded ufunc
+          # loops, unguarded casts (ADR-0006) -- in which case there is nothing left to crash.
+          # If it SIGABRTs again, take it back out of this line and keep `-f os=macos-intel`,
+          # which runs intel alone at one python version, for asking again later.
           if [[ "${{ inputs.minimal }}" == "true" ]]; then
             OS='["ubuntu-latest"]'; PY='["3.11"]'
           elif [[ "${{ github.ref }}" == "refs/heads/main" || "${{ github.ref }}" == "refs/heads/develop" || "${{ github.ref }}" == refs/tags/* || "${{ inputs.full_matrix }}" == "true" || "${{ github.event.pull_request.base.ref }}" == "develop" || "${{ github.event.pull_request.base.ref }}" == "main" ]]; then
-            OS='["ubuntu-latest","macos-14"]'; PY='["3.10","3.11","3.12","3.13","3.14"]'
+            OS='["ubuntu-latest","macos-14","macos-15-intel"]'; PY='["3.10","3.11","3.12","3.13","3.14"]'
           else
             OS='["ubuntu-latest"]'; PY='["3.11"]'
           fi
           # Manual OS targeting (the workflow_dispatch `os` input) narrows the unix matrix; the
           # separate Windows jobs gate on the same input.  Empty/`all` => leave as computed above.
           case "${{ inputs.os }}" in
-            linux)   OS='["ubuntu-latest"]' ;;
-            macos)   OS='["macos-14"]' ;;
-            windows) OS='[]' ;;   # no unix jobs; only the standalone Windows jobs run
+            linux)        OS='["ubuntu-latest"]' ;;
+            macos)        OS='["macos-14"]' ;;
+            macos-intel)  OS='["macos-15-intel"]'; PY='["3.11"]' ;;   # the #215 experiment
+            windows)      OS='[]' ;;   # no unix jobs; only the standalone Windows jobs run
           esac
           echo "os=$OS" >> $GITHUB_OUTPUT
           echo "python_versions=$PY" >> $GITHUB_OUTPUT
@@ -492,7 +495,13 @@ jobs:
             pip install scikit-build-core numpy scipy
             PY_VER=$(python -c "import sys; print(f'{sys.version_info.major}.{sys.version_info.minor}')")
             PY_TAG="cp$(echo "$PY_VER" | tr -d .)"
-            ASSET="deps-macos14-arm64-${PY_TAG}-boost${{ env.BOOST_VERSION }}-eigenpy${{ env.EIGENPY_VERSION }}.tar.gz"
+            # the bundle is per-architecture: an intel runner must not unpack the arm64 one,
+            # which would 'succeed' and then fail to link.  Only arm64 has a prebuilt bundle
+            # today, so intel 404s here and takes the from-source path below.
+            case "$(uname -m)" in
+              arm64)  ASSET="deps-macos14-arm64-${PY_TAG}-boost${{ env.BOOST_VERSION }}-eigenpy${{ env.EIGENPY_VERSION }}.tar.gz" ;;
+              *)      ASSET="deps-macos15-$(uname -m)-${PY_TAG}-boost${{ env.BOOST_VERSION }}-eigenpy${{ env.EIGENPY_VERSION }}.tar.gz" ;;
+            esac
             URL="https://github.com/${{ github.repository }}/releases/download/ci-deps/${ASSET}"
             rm -rf /tmp/deps-py
             if curl -fsSL -o /tmp/deps.tgz "$URL"; then
@@ -514,12 +523,16 @@ jobs:
               cd /tmp
               rm -rf eigenpy-${{ env.EIGENPY_VERSION }}; tar zxf eigenpy-${{ env.EIGENPY_VERSION }}.tar.gz
               cd eigenpy-${{ env.EIGENPY_VERSION }}; mkdir -p bld; cd bld
-              cmake .. -DCMAKE_PREFIX_PATH="/tmp/deps-py;/opt/homebrew" -DCMAKE_INSTALL_PREFIX=/tmp/deps-py -DCMAKE_BUILD_TYPE=Release -DPython3_EXECUTABLE=$(which python) -DPython3_NumPy_INCLUDE_DIR=$(python -c "import numpy; print(numpy.get_include())") -DBUILD_TESTING=OFF
+              # both homebrew prefixes: /opt/homebrew on apple silicon, /usr/local on intel.
+              # a prefix that does not exist on this runner is simply skipped.
+              cmake .. -DCMAKE_PREFIX_PATH="/tmp/deps-py;/opt/homebrew;/usr/local" -DCMAKE_INSTALL_PREFIX=/tmp/deps-py -DCMAKE_BUILD_TYPE=Release -DPython3_EXECUTABLE=$(which python) -DPython3_NumPy_INCLUDE_DIR=$(python -c "import numpy; print(numpy.get_include())") -DBUILD_TESTING=OFF
               make -j2 install
             fi
           CIBW_BEFORE_BUILD: "pip install scikit-build-core numpy"
           CIBW_ENVIRONMENT_LINUX: "LD_LIBRARY_PATH=/opt/deps/current/lib:/opt/deps/current/lib64:$LD_LIBRARY_PATH CMAKE_PREFIX_PATH=/opt/deps/current CXXFLAGS=-w CMAKE_BUILD_PARALLEL_LEVEL=4 CCACHE_DIR=/ccache-host CCACHE_MAXSIZE=400M CMAKE_ARGS='-DCMAKE_C_COMPILER_LAUNCHER=ccache -DCMAKE_CXX_COMPILER_LAUNCHER=ccache'"
-          CIBW_ENVIRONMENT_MACOS: "MACOSX_DEPLOYMENT_TARGET=$MACOSX_DEPLOYMENT_TARGET CMAKE_PREFIX_PATH=/tmp/deps-py:/opt/homebrew DYLD_FALLBACK_LIBRARY_PATH=/tmp/deps-py/lib:/opt/homebrew/lib CCACHE_DIR=$GITHUB_WORKSPACE/.ccache CCACHE_MAXSIZE=400M CMAKE_ARGS='-DCMAKE_C_COMPILER_LAUNCHER=ccache -DCMAKE_CXX_COMPILER_LAUNCHER=ccache'"
+          # the homebrew prefix differs by architecture (/opt/homebrew on apple silicon,
+          # /usr/local on intel), so both are named; the one that is not there is ignored
+          CIBW_ENVIRONMENT_MACOS: "MACOSX_DEPLOYMENT_TARGET=$MACOSX_DEPLOYMENT_TARGET CMAKE_PREFIX_PATH=/tmp/deps-py:/opt/homebrew:/usr/local DYLD_FALLBACK_LIBRARY_PATH=/tmp/deps-py/lib:/opt/homebrew/lib:/usr/local/lib CCACHE_DIR=$GITHUB_WORKSPACE/.ccache CCACHE_MAXSIZE=400M CMAKE_ARGS='-DCMAKE_C_COMPILER_LAUNCHER=ccache -DCMAKE_CXX_COMPILER_LAUNCHER=ccache'"
           # Full pytest suite, restored 2026-06-08 now that the uninitialized-numpy-slot
           # crash is fixed in the bindings (see ADR-0006).  The build image is
           # manylinux_2_34 (AlmaLinux 9, MPFR 4.1; set via CIBW_MANYLINUX_X86_64_IMAGE
@@ -664,7 +677,7 @@ jobs:
     # Guard: this job's matrix EXCLUDES ubuntu, so when the os matrix is ubuntu-only (a non-develop
     # base, or `-f os=linux`/`os=windows`) it would expand to zero combinations and FAIL the run
     # with no job to point at.  Only run when the matrix actually contains macOS.
-    if: ${{ inputs.minimal != true && contains(fromJson(needs.set_matrix.outputs.os), 'macos-14') }}
+    if: ${{ inputs.minimal != true && contains(join(fromJson(needs.set_matrix.outputs.os), ','), 'macos') }}
     needs: [set_matrix, build_macos_ubuntu_wheels]
     runs-on: ${{ matrix.os }}
     timeout-minutes: 25   # backstop against a hang; healthy test runs are well under a minute
