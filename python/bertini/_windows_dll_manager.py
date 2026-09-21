@@ -1,3 +1,10 @@
+"""Where windows looks for the DLLs the native module needs.
+
+Plumbing for ``import bertini`` on windows, private to the package: a caller has no reason
+to add search directories on bertini's behalf, and the names were part of the public
+interface only because this module was not underscored.
+"""
+
 import contextlib
 import os
 
@@ -59,5 +66,14 @@ class DllDirectoryManager(contextlib.AbstractContextManager):
                                                                 '' if len(held) == 1 else 's')
 
 
-def build_directory_manager():
-    return DllDirectoryManager()
+def open_dll_directories():
+    """Add every candidate directory to the DLL search path, and hold them open.
+
+    The loop lives here rather than in ``bertini/__init__.py`` so that neither it nor its
+    variable ends up as a name in the ``bertini`` namespace.
+    """
+    manager = DllDirectoryManager()
+    manager.__enter__()
+    for directory in get_dll_paths():
+        manager.add_dll_directory(directory)
+    return manager

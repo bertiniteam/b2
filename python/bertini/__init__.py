@@ -41,11 +41,8 @@ __version__ = version("bertini2")
 import sys
 
 if sys.platform == "win32":
-    from .windows_dll_manager import get_dll_paths, build_directory_manager
-    _dll_manager = build_directory_manager()
-    _dll_manager.__enter__()
-    for p in get_dll_paths():
-        _dll_manager.add_dll_directory(p)
+    from . import _windows_dll_manager as _windows_dll_manager
+    _dll_manager = _windows_dll_manager.open_dll_directories()
 
 del sys  # used only for the platform check above; don't leak it into the bertini.* namespace
 

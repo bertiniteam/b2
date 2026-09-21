@@ -74,6 +74,13 @@ A correctness fix to the `MakeMovingHomotopy` guards: they decided function iden
 
 ### Removed
 
+- **The windows DLL plumbing is no longer part of the interface** (#99).
+  `bertini.windows_dll_manager` was importable, was listed in the API reference beside
+  `System` and `tracking`, and put `get_dll_paths` and `build_directory_manager` into the
+  `bertini` namespace on windows -- along with `bertini.p`, the leftover loop variable from
+  the import-time DLL search.  It exists so that `import bertini` can find the DLLs the
+  native module needs, which is nothing a caller has business with, and it is
+  `bertini._windows_dll_manager` now.
 - **A System no longer carries a precision.**  `System::precision(unsigned)`,
   `System::precision()` and the `precision_` member are all gone, in C++ and in Python.
   Evaluation happens at the precision of the point it is handed, so there is nothing for a
