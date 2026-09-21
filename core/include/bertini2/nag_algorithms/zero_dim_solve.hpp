@@ -535,7 +535,6 @@ run the endgame, classify the endpoints, report.  See the forward-declare doc ab
         template<typename TrackerType, typename EndgameType, typename SystemType>
         struct HomotopySolver :
                             public virtual AnyZeroDim,
-                            public Observable,
                             public detail::Configured<
                                 typename AlgoTraits< HomotopySolver<TrackerType, EndgameType, SystemType>>::NeededConfigs>
         {
@@ -1969,7 +1968,8 @@ run the endgame, classify the endpoints, report.  See the forward-declare doc ab
                 {
                     ctx.tracker.ClearMaxWallClockTime();
                     stamp_path_time();
-                    this->NotifyObservers(PathComplete<AnyZeroDim>(*this, static_cast<std::size_t>(soln_ind), exec_tracker));
+                    this->NotifyObservers(PathComplete<AnyZeroDim>(*this, static_cast<std::size_t>(soln_ind), exec_tracker,
+                                                                   solution_final_metadata_[soln_ind].pre_endgame_success_code));
                     return;
                 }
 
@@ -1979,7 +1979,8 @@ run the endgame, classify the endpoints, report.  See the forward-declare doc ab
                 ReadSolveTimeoutAsAnInterrupt(solution_final_metadata_[soln_ind].endgame_success_code, path_start_clock);
                 ctx.tracker.ClearMaxWallClockTime();   // the budget was this path's; do not carry it to the next
                 stamp_path_time();
-                this->NotifyObservers(PathComplete<AnyZeroDim>(*this, static_cast<std::size_t>(soln_ind), exec_tracker));
+                this->NotifyObservers(PathComplete<AnyZeroDim>(*this, static_cast<std::size_t>(soln_ind), exec_tracker,
+                                                               solution_final_metadata_[soln_ind].endgame_success_code));
             }
 
 
@@ -2590,6 +2591,12 @@ run the endgame, classify the endpoints, report.  See the forward-declare doc ab
 
             /// \brief The attached output directory (null when not recording).
             std::shared_ptr<records::OutputDirectory> const& Records() const { return records_; }
+
+            /// \brief How many paths there are to answer: the start system's start point count.
+            ///
+            /// Known once PreSolveSetup has run, which is before the first path event, so a
+            /// watcher can size itself from the AlgorithmStarted event.  Zero before that.
+            unsigned long long NumPaths() const { return num_start_points_; }
 
             /// \brief How many paths the last Solve() recalled from records instead of computing.
             unsigned long long NumPathsRecalled() const { return num_recalled_; }

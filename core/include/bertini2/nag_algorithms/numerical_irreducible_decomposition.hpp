@@ -110,7 +110,6 @@ template<   typename TrackerType, typename EndgameType,
             typename SystemType >
 struct NumericalIrreducibleDecomposition :
                     public virtual AnyNID,
-                    public Observable,
                     public detail::Configured<
                         typename AlgoTraits< NumericalIrreducibleDecomposition<TrackerType, EndgameType, SystemType> >::NeededConfigs>
 {

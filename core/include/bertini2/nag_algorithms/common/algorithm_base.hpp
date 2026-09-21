@@ -27,12 +27,22 @@
 
 #pragma once
 
+#include "bertini2/detail/observable.hpp"
+
 namespace bertini{
 
 namespace algorithm {
 
-    /// \brief Type-erased base for all nag algorithms, exposing a single Run() entry point.
-    struct AnyAlgorithm
+    /**
+    \brief Type-erased base for all nag algorithms, exposing a single Run() entry point.
+
+    Observable, so that being watchable is a property of being an algorithm rather than
+    something each one remembers to add: anything holding an AnyAlgorithm can attach an
+    observer to it.  Virtually inherited, because the concrete algorithms reach this base
+    through their own type-erased bases (AnyZeroDim, AnyNID) and must not end up with two
+    observer lists.
+    */
+    struct AnyAlgorithm : public virtual Observable
     {
 
         /// \brief Run the algorithm.

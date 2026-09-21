@@ -301,6 +301,12 @@ void ZDVisitor<AlgoT>::visit(PyClass& cl) const
         (boost::python::arg("self")),
         "This solve's run id in the records (empty until a recording solve() runs).  "
         "Points are referenced as {run, index} pairs; this is the run half.")
+    .def("num_paths",
+        +[](AlgoT const& self){ return self.NumPaths(); },
+        (boost::python::arg("self")),
+        "How many paths this solve has to answer -- the start system's start point count.  "
+        "Known once a solve has begun its setup, which is before the first path event, and 0 "
+        "before that.")
     .def("num_paths_recalled",
         +[](AlgoT const& self){ return self.NumPathsRecalled(); },
         (boost::python::arg("self")),
