@@ -51,6 +51,13 @@ class DllDirectoryManager(contextlib.AbstractContextManager):
         for d in self.dll_dirs:
             d.close()
 
+    def __repr__(self):
+        held = getattr(self, 'dll_dirs', None)
+        if held is None:
+            return '<DllDirectoryManager: not entered>'
+        return '<DllDirectoryManager: %d directory%s added>' % (len(held),
+                                                                '' if len(held) == 1 else 's')
+
 
 def build_directory_manager():
     return DllDirectoryManager()
