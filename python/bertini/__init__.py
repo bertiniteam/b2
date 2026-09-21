@@ -41,11 +41,8 @@ __version__ = version("bertini2")
 import sys
 
 if sys.platform == "win32":
-    from .windows_dll_manager import get_dll_paths, build_directory_manager
-    _dll_manager = build_directory_manager()
-    _dll_manager.__enter__()
-    for p in get_dll_paths():
-        _dll_manager.add_dll_directory(p)
+    from . import _windows_dll_manager as _windows_dll_manager
+    _dll_manager = _windows_dll_manager.open_dll_directories()
 
 del sys  # used only for the platform check above; don't leak it into the bertini.* namespace
 
@@ -159,6 +156,10 @@ _numpy_guard.install()
 # import matplotlib itself.
 from . import _matplotlib_bridge as _matplotlib_bridge
 _matplotlib_bridge.install()
+
+# printing an object says what it is and where it has got to, rather than its address
+from . import _repr as _repr
+_repr.install()
 
 real = _numpy_helpers.real
 imag = _numpy_helpers.imag

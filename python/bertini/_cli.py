@@ -30,8 +30,8 @@ def main():
     if os.name == "nt":
         # The exe needs the same vendored DLLs the extension module uses; prepend
         # their directories to PATH so the loader finds them.  Reuse the resolver
-        # that windows_dll_manager already maintains for _pybertini.
-        from .windows_dll_manager import get_dll_paths
+        # that _windows_dll_manager already maintains for _pybertini.
+        from ._windows_dll_manager import get_dll_paths
 
         dll_paths = [p for p in get_dll_paths() if p]
         os.environ["PATH"] = os.pathsep.join(dll_paths + [os.environ.get("PATH", "")])

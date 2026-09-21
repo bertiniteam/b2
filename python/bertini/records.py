@@ -265,8 +265,16 @@ class SolveResult:
         return self.answer[k]
 
     def __repr__(self):
-        return ("SolveResult(%d solutions, run %s, %d recalled, records at %s)"
-                % (len(self.answer), self.run_id, self.num_recalled, self.directory))
+        # a solve with recording off has no run and no directory; saying "run , records
+        # at None" reads like something went wrong, when nothing did
+        parts = ['%d solutions' % len(self.answer)]
+        if self.num_recalled:
+            parts.append('%d recalled' % self.num_recalled)
+        if self.run_id:
+            parts.append('run %s' % self.run_id)
+        if self.directory:
+            parts.append('records at %s' % self.directory)
+        return 'SolveResult(%s)' % ', '.join(parts)
 
     @property
     def solver(self):

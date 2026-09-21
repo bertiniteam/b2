@@ -41,6 +41,18 @@ The tracker exposes the whole per-step state: ``current_time()``, ``current_poin
 ``current_precision()``, ``current_stepsize()``, ``delta_t()``, ``latest_condition_number()``,
 ``latest_norm_of_step()`` and ``latest_error_estimate()``.
 
+While you are writing one, ``print`` is enough to see what arrived.  An event describes what
+changed and where the path was when it did, and a tracker describes where the path is now, so
+printing either one inside ``Observe`` reads as a running commentary rather than as a row of
+memory addresses::
+
+    <PrecisionIncreased: 30 -> 40 digits, at t=0.7>
+    <SuccessfulStep: at t=0.65 in 40 digits>
+    <AMPTracker: homotopy in 1 variable, RKF45, tolerance 1e-05, adaptive precision at 40 digits, at t=0.65 after 12 steps>
+
+The same is true of the collectors below: a ``PathDataCollector`` prints how many steps it has
+recorded, so you can tell at a glance whether it was attached in time.
+
 Attach it to a tracker, run, and detach.  Here is a small adaptive-precision tracker on the
 one-variable homotopy :math:`y - t` (whose single path runs from :math:`y=1` at :math:`t=1` to
 :math:`y=0` at :math:`t=0`) to watch:

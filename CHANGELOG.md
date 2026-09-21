@@ -74,6 +74,13 @@ A correctness fix to the `MakeMovingHomotopy` guards: they decided function iden
 
 ### Removed
 
+- **The windows DLL plumbing is no longer part of the interface** (#99).
+  `bertini.windows_dll_manager` was importable, was listed in the API reference beside
+  `System` and `tracking`, and put `get_dll_paths` and `build_directory_manager` into the
+  `bertini` namespace on windows -- along with `bertini.p`, the leftover loop variable from
+  the import-time DLL search.  It exists so that `import bertini` can find the DLLs the
+  native module needs, which is nothing a caller has business with, and it is
+  `bertini._windows_dll_manager` now.
 - **A System no longer carries a precision.**  `System::precision(unsigned)`,
   `System::precision()` and the `precision_` member are all gone, in C++ and in Python.
   Evaluation happens at the precision of the point it is handed, so there is nothing for a
@@ -262,6 +269,16 @@ A correctness fix to the `MakeMovingHomotopy` guards: they decided function iden
   int is arbitrary precision, so nothing is lost), and refuses NaN and infinity the way python
   does.  `bool()` of an `int_mp` or a `rational_mp` was `True` for zero, because neither type had
   a `__bool__` and python's "every object is true" default applied.
+- **Printing a bertini object says what it is and where it has got to** (#99).  106 of the 188
+  public classes printed `<bertini._pybertini.tracking.AMPTracker object at 0x7f3c...>` -- the
+  type you already knew and an address you cannot use.  Each of them now describes itself:
+  `<AMPTracker: homotopy in 2 variables, RKF45, tolerance 1e-05, adaptive precision at 30
+  digits, at t=0.31 after 47 steps>`, `<PrecisionIncreased: 30 -> 40 digits, at t=0.7>`,
+  `<PathDataCollector: 12 steps>`, `<PartialPivLU: 3x3>`.  A tracker's description is live, so
+  printing one inside an observer callback says where the path is rather than repeating its
+  settings.  Configs and metadata keep the `SteppingConfig(initial_step_size=...)` form they
+  already had.  A test walks every public class and fails if one prints an address, so the next
+  binding arrives with a description.  See ADR-0065.
 
 ### Changed
 
@@ -383,6 +400,18 @@ A correctness fix to the `MakeMovingHomotopy` guards: they decided function iden
   matplotlib axis now raises a `TypeError` naming `bertini.real` / `bertini.imag` instead.  The
   refusal catches exactly the wrong spelling, because `.real` of a `complex_mp` array is still
   `complex_mp`.  A `Solution` is unaffected: it overrides `.real` / `.imag` correctly.
+- **A tracker's step counters are zeroed at construction** (#99).  `ResetCountersBase` runs at
+  the top of `TrackPath`, so until a path had been tracked `num_total_steps_taken()` read two
+  uninitialized members -- on a fresh tracker it returned whatever had been in that memory
+  (1093431419, in the case that found it).  The two cumulative counters, added later, already
+  had initializers; the four per-call ones now do too.
+- **A variable group prints its variables** (#99).  `repr` of a `VariableGroup` printed the
+  addresses of the variables it held -- `[0xae8010b19520, 0xae8010b100f0]` -- because the bound
+  container streams its elements in C++ and an element is a pointer to a node.  It reads
+  `VariableGroup([x, y])` now, as does a list of them.
+- **A `SolveResult` names only what it has** (#99).  With recording off there is no run and no
+  directory, and the repr said so as `SolveResult(4 solutions, run , 0 recalled, records at
+  None)`, which reads like something went wrong.
 - **Linear-product start points no longer compute a thousand digits to keep thirty** (#351).  Both
   `TotalDegreeLinearProduct` and `MHomogeneous` produce each start point by solving an n-by-n
   linear system whose coefficients come from masters stored at `MaxPrecisionAllowed` -- a thousand

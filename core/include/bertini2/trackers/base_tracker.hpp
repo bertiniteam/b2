@@ -790,10 +790,14 @@ namespace bertini{
             bool reinitialize_stepsize_ = true; ///< Whether should re-initialize the stepsize with each call to Trackpath.  On by default.
 
             // tracking the numbers of things
-            mutable unsigned num_successful_steps_taken_;  ///< The number of successful steps taken so far.
-            mutable unsigned num_consecutive_successful_steps_; ///< The number of CONSECUTIVE successful steps taken in a row.
-            mutable unsigned num_consecutive_failed_steps_; ///< The number of CONSECUTIVE failed steps taken in a row.
-            mutable unsigned num_failed_steps_taken_; ///< The total number of failed steps taken.
+            // zeroed here as well as in ResetCountersBase: that reset runs at the top of
+            // TrackPath, so until a path has been tracked these would otherwise be read
+            // uninitialized -- NumTotalStepsTaken() on a fresh tracker returned whatever
+            // was in the memory
+            mutable unsigned num_successful_steps_taken_ = 0;  ///< The number of successful steps taken so far.
+            mutable unsigned num_consecutive_successful_steps_ = 0; ///< The number of CONSECUTIVE successful steps taken in a row.
+            mutable unsigned num_consecutive_failed_steps_ = 0; ///< The number of CONSECUTIVE failed steps taken in a row.
+            mutable unsigned num_failed_steps_taken_ = 0; ///< The total number of failed steps taken.
             mutable unsigned num_successful_steps_cumulative_ = 0; ///< Successful steps since ResetCumulativeStepCounts, across TrackPath calls.
             mutable unsigned num_failed_steps_cumulative_ = 0; ///< Failed steps since ResetCumulativeStepCounts, across TrackPath calls.
             mutable std::optional<std::chrono::steady_clock::time_point> wall_clock_deadline_; ///< Give up between steps once this passes; none by default.

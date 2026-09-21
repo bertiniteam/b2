@@ -45,4 +45,3 @@ so appear in no listing here.
    sympy_bridge
    system
    tracking
-   windows_dll_manager
