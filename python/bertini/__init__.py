@@ -153,6 +153,13 @@ from . import _numpy_helpers as _numpy_helpers
 from . import _numpy_guard as _numpy_guard
 _numpy_guard.install()
 
+# teach matplotlib to draw mp numbers -- and to refuse complex data at an axis rather
+# than draw the real parts and call them the data.  See _matplotlib_bridge for the story.
+# Registers whether matplotlib is imported before bertini or after it, and does not
+# import matplotlib itself.
+from . import _matplotlib_bridge as _matplotlib_bridge
+_matplotlib_bridge.install()
+
 real = _numpy_helpers.real
 imag = _numpy_helpers.imag
 conj = _numpy_helpers.conj
