@@ -246,6 +246,22 @@ A correctness fix to the `MakeMovingHomotopy` guards: they decided function iden
   sample of the root at a known, coarser accuracy, which is what lets a caller judge how a
   derived quantity (the singular values of a Jacobian, say) behaves as the approximation
   improves, rather than thresholding it at one point.
+- **Multiprecision numbers plot** (#389).  `real_mp` data goes onto a matplotlib axis as it is,
+  including the calls that compute against plain floats before they draw (`hist`, `bar` with a
+  float width), which previously died with a numpy dtype promotion error.  Importing bertini
+  registers a units converter with matplotlib -- whether matplotlib is imported before bertini or
+  long after -- so conversion to `float64` happens at the axis, which is the one place where
+  dropping digits is right, and nowhere else.  Nothing about ordinary arithmetic changes: there is
+  still no common dtype between `real_mp` and `float64`, deliberately, so nothing silently
+  downcasts.  Image data, contour levels and marker sizes are cast explicitly with
+  `.astype(float)`.  New tutorial: "Plotting solutions and paths".  See ADR-0064.
+- **Every conversion out of a multiprecision number is defined** (#389).  `int_mp` and
+  `rational_mp` had no `__float__` or `__int__` at all, so neither could be plotted, serialized or
+  handed to any library expecting a number; `int_mp` is now usable as a sequence index too.
+  `int()` of a `real_mp` truncates toward zero and keeps every digit before the point (a python
+  int is arbitrary precision, so nothing is lost), and refuses NaN and infinity the way python
+  does.  `bool()` of an `int_mp` or a `rational_mp` was `True` for zero, because neither type had
+  a `__bool__` and python's "every object is true" default applied.
 
 ### Changed
 
@@ -350,6 +366,23 @@ A correctness fix to the `MakeMovingHomotopy` guards: they decided function iden
 
 ### Fixed
 
+- **Four ways to crash the interpreter from python, all closed** (#389).  `int()` of a `real_mp`
+  or a `complex_mp` segfaulted, and `byteswap()` on either -- as a scalar or across a whole array
+  -- aborted inside mpfr.  Both types become subclasses of `numpy.generic` when their dtypes are
+  registered, and the inherited implementations reach for machinery a user dtype does not have: a
+  cast function to `int64` that was never registered, and a scalar payload at an offset where
+  Boost.Python does not keep one.  All four now convert or raise.  A regression test exercises
+  every inherited `numpy.generic` member of both types in a subprocess, so a future one cannot
+  take the test suite down with it.  The array-level `byteswap` was eigenpy's `copyswap`
+  dereferencing a null `src` on an in-place swap request, now guarded on our side beside the other
+  `Harden*` slot repairs.
+- **Drawing a multiprecision complex array no longer silently draws the wrong picture** (#389).
+  numpy's `.real` and `.imag` on an array of a user complex dtype return the array itself and an
+  array of zeros, so `scatter(points.real, points.imag)` -- the usual spelling -- put every point
+  on the x axis, with no error.  numpy offers no hook to correct that, so complex data handed to a
+  matplotlib axis now raises a `TypeError` naming `bertini.real` / `bertini.imag` instead.  The
+  refusal catches exactly the wrong spelling, because `.real` of a `complex_mp` array is still
+  `complex_mp`.  A `Solution` is unaffected: it overrides `.real` / `.imag` correctly.
 - **Linear-product start points no longer compute a thousand digits to keep thirty** (#351).  Both
   `TotalDegreeLinearProduct` and `MHomogeneous` produce each start point by solving an n-by-n
   linear system whose coefficients come from masters stored at `MaxPrecisionAllowed` -- a thousand

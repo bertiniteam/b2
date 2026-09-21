@@ -8,3 +8,4 @@ Manipulating solutions
 
    intro_to_slices/index
    moving_slice/index
+   plotting/index
