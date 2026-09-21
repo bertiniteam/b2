@@ -143,7 +143,13 @@ jobs:
     runs-on: ${{ matrix.os }}
     env:
       BOOST_VERSION: ${{ needs.set_versions.outputs.boost }}
-    timeout-minutes: 30   # backstop against a hang; healthy runs are ~7 min
+    # A backstop against a hang, not a budget: a warm run is ~7 min, but the FIRST run on a
+    # runner whose ccache key has never been populated is a cold full build, and on intel that
+    # ran past 30 and was cancelled at 30:24.  A cancelled job skips its post steps, so the
+    # cache is never saved, so the next run is cold too -- the timeout that was meant to catch
+    # a hang was instead guaranteeing one.  60 still catches a hang; it does not punish a
+    # newly added runner for having no cache yet.
+    timeout-minutes: 60
     strategy:
       fail-fast: false
       matrix:
@@ -412,14 +418,18 @@ jobs:
       # is deliberately loose -- always save fresh, restore newest; ccache does
       # its own invalidation.  on Linux the cache lives in the repo dir because
       # that is what cibuildwheel mounts into the container (as /project).
+      # keyed by ARCHITECTURE as well as OS: runner.os is "macOS" for both apple silicon and
+      # intel, so without runner.arch the two share one namespace.  ccache hashes the compiler
+      # and its target, so a cross-arch entry can never be used -- it just occupies the 400M
+      # budget and evicts the entries that could have been.
       - name: Cache ccache (bertini2 compile)
         uses: actions/cache@v5
         with:
           path: .ccache
-          key: ccache-wheels-${{ runner.os }}-${{ matrix.python-version }}-${{ github.sha }}
+          key: ccache-wheels-${{ runner.os }}-${{ runner.arch }}-${{ matrix.python-version }}-${{ github.sha }}
           restore-keys: |
-            ccache-wheels-${{ runner.os }}-${{ matrix.python-version }}-
-            ccache-wheels-${{ runner.os }}-
+            ccache-wheels-${{ runner.os }}-${{ runner.arch }}-${{ matrix.python-version }}-
+            ccache-wheels-${{ runner.os }}-${{ runner.arch }}-
       # pre-create as the runner user so docker's volume mount doesn't create it
       # root-owned on the host
       - name: Ensure ccache dir exists

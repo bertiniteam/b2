@@ -32,14 +32,20 @@ env:
 
 jobs:
   build-macos-deps:
-    name: macOS deps py${{ matrix.python-version }}
-    runs-on: macos-14   # arm64
+    name: macOS deps ${{ matrix.target.arch }} py${{ matrix.python-version }}
+    runs-on: ${{ matrix.target.runner }}
     permissions:
       contents: write   # create/upload the ci-deps release assets
     strategy:
       fail-fast: false
       matrix:
         python-version: ['3.10', '3.11', '3.12', '3.13', '3.14']
+        # One bundle per architecture: a tarball is a pile of dylibs built for one target, so
+        # intel cannot use the arm64 one.  `name` is the asset's toolchain key, and must match
+        # what build_and_test.yml's CIBW_BEFORE_BUILD_MACOS asks for on each runner.
+        target:
+          - {runner: macos-14, arch: arm64, name: macos14-arm64}
+          - {runner: macos-15-intel, arch: x86_64, name: macos15-x86_64}
     steps:
       - uses: actions/checkout@v5
       - name: Load dep versions
@@ -73,7 +79,7 @@ jobs:
           rm -rf "eigenpy-${EIGENPY_VERSION}" && tar zxf "eigenpy-${EIGENPY_VERSION}.tar.gz" 2>/dev/null || \
             { curl -fsSL -o "eigenpy-${EIGENPY_VERSION}.tar.gz" "https://github.com/stack-of-tasks/eigenpy/releases/download/v${EIGENPY_VERSION}/eigenpy-${EIGENPY_VERSION}.tar.gz"; tar zxf "eigenpy-${EIGENPY_VERSION}.tar.gz"; }
           cd "eigenpy-${EIGENPY_VERSION}" && mkdir -p bld && cd bld
-          cmake .. -DCMAKE_PREFIX_PATH="/tmp/deps-py;/opt/homebrew" -DCMAKE_INSTALL_PREFIX=/tmp/deps-py \
+          cmake .. -DCMAKE_PREFIX_PATH="/tmp/deps-py;/opt/homebrew;/usr/local" -DCMAKE_INSTALL_PREFIX=/tmp/deps-py \
             -DCMAKE_BUILD_TYPE=Release -DPython3_EXECUTABLE="$PY" \
             -DPython3_NumPy_INCLUDE_DIR="$("$PY" -c 'import numpy;print(numpy.get_include())')" \
             -DBUILD_TESTING=OFF
@@ -86,7 +92,7 @@ jobs:
           set -euo pipefail
           PY_TAG="cp$(echo '${{ matrix.python-version }}' | tr -d .)"
           KEY="boost${BOOST_VERSION}-eigenpy${EIGENPY_VERSION}"
-          ASSET="deps-macos14-arm64-${PY_TAG}-${KEY}.tar.gz"
+          ASSET="deps-${{ matrix.target.name }}-${PY_TAG}-${KEY}.tar.gz"
           tar czf "$ASSET" -C /tmp deps-py
           ls -lh "$ASSET"
           # Ensure the holder release exists (idempotent), then upload/replace this asset.
