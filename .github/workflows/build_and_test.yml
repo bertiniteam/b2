@@ -59,7 +59,7 @@ on:
         required: false
         type: choice
         default: all
-        options: [all, linux, macos, macos-intel, windows]
+        options: [all, linux, linux-arm, macos, macos-intel, windows]
 
 concurrency:
   group: build-${{ github.head_ref || github.ref_name }}
@@ -121,14 +121,17 @@ jobs:
           if [[ "${{ inputs.minimal }}" == "true" ]]; then
             OS='["ubuntu-latest"]'; PY='["3.11"]'
           elif [[ "${{ github.ref }}" == "refs/heads/main" || "${{ github.ref }}" == "refs/heads/develop" || "${{ github.ref }}" == refs/tags/* || "${{ inputs.full_matrix }}" == "true" || "${{ github.event.pull_request.base.ref }}" == "develop" || "${{ github.event.pull_request.base.ref }}" == "main" ]]; then
-            OS='["ubuntu-latest","macos-14","macos-15-intel"]'; PY='["3.10","3.11","3.12","3.13","3.14"]'
+            # ubuntu-24.04-arm is linux-aarch64 (#474): a full member, C++ tests and every wheel,
+            # on a native arm runner rather than under emulation.
+            OS='["ubuntu-latest","ubuntu-24.04-arm","macos-14","macos-15-intel"]'; PY='["3.10","3.11","3.12","3.13","3.14"]'
           else
             OS='["ubuntu-latest"]'; PY='["3.11"]'
           fi
           # Manual OS targeting (the workflow_dispatch `os` input) narrows the unix matrix; the
           # separate Windows jobs gate on the same input.  Empty/`all` => leave as computed above.
           case "${{ inputs.os }}" in
-            linux)        OS='["ubuntu-latest"]' ;;
+            linux)        OS='["ubuntu-latest","ubuntu-24.04-arm"]' ;;
+            linux-arm)    OS='["ubuntu-24.04-arm"]' ;;
             macos)        OS='["macos-14"]' ;;
             macos-intel)  OS='["macos-15-intel"]'; PY='["3.11"]' ;;   # the #215 experiment
             windows)      OS='[]' ;;   # no unix jobs; only the standalone Windows jobs run
@@ -409,10 +412,11 @@ jobs:
             /tmp/boost_*.tar.bz2
             /tmp/eigen-${{ env.EIGEN_VERSION }}.tar.gz
             /tmp/eigenpy-${{ env.EIGENPY_VERSION }}.tar.gz
-          key: ${{ runner.os }}-cibw-${{ matrix.python-version }}-${{ hashFiles('pyproject.toml', 'python/pyproject.toml', 'CMakeLists.txt', 'core/CMakeLists.txt', '.github/workflows/build_and_test.yml', 'python_bindings/include/tracker_export.hpp', 'python_bindings/include/endgame_export.hpp') }}
+          # keyed by architecture too: runner.os is "Linux" on both x86_64 and aarch64 runners
+          key: ${{ runner.os }}-${{ runner.arch }}-cibw-${{ matrix.python-version }}-${{ hashFiles('pyproject.toml', 'python/pyproject.toml', 'CMakeLists.txt', 'core/CMakeLists.txt', '.github/workflows/build_and_test.yml', 'python_bindings/include/tracker_export.hpp', 'python_bindings/include/endgame_export.hpp') }}
           restore-keys: |
-            ${{ runner.os }}-cibw-${{ matrix.python-version }}-
-            ${{ runner.os }}-cibw-
+            ${{ runner.os }}-${{ runner.arch }}-cibw-${{ matrix.python-version }}-
+            ${{ runner.os }}-${{ runner.arch }}-cibw-
       # compiler cache for the bertini2 compile itself (deps are built by their
       # own build systems and are out of ccache's cmake-launcher reach).  the key
       # is deliberately loose -- always save fresh, restore newest; ccache does
@@ -458,7 +462,10 @@ jobs:
           # Prebuilt deps image (built by build-ci-image.yml).  The tag is the toolchain key from
           # the single-sourced versions, so a bump pins a new tag -- and if that tag isn't built
           # yet, cibuildwheel's pull fails loudly (the implicit ABI assert; no silent mismatch).
+          # Each runner builds only its own architecture (cibuildwheel's default), so an x86_64
+          # runner pulls only the first image and an arm runner only the second.
           CIBW_MANYLINUX_X86_64_IMAGE: ghcr.io/bertiniteam/b2-manylinux-deps:boost${{ env.BOOST_VERSION }}-eigen${{ env.EIGEN_VERSION }}-eigenpy${{ env.EIGENPY_VERSION }}-mlx2_34
+          CIBW_MANYLINUX_AARCH64_IMAGE: ghcr.io/bertiniteam/b2-manylinux-deps:boost${{ env.BOOST_VERSION }}-eigen${{ env.EIGEN_VERSION }}-eigenpy${{ env.EIGENPY_VERSION }}-mlx2_34-aarch64
           # cibuildwheel COPIES the project into the container (no bind mount), so
           # a cache written under /project is discarded.  mount the host ccache dir
           # explicitly; ignored on macOS (host build, no container).
@@ -679,7 +686,7 @@ jobs:
 
   test_wheels_linux_macos:
     name: Test wheels on ${{ matrix.os }} / py${{ matrix.python-version }}
-    # ubuntu-latest is excluded below: Linux wheels run the full pytest suite *inside*
+    # Both Linux runners are excluded below: Linux wheels run the full pytest suite *inside*
     # the manylinux_2_34 container via CIBW_TEST_COMMAND_LINUX (see
     # build_macos_ubuntu_wheels).  This host-runner job therefore covers macOS only;
     # Windows is covered by test_wheels_windows.
@@ -698,6 +705,7 @@ jobs:
         python-version: ${{ fromJson(needs.set_matrix.outputs.python_versions) }}
         exclude:
           - os: ubuntu-latest
+          - os: ubuntu-24.04-arm
 
     steps:
       - uses: actions/checkout@v5
