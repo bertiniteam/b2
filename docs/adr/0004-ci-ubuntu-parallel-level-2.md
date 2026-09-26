@@ -1,6 +1,7 @@
-# ADR-0004: Ubuntu wheel builds use CMAKE_BUILD_PARALLEL_LEVEL=2
+# ADR-0004: Linux wheel build parallelism is bounded by runner memory
 
-**Status:** Accepted  
+**Status:** Accepted (amended 2026-06-16 and 2026-09-26 -- see the updates at the end; the
+current values are 4 on x86_64 Linux and 3 on aarch64 Linux)  
 **Date:** 2026-06-07
 
 ## Context
@@ -92,3 +93,28 @@ OS-conditional via `runner.os == 'Linux'`).  4 = the full core count; worst-case
 memory is bounded by the few heavy TUs (~4 GB each, and they rarely align), and ccache keeps most
 rebuilds compile-free.  **macOS stays at 2** (3-core / 7 GB runner).  If a *cold* Linux build shows
 exit 137 (OOM killer), drop Linux back to 3 (one heavy-TU slot of headroom).
+
+## Update (2026-09-26): aarch64 Linux wheels build at 3
+
+Linux wheels are now also built for aarch64 (#474), on GitHub's native `ubuntu-24.04-arm`
+runners, which have the same 4 cores / 16 GB as `ubuntu-latest`.  At 4, three of the five
+cold aarch64 wheel builds were killed while compiling the Python bindings: two with exit 143
+(the pattern described above) and one with "the hosted runner lost communication with the
+server", which GitHub attributes to a runner starved of CPU or memory.  The aarch64 C++ test
+job, which builds no bindings, passed at 4, and the x86_64 wheels passed at 4 in the same run.
+
+So `CMAKE_BUILD_PARALLEL_LEVEL` in `CIBW_ENVIRONMENT_LINUX` is now per architecture:
+**4 on x86_64, 3 on aarch64** (`runner.arch == 'ARM64'`).  With 3, all five cold aarch64
+wheel builds passed.  Why aarch64 needs the margin was not measured; the likely reason is a
+larger per-TU peak from the aarch64 compiler, against x86_64's already zero-margin
+4 x ~4 GB.
+
+Consequences, in addition to the ones above:
+
+- **Do not raise aarch64 wheels back to 4** to match x86_64 without measuring the heaviest
+  binding TU's peak memory on aarch64 first.  A warm build will pass at 4 regardless (it is
+  mostly ccache hits), so a green warm run is not evidence; only a cold build is.
+- **The Linux C++ test job stays at 4 on both architectures.**  It builds no bindings, and
+  passed cold at 4 on aarch64.
+- A cold aarch64 wheel build takes somewhat longer than it would at 4.  Only cold builds
+  (dependency bumps, cache eviction) pay this.
