@@ -6,6 +6,10 @@ name: Build CI deps image 🐳
 # ghcr.io/bertiniteam/b2-manylinux-deps, tagged by TOOLCHAIN KEY.  Rare: only on docker/ changes or
 # dispatch.
 #
+# One image per ARCHITECTURE, x86_64 and aarch64, each built on a runner of that architecture
+# (ubuntu-24.04-arm for aarch64) so nothing runs under emulation.  The x86_64 image keeps the
+# plain toolchain-key tag; the aarch64 image's tag carries an -aarch64 suffix.
+#
 # OWNER: the package lands under whichever org runs this; it MUST run in bertiniteam/b2 (its token
 # can only push to that org's GHCR).
 
@@ -26,17 +30,24 @@ env:
   # BOOST_VERSION / EIGEN_VERSION / EIGENPY_VERSION are single-sourced in
   # .github/ci-deps-versions.env and loaded per-job (see the "Load dep versions" steps).
   MANYLINUX_TAG: "mlx2_34"
-  MANYLINUX_IMAGE: "quay.io/pypa/manylinux_2_34_x86_64"
   IMAGE: "ghcr.io/bertiniteam/b2-manylinux-deps"
 
 jobs:
   build-deps:
-    name: Boost+eigenpy ${{ matrix.pytag }}
-    runs-on: ubuntu-latest
+    name: Boost+eigenpy ${{ matrix.arch }} ${{ matrix.pytag }}
+    runs-on: ${{ matrix.runner }}
+    env:
+      MANYLINUX_IMAGE: quay.io/pypa/manylinux_2_34_${{ matrix.arch }}
     strategy:
       fail-fast: false
       matrix:
+        arch: [x86_64, aarch64]
         pytag: [cp310-cp310, cp311-cp311, cp312-cp312, cp313-cp313, cp314-cp314]
+        include:
+          - arch: x86_64
+            runner: ubuntu-latest
+          - arch: aarch64
+            runner: ubuntu-24.04-arm
     steps:
       - uses: actions/checkout@v5
       # SOURCE the file, then write the three values out by name.  Do NOT cat it into
@@ -61,17 +72,27 @@ jobs:
             bash docker/manylinux-deps/build-python-deps.sh "${{ matrix.pytag }}"
       - uses: actions/upload-artifact@v5
         with:
-          name: deps-${{ matrix.pytag }}
+          name: deps-${{ matrix.arch }}-${{ matrix.pytag }}
           path: deps-${{ matrix.pytag }}.tar.gz
           if-no-files-found: error
 
   assemble-and-push:
-    name: Assemble & push image
+    name: Assemble & push ${{ matrix.arch }} image
     needs: build-deps
-    runs-on: ubuntu-latest
+    runs-on: ${{ matrix.runner }}
     permissions:
       contents: read
       packages: write
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - arch: x86_64
+            runner: ubuntu-latest
+            suffix: ""
+          - arch: aarch64
+            runner: ubuntu-24.04-arm
+            suffix: "-aarch64"
     steps:
       - uses: actions/checkout@v5
 
@@ -88,15 +109,16 @@ jobs:
       - name: Collect prebuilt deps into the build context
         uses: actions/download-artifact@v5
         with:
-          pattern: deps-*
+          pattern: deps-${{ matrix.arch }}-*
           merge-multiple: true
           path: docker/manylinux-deps/deps
 
       - name: Compute toolchain tag
         id: tag
         run: |
-          echo "key=boost${BOOST_VERSION}-eigen${EIGEN_VERSION}-eigenpy${EIGENPY_VERSION}-${MANYLINUX_TAG}" >> "$GITHUB_OUTPUT"
-          echo "Image: $IMAGE:boost${BOOST_VERSION}-eigen${EIGEN_VERSION}-eigenpy${EIGENPY_VERSION}-${MANYLINUX_TAG}"
+          key="boost${BOOST_VERSION}-eigen${EIGEN_VERSION}-eigenpy${EIGENPY_VERSION}-${MANYLINUX_TAG}${{ matrix.suffix }}"
+          echo "key=$key" >> "$GITHUB_OUTPUT"
+          echo "Image: $IMAGE:$key"
           ls -lh docker/manylinux-deps/deps
 
       - name: Log in to GHCR
@@ -113,8 +135,9 @@ jobs:
           push: true
           tags: |
             ${{ env.IMAGE }}:${{ steps.tag.outputs.key }}
-            ${{ env.IMAGE }}:latest
+            ${{ env.IMAGE }}:latest${{ matrix.suffix }}
           build-args: |
+            MANYLINUX_IMAGE=quay.io/pypa/manylinux_2_34_${{ matrix.arch }}
             BOOST_VERSION=${{ env.BOOST_VERSION }}
             EIGEN_VERSION=${{ env.EIGEN_VERSION }}
             EIGENPY_VERSION=${{ env.EIGENPY_VERSION }}

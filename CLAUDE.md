@@ -165,7 +165,7 @@ Rules that follow:
 
 - The root `CMakeLists.txt` uses `jrl-cmakemodules` (fetched automatically). It currently only adds `core/` as a subdirectory; `python_bindings/` and `python/` subdirectory calls are commented out (the wheel build via scikit-build-core handles them).
 - `pyproject.toml` configures scikit-build-core: wheel packages from `python/bertini/`, build dir is `bld/`.
-- Cross-platform: Linux builds in a **custom prebuilt manylinux image** (`ghcr.io/bertiniteam/b2-manylinux-deps`, ADR-0049) + `auditwheel`; macOS uses Homebrew + **prebuilt Boost/eigenpy tarballs** (the `ci-deps` release); Windows uses conda-forge (which already ships prebuilt Boost/eigenpy) + clang-cl (MSVC has template compilation issues).
+- Cross-platform: Linux builds in a **custom prebuilt manylinux image** (`ghcr.io/bertiniteam/b2-manylinux-deps`, ADR-0049) + `auditwheel`, one image per architecture -- x86_64 on `ubuntu-latest`, aarch64 on native `ubuntu-24.04-arm` runners (tag suffix `-aarch64`); both are full matrix members (C++ tests + every wheel); macOS uses Homebrew + **prebuilt Boost/eigenpy tarballs** (the `ci-deps` release); Windows uses conda-forge (which already ships prebuilt Boost/eigenpy) + clang-cl (MSVC has template compilation issues).
 - `-Werror` is disabled globally. `-pedantic` is stripped from flags.
 
 ## CI/CD
@@ -178,7 +178,7 @@ Rules that follow:
 
 ### Linux wheel test coverage
 
-Linux wheels are built inside the **custom prebuilt deps image** (`ghcr.io/bertiniteam/b2-manylinux-deps`, an `manylinux_2_34`/AlmaLinux 9 base with Boost+eigenpy baked in; set via `CIBW_MANYLINUX_X86_64_IMAGE`; ADR-0049). The **full pytest suite runs on all three platforms** — on Linux it runs *inside* that container via `CIBW_TEST_COMMAND_LINUX`, and on macOS/Windows via the host-runner test jobs. `mpi4py` is installed in every test env (the image ships OpenMPI), so the MPI test modules **run at 1 rank rather than skip** — the suites are 0-skip on all three platforms.
+Linux wheels are built inside the **custom prebuilt deps image** (`ghcr.io/bertiniteam/b2-manylinux-deps`, an `manylinux_2_34`/AlmaLinux 9 base with Boost+eigenpy baked in; set via `CIBW_MANYLINUX_X86_64_IMAGE` and `CIBW_MANYLINUX_AARCH64_IMAGE`; ADR-0049). The **full pytest suite runs on all three platforms** — on Linux it runs *inside* that container via `CIBW_TEST_COMMAND_LINUX`, and on macOS/Windows via the host-runner test jobs. `mpi4py` is installed in every test env (the image ships OpenMPI), so the MPI test modules **run at 1 rank rather than skip** — the suites are 0-skip on all three platforms.
 
 This was not always so: for a while Linux ran an import smoke test only, because the suite was SIGABRT/SIGSEGV-crashing — a crash *misattributed* to the older `manylinux_2_28` container's MPFR 3.1.6. The real cause is a **version-independent** bug (uninitialized `mpfr`/`mpc` numpy slots), now fixed in the bindings. Do **not** try to fix Linux test crashes by bumping MPFR or the manylinux image (that was tried and does not work) or by building MPFR from source (specifically out of bounds). See `docs/adr/0006-eigenpy-uninitialized-numpy-slot-guards.md` for the fix and `docs/adr/0003-manylinux-no-full-pytest.md` for the (now reversed) smoke-test stopgap and its history.
 
