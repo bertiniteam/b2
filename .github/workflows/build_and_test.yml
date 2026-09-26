@@ -546,7 +546,11 @@ jobs:
               make -j2 install
             fi
           CIBW_BEFORE_BUILD: "pip install scikit-build-core numpy"
-          CIBW_ENVIRONMENT_LINUX: "LD_LIBRARY_PATH=/opt/deps/current/lib:/opt/deps/current/lib64:$LD_LIBRARY_PATH CMAKE_PREFIX_PATH=/opt/deps/current CXXFLAGS=-w CMAKE_BUILD_PARALLEL_LEVEL=4 CCACHE_DIR=/ccache-host CCACHE_MAXSIZE=400M CMAKE_ARGS='-DCMAKE_C_COMPILER_LAUNCHER=ccache -DCMAKE_CXX_COMPILER_LAUNCHER=ccache'"
+          # Compile parallelism is memory-bound: 4 jobs x a ~4 GB peak TU fills the 16 GB x86_64
+          # runner with no margin.  The same 4 on the 16 GB arm runner was killed (exit 143, and
+          # "runner lost communication") in three of five cold wheel builds, so arm compiles 3 at
+          # a time.  Only a cold build feels this; a warm one is mostly ccache hits.
+          CIBW_ENVIRONMENT_LINUX: "LD_LIBRARY_PATH=/opt/deps/current/lib:/opt/deps/current/lib64:$LD_LIBRARY_PATH CMAKE_PREFIX_PATH=/opt/deps/current CXXFLAGS=-w CMAKE_BUILD_PARALLEL_LEVEL=${{ runner.arch == 'ARM64' && 3 || 4 }} CCACHE_DIR=/ccache-host CCACHE_MAXSIZE=400M CMAKE_ARGS='-DCMAKE_C_COMPILER_LAUNCHER=ccache -DCMAKE_CXX_COMPILER_LAUNCHER=ccache'"
           # the homebrew prefix differs by architecture (/opt/homebrew on apple silicon,
           # /usr/local on intel), so both are named; the one that is not there is ignored
           CIBW_ENVIRONMENT_MACOS: "MACOSX_DEPLOYMENT_TARGET=$MACOSX_DEPLOYMENT_TARGET CMAKE_PREFIX_PATH=/tmp/deps-py:/opt/homebrew:/usr/local DYLD_FALLBACK_LIBRARY_PATH=/tmp/deps-py/lib:/opt/homebrew/lib:/usr/local/lib CCACHE_DIR=$GITHUB_WORKSPACE/.ccache CCACHE_MAXSIZE=400M CMAKE_ARGS='-DCMAKE_C_COMPILER_LAUNCHER=ccache -DCMAKE_CXX_COMPILER_LAUNCHER=ccache'"
