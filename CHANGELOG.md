@@ -107,6 +107,11 @@ A correctness fix to the `MakeMovingHomotopy` guards: they decided function iden
 
 ### Added
 
+- **Wheels for linux-aarch64** (#474).  `pip install bertini2` now works on 64-bit ARM Linux --
+  a Linux VM on an Apple silicon Mac, a Raspberry Pi 4 or 5, an ARM cloud instance -- instead of
+  requiring a build from source.  Every supported Python (3.10 through 3.14) is covered, and
+  aarch64 is tested like the other platforms: the C++ test suite, and the full pytest suite
+  inside the manylinux container for each wheel.
 - **A system can say which of its coordinates are auxiliary** (#403).  Bertini judges a point by
   its largest coordinate, three times over: the tracker truncates a path past
   `path_truncation_threshold`, the endgame abandons one past `Security.max_norm`, and the solver
