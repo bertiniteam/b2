@@ -129,6 +129,13 @@ the identity of the algorithm that answered it (#420).
 
 ### Added
 
+- **bertini's list containers compare by value.**  `sys.degrees() == [2, 2]` is now true when
+  the degrees are 2 and 2; before, every container's `==` was object identity, so it was false
+  -- as was comparing two calls of `sys.degrees()` -- and a check had to be written
+  `list(sys.degrees()) == [2, 2]`.  Every list container (`ListOfInt`, `VariableGroup`, the
+  solution lists, ...) is equal to any Python sequence of the same length whose elements are
+  equal pairwise; a solution vector counts as equal when all of its entries are.  Like
+  Python's own `list`, the containers are no longer hashable.
 - **Wheels for linux-aarch64** (#474).  `pip install bertini2` now works on 64-bit ARM Linux --
   a Linux VM on an Apple silicon Mac, a Raspberry Pi 4 or 5, an ARM cloud instance -- instead of
   requiring a build from source.  Every supported Python (3.10 through 3.14) is covered, and

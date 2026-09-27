@@ -106,6 +106,43 @@ private:
         return ss.str();
     };
 
+    /// \brief Equal to any Python sequence (a list, a tuple, another bertini list) of the same
+    /// length whose elements compare equal pairwise, by Python's own `==` -- so
+    /// `sys.degrees() == [2, 2]` holds.  An element comparison that answers with an array
+    /// (the solution containers hold numpy vectors) counts as equal when all of it is.
+    /// Anything that is not a sequence, and strings, get NotImplemented, so Python falls
+    /// back to its default (False for `==`).
+    static object __eq__(object const& self, object const& other)
+    {
+        PyObject* const o = other.ptr();
+        if (PyUnicode_Check(o) || PyBytes_Check(o) || !PySequence_Check(o))
+            return object(handle<>(borrowed(Py_NotImplemented)));
+        auto const n = len(self);
+        if (len(other) != n)
+            return object(false);
+        for (decltype(len(self)) ii = 0; ii < n; ++ii)
+        {
+            object same = (self[ii] == other[ii]);
+            if (!PyBool_Check(same.ptr()) && PyObject_HasAttrString(same.ptr(), "all"))
+                same = same.attr("all")();
+            int const truth = PyObject_IsTrue(same.ptr());
+            if (truth < 0)
+                throw_error_already_set();
+            if (!truth)
+                return object(false);
+        }
+        return object(true);
+    }
+
+    /// \brief The negation of __eq__, passing NotImplemented through.
+    static object __ne__(object const& self, object const& other)
+    {
+        object const eq = __eq__(self, other);
+        if (eq.ptr() == Py_NotImplemented)
+            return eq;
+        return object(!extract<bool>(eq)());
+    }
+
     static std::string __repr__(const object& obj)
     {
         return __str__(obj);
