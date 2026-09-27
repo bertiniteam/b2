@@ -53,6 +53,18 @@ _override = os.environ.get('BERTINI_BUILD_DIR')
 if _override and _has_pybertini(_override):
     sys.path.insert(0, _override)
 
+# Every solve the docs build runs records under the docs' own (gitignored) build output, never
+# into the docs source, which is sphinx's working directory.  Set here, before anything imports
+# bertini, so it holds for the whole process and for any bertini2 CLI a tutorial starts.  Emptied
+# at every build: records kept from a previous build would RECALL a tutorial's solve instead of
+# running it.  Each document additionally gets a fresh folder of its own inside it (see
+# doctest_global_setup).
+import shutil
+_doc_records = os.path.abspath('../build/doctest_records')
+shutil.rmtree(_doc_records, ignore_errors=True)
+os.makedirs(_doc_records, exist_ok=True)
+os.environ['BERTINI_RECORDS_DIR'] = _doc_records
+
 # -- General configuration ------------------------------------------------
 
 # If your documentation needs a minimal Sphinx version, state it here.
@@ -84,7 +96,7 @@ autosectionlabel_prefix_document = True
 # Run before every `sphinx -b doctest` group, in every document.  Forces a headless
 # matplotlib backend (so plotting code blocks render no windows) and silences the
 # resulting "non-interactive" warning, so tutorials that plot stay testable & quiet.
-doctest_global_setup = '''
+doctest_global_setup = f'''
 import warnings
 import matplotlib
 matplotlib.use("Agg")
@@ -99,12 +111,11 @@ warnings.filterwarnings("ignore", message="FigureCanvasAgg is non-interactive")
 import bertini
 bertini.default_precision(20)
 
-# Point the ambient records directory at a scratch location for the whole doctest build.
-# bertini.solve() records by design (the structured output directory is ordinary program
-# output); without this, any tutorial calling solve() without directory= would drop a
-# bertini_output/ into sphinx's working directory.  One temp dir per build, auto-discarded.
+# A fresh records directory for each document, inside the docs build's records folder (set up
+# at the top of conf.py): solves record by design, and a fresh folder per document keeps one
+# tutorial from recalling another's solve.
 import tempfile as _tempfile
-bertini.records_dir(_tempfile.mkdtemp(prefix="bertini_docs_records_"))
+bertini.records_dir(_tempfile.mkdtemp(prefix="doc_", dir={_doc_records!r}))
 '''
 
 bibtex_bibfiles = ['../../../doc_resources/bertini2.bib']
