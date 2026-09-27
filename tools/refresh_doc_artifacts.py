@@ -69,7 +69,7 @@ class Plot:
 
 
 def _plots():
-    B1 = REPO / "build" / "core" / "bertini2"     # optional CLI binary for the b1-vs-b2 benchmark
+    B2 = REPO / "bld" / "core" / "bertini2"     # optional CLI binary for the b1-vs-b2 benchmark
     return [
         Plot("real_points",
              TUT / "formulating_and_solving" / "real_points" / "real_points.py",
@@ -103,8 +103,8 @@ def _plots():
         Plot("bertini1_vs_bertini2_timing",
              TUT / "performance_benchmarking" / "bertini1_vs_bertini2_timing" / "b1_vs_b2_timing.py",
              ["b1_vs_b2_timing.svg", "b1_vs_b2_timing.png"],
-             argv=["--out", "{outdir}", "--bertini2", str(B1)],
-             needs=("bertini2 CLI binary", B1),
+             argv=["--out", "{outdir}", "--bertini2", str(B2)],
+             needs=("bertini2 CLI binary", B2),
              note="benchmark vs Bertini 1; needs the built CLI and (optionally) a `bertini` on PATH"),
         Plot("tracking_analytic",
              TUT / "doing_things_manually" / "tracking_analytic" / "tracking_analytic.py",
