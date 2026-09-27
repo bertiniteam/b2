@@ -54,7 +54,7 @@ the minimum a randomization can achieve.
 
    assert randomized.num_functions() == 2          # squared up
    assert original.num_functions() == 3            # original unchanged
-   assert randomized.degrees() == [2, 2]
+   assert list(randomized.degrees()) == [2, 2]
 
 .. note::
 

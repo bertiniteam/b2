@@ -26,7 +26,10 @@ The slice: a stack of linear forms
 ==================================
 
 A :class:`~bertini.Slice` is a stack of linear forms :math:`M\,[x ; 1]` -- one row per
-form, the trailing column of each row holding that form's constant term. You build one from exact
+form, the trailing column of each row holding that form's constant term (we're normalizing to 1). 
+
+
+You can build a ``Slice`` from exact
 coefficients with :meth:`~bertini.Slice.from_coefficients`:
 
 .. testcode::
@@ -54,13 +57,15 @@ or generate a generic one (the usual case in practice -- a witness set's slice i
 
    Coefficients must be **exact** (ints, ``fractions.Fraction``, exact strings like ``'3/4'``, or
    ``bertini.multiprec`` values). A Python ``float`` is refused -- its ~16 digits would cap the
-   precision of the arbitrary-precision tree. See :func:`~bertini.coefficient`.
+   precision of arbitrary-precision arithmetic during path tracking. 
+   See :func:`~bertini.coefficient`.
 
-A slice is a sequence of forms -- and the shape rules matter
+Slicing ``Slice`` is Pythonic (i hope)
 ============================================================
 
-This is the part with "lots of semantics running around," so it is worth being precise. A slice
-behaves like a **Python sequence of its linear forms**, with the usual list semantics:
+This is the part with "lots of semantics running around," so it is worth being precise.  
+This part is very much on the way to interact with ``bertini.Slice`` in Python.
+A slice behaves like a **Python sequence of its linear forms**, with the usual list semantics:
 
 * an **integer index** selects an *element* -- the i-th form's coefficient **vector**;
 * a **slice** ``[i:j]`` (or a list of indices) selects a *sub-collection* -- a new (sub-)``Slice``;
@@ -83,12 +88,14 @@ behaves like a **Python sequence of its linear forms**, with the usual list sema
    # the whole matrix: always 2-D, (num_forms, num_variables + 1)
    assert s.coefficients().shape == (2, 3)
 
-The "always 2-D" is the important guarantee. The underlying binding library (eigenpy today) returns
+The "always 2-D" is the important guarantee. The underlying linear algebra binding library 
+(eigenpy today) returns
 a *one-row* matrix to Python as a **1-D** array -- a data-dependent shape that silently breaks code
 written for the many-row case. This bites constantly in practice: a **curve** (dimension 1) has a
 **single-form** slice, so its coefficient matrix is exactly the one that would collapse.
 
-bertini owns the shape so you do not have to think about it: ``coefficients()`` is **always** 2-D,
+Bertini owns the shape in this part of the software, 
+so you do not have to think about it: ``coefficients()`` is **always** 2-D,
 even for one form, and the 1-D "vector" view is something you *ask for* by indexing an element
 (``s[i]``) -- never something the form count hands you by surprise.
 
@@ -98,8 +105,12 @@ even for one form, and the 1-D "vector" view is something you *ask for* by index
    assert one_form.coefficients().shape == (1, 3)     # NOT (3,) -- it never collapses
    assert np.asarray(one_form[0]).shape == (3,)       # the vector view is explicit
 
-(The "why" -- and the list of accessors that still carry the raw hazard -- is recorded in
-``docs/adr/0033``.)
+
+.. note:: 
+
+   The "why" -- and the list of accessors that still carry the raw hazard -- is recorded in
+   ``docs/adr/0033``.  Silviana notes that this was a genuine pain in the butt to get right,
+   and she really hopes that she got this part of the interface correct.
 
 A slice rides along with a system
 =================================
@@ -124,18 +135,24 @@ linear forms, meant to be carried alongside a system. Two ways to put them toget
 
    ``add_to`` is homogenization-aware. If the system has already been homogenized, the slice's
    constant term is folded onto the homogenizing variable (exactly as the system did to its own
-   functions), so the appended forms stay consistent. You never homogenize the slice yourself.
+   functions), so the appended forms stay consistent. You never need to homogenize the slice yourself.
 
 The witness set
 ===============
+
+.. todo::
+
+   Improve this part of the tutorial once I get NID into the core library
+   (as of sept 2026, silviana has an implementation in pure Python in a private
+   repo, but it's still work in progress) 
 
 Now assemble the triple. You can build a witness set all at once, or incrementally -- add points as
 you find them:
 
 .. testcode::
 
-   def pt(*entries):
-       return np.array([mp.complex_mp(str(e)) for e in entries], dtype=mp.complex_mp)
+   def pt(entries):
+       return np.array(entries, dtype=mp.complex_mp)
 
    sys = bertini.System()
    sys.add_variable_group(vg)
@@ -143,7 +160,7 @@ you find them:
    slice2 = Slice.random_complex(vg, 2)
 
    # all at once: points + slice + system
-   w = WitnessSetMultiplePrecision([pt(1, 0, 0), pt(0, 1, 0)], slice2, sys)
+   w = WitnessSetMultiplePrecision([pt([1, 0, 0]), pt([0, 1, 0])], slice2, sys)
    assert w.degree() == 2          # two witness points
    assert w.dimension() == 2       # a surface
    assert w.is_consistent()        # 3 variables - 1 equation == slice dimension 2
@@ -152,8 +169,8 @@ you find them:
    w2 = WitnessSetMultiplePrecision()
    w2.set_system(sys)
    w2.set_slice(slice2)
-   w2.add_point(pt(1, 0, 0))
-   w2.add_point(pt(0, 1, 0))
+   w2.add_point(pt([1, 0, 0]))
+   w2.add_point(pt([0, 1, 0]))
    assert w2.degree() == 2
 
 A witness set prints a readable summary:
@@ -168,8 +185,12 @@ A witness set prints a readable summary:
      slice:  2 linear forms on 3 variables
      system: 1 function on 3 variables
 
-Carrying it around, and emitting to Bertini 1
-=============================================
+Serializing and emitting Witness Sets
+======================================
+
+.. todo::
+
+   This part will change some, after NID makes its way in.
 
 A witness set (and a slice) serializes, so you can pickle one, send it to another process, or
 checkpoint it -- the deserialized system is restored ready to evaluate:
@@ -209,8 +230,6 @@ becomes one function that is the product of its hyperplanes:
 
 Complete example
 ================
-
-The whole tutorial as one runnable script -- assemble nothing, just run it:
 
 .. literalinclude:: intro_to_slices.py
    :language: python

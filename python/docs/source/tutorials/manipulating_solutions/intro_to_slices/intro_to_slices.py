@@ -73,8 +73,8 @@ def slice_rides_along(s, x0, x1, x2, vg, generic):
 
 def build_witness_set(x0, x1, x2, vg):
     """The witness set: assemble the triple."""
-    def pt(*entries):
-        return np.array([mp.complex_mp(str(e)) for e in entries], dtype=mp.complex_mp)
+    def pt(entries):
+        return np.array(entries, dtype=mp.complex_mp)
 
     sys = bertini.System()
     sys.add_variable_group(vg)
@@ -82,7 +82,7 @@ def build_witness_set(x0, x1, x2, vg):
     slice2 = Slice.random_complex(vg, 2)
 
     # all at once: points + slice + system
-    w = WitnessSetMultiplePrecision([pt(1, 0, 0), pt(0, 1, 0)], slice2, sys)
+    w = WitnessSetMultiplePrecision([pt([1, 0, 0]), pt([0, 1, 0])], slice2, sys)
     assert w.degree() == 2          # two witness points
     assert w.dimension() == 2       # a surface
     assert w.is_consistent()        # 3 variables - 1 equation == slice dimension 2
@@ -91,8 +91,8 @@ def build_witness_set(x0, x1, x2, vg):
     w2 = WitnessSetMultiplePrecision()
     w2.set_system(sys)
     w2.set_slice(slice2)
-    w2.add_point(pt(1, 0, 0))
-    w2.add_point(pt(0, 1, 0))
+    w2.add_point(pt([1, 0, 0]))
+    w2.add_point(pt([0, 1, 0]))
     assert w2.degree() == 2
 
     # a witness set prints a readable summary
