@@ -33,6 +33,7 @@ the reason plots stay opt-in.
 import argparse
 import os
 import re
+import shutil
 import subprocess
 import sys
 import tempfile
@@ -43,6 +44,13 @@ REPO = Path(__file__).resolve().parent.parent
 TUT = REPO / "python" / "docs" / "source" / "tutorials"
 SHOWPIECES = REPO / "python" / "docs" / "source" / "showpieces"
 EXAMPLES = REPO / "python" / "examples"
+
+# Where each plot's solves record (BERTINI_RECORDS_DIR), one folder per plot under the docs'
+# gitignored build output, so records never land in the docs source.  Each folder is emptied
+# before its plot runs: persistent records would RECALL identical solves instead of computing
+# them, which draws a figure from an older library and leaves path observers with nothing to
+# see.  Kept after the run, for looking at what a figure's solves did.
+RECORDS_SCRATCH = REPO / "python" / "docs" / "build" / "refresh_records"
 
 # A fixed salt makes matplotlib's SVG element ids deterministic run-to-run (same matplotlib
 # version).  Any stable string works; keep it constant so ids don't move.
@@ -56,14 +64,12 @@ SVG_HASHSALT = "bertini2-docs"
 # The script runs with `outdir` as its working directory, so a plain `savefig("name.svg")`
 # lands where the docs expect it; the script needs no path handling of its own.
 class Plot:
-    def __init__(self, key, script, outputs, argv=None, outdir=None, needs=None, note=None,
-                 env=None):
+    def __init__(self, key, script, outputs, argv=None, outdir=None, needs=None, note=None):
         self.key = key
         self.script = script                      # Path
         self.outputs = outputs                    # list[str] basenames
         self.outdir = outdir or script.parent     # where the images land
         self.argv = argv or []                    # extra argv
-        self.env = env or {}                      # extra env (values may reference {tmpdir})
         self.needs = needs                        # optional (label, Path) that must exist
         self.note = note
 
@@ -117,9 +123,7 @@ def _plots():
              EXAMPLES / "chained_homotopies.py",
              ["chain_progression.svg", "chain_progression.png"],
              outdir=TUT / "record_keeping" / "chained_homotopies",
-             argv=["--plot", "chain_progression"],
-             env={"BERTINI_RECORDS_DIR": "{tmpdir}"},
-             note="records go to a scratch dir; only the drawn chain is the artifact"),
+             argv=["--plot", "chain_progression"]),
         Plot("monodromy_loom",
              SHOWPIECES / "monodromy_loom" / "monodromy_loom.py",
              ["monodromy_loom.png", "monodromy_loom_teaching.png"],
@@ -184,14 +188,14 @@ def run_plot(plot: Plot, dry_run):
     if dry_run:
         return 0
     started = time.time()
+    records = RECORDS_SCRATCH / plot.key
+    shutil.rmtree(records, ignore_errors=True)
     env, rc_path = _env_with_determinism()
-    scratch = tempfile.TemporaryDirectory(prefix="refresh_doc_artifacts_")
-    env.update({k: v.format(tmpdir=scratch.name) for k, v in plot.env.items()})
+    env["BERTINI_RECORDS_DIR"] = str(records)
     try:
         proc = subprocess.run(cmd, cwd=plot.outdir, env=env)
     finally:
         os.unlink(rc_path)
-        scratch.cleanup()
     if proc.returncode != 0:
         return proc.returncode
     # a clean exit is not proof: the script may have saved somewhere else, or not at all
