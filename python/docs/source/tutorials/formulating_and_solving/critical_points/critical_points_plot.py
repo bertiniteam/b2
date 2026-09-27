@@ -13,7 +13,6 @@ illustration with no in-repo source (see tools/refresh_doc_artifacts.py `_NO_REG
 Run:  python critical_points_plot.py   (or via tools/refresh_doc_artifacts.py --plots --only critical_points)
 """
 
-import os
 
 import matplotlib
 matplotlib.use('Agg')            # headless: no display needed
@@ -23,8 +22,6 @@ import numpy as np
 
 import bertini
 from bertini import ZeroDimSolver
-
-_OUT = os.path.dirname(os.path.abspath(__file__))
 
 
 def solve_critical_points():
@@ -96,8 +93,8 @@ def plot(finite):
 
 def main():
     fig = plot(solve_critical_points())
-    fig.savefig(os.path.join(_OUT, 'critical_points.svg'))
-    fig.savefig(os.path.join(_OUT, 'critical_points.png'), dpi=150)
+    fig.savefig('critical_points.svg')
+    fig.savefig('critical_points.png', dpi=150)
 
 
 if __name__ == '__main__':

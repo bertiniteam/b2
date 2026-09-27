@@ -13,7 +13,6 @@ results.  It produces three figures:
 Run:  python observers_and_path_data.py
 """
 
-import os
 from fractions import Fraction
 
 import numpy as np
@@ -35,8 +34,6 @@ from bertini.nag_algorithm import observers as nag_observers
 # recalls from the records and tracks nothing, so observers see nothing (see the
 # observers tutorial's note and the automatic record keeping tutorial)
 bertini.recording(False)
-
-_OUT = os.path.dirname(os.path.abspath(__file__))
 
 
 # --- Writing an observer in Python --------------------------------------------------------------
@@ -135,8 +132,8 @@ def plot_degree_six(solver, A):
     ax.set_aspect(1.0); ax.set_box_aspect(1)     # 1:1 data scaling, square box
     ax.set_xlabel('Re(z)'); ax.set_ylabel('Im(z)')
     ax.legend(loc='upper right', fontsize=8)
-    fig.savefig(os.path.join(_OUT, 'observers_and_path_data.svg'))
-    fig.savefig(os.path.join(_OUT, 'observers_and_path_data.png'), dpi=150)
+    fig.savefig('observers_and_path_data.svg')
+    fig.savefig('observers_and_path_data.png', dpi=150)
 
 
 # --- Build it yourself: one observer that attaches another ---------------------------------------
@@ -273,8 +270,8 @@ def plot_cyclic3(solver, A, COND):
     ax.set_xlabel('Re(x)'); ax.set_ylabel('Re(y)'); ax.set_zlabel('Re(z)')
     ax.set_box_aspect((1, 1, 1))                               # 1:1:1 data aspect ratio
     fig.colorbar(last, ax=ax, shrink=0.6, pad=0.1, label='condition number (log)')
-    fig.savefig(os.path.join(_OUT, 'cyclic3_paths.svg'))
-    fig.savefig(os.path.join(_OUT, 'cyclic3_paths.png'), dpi=150)
+    fig.savefig('cyclic3_paths.svg')
+    fig.savefig('cyclic3_paths.png', dpi=150)
 
 
 # --- Watching the Cauchy endgame at a singular solution -----------------------------------------
@@ -322,8 +319,8 @@ def plot_griewank_osborn(singular):
     R = -(np.log10(np.abs(xv).min())) + 0.3
     ax.set_xlim(-R, R); ax.set_ylim(-R, R); ax.set_aspect(1.0)
     fig.colorbar(lc, ax=ax, label='|t|  (log)')
-    fig.savefig(os.path.join(_OUT, 'griewank_osborn_endgame.svg'))
-    fig.savefig(os.path.join(_OUT, 'griewank_osborn_endgame.png'), dpi=150)
+    fig.savefig('griewank_osborn_endgame.svg')
+    fig.savefig('griewank_osborn_endgame.png', dpi=150)
 
 
 def main():

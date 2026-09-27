@@ -16,11 +16,8 @@ reached by two paths) and simple roots at x=-2, 4 (**nonsingular**).  The total-
 has 6 paths, so the remaining two **diverge to infinity** (the homogenizing coordinate -> 0).
 
 Run (needs matplotlib):
-    python .../classic_continuation_cartoon/classic_continuation_cartoon.py           # SVG + PNG to cwd
-    python .../classic_continuation_cartoon/classic_continuation_cartoon.py /tmp/out
+    python classic_continuation_cartoon.py           # SVG + PNG to the current directory
 """
-import os
-import sys
 
 import bertini as pb
 from bertini.nag_algorithm import ZeroDimSolver, observers as nobs
@@ -201,12 +198,10 @@ def make_plot(paths, out_stem):
 
 
 def main():
-    out_dir = sys.argv[1] if len(sys.argv) > 1 else os.getcwd()
-    os.makedirs(out_dir, exist_ok=True)
     paths = collect()
     from collections import Counter
     print("paths by endpoint flavor:", dict(Counter(f for f, _ in paths)))
-    svg, png = make_plot(paths, os.path.join(out_dir, "classic_continuation_cartoon"))
+    svg, png = make_plot(paths, "classic_continuation_cartoon")
     print("wrote", svg, "\n      ", png)
 
 

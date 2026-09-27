@@ -38,7 +38,7 @@ The result
 Run it (needs ``matplotlib``; Bertini 1 optional)::
 
     python python/docs/source/tutorials/bertini1_vs_bertini2_timing/b1_vs_b2_timing.py \
-        --bertini2 ./build/core/bertini2 --bertini1 /usr/local/bin/bertini --out .
+        --bertini2 ./build/core/bertini2 --bertini1 /usr/local/bin/bertini
 
 .. image:: b1_vs_b2_timing.png
    :width: 100%
