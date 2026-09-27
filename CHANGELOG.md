@@ -69,8 +69,30 @@ _______________________________________________________________________________
 
 ## [4.0.0] - unreleased
 
-A correctness fix to the `MakeMovingHomotopy` guards: they decided function identity on a
-*presentation* rendering, which silently refused valid homotopies.
+The release where a solve tells you what it is doing.  Multiprecision numbers go straight onto a
+matplotlib axis, every object describes itself when printed instead of giving you its address, and
+a long solve reports how far it has got.  Underneath that sits a large correctness pass --
+precision, endpoint classification, the classic-format round trip, path crossings, start points --
+and Intel macOS wheels are built and tested again.
+
+**A major version because it breaks source compatibility.**  A `System` no longer carries a
+precision, because evaluation happens at the precision of the point it is handed.
+`final_tolerance` belongs to the endgame alone.  The tracker's predictor, tracking tolerance and
+path truncation threshold are a config rather than bare members.  `moving_homotopy` is gone,
+subsumed by `straight_line_homotopy`, which returns a record carrying the homotopy, its two ends
+and the gamma actually used.  `Homogenize()` throws where it used to half-succeed.
+
+**It also breaks quietly, which matters more**: code that still compiles can get different
+answers.  The default endgame is power series rather than Cauchy, `InEGOperatingZone` changed
+meaning, a system can now declare coordinates that the finiteness and realness tests must ignore,
+and `function(i)` addresses the patch rows on a patched system.  Read Changed and Fixed before
+upgrading a script whose answers you rely on.
+
+**Records written by 3.x are not recalled.**  Both content encodings moved -- `b2sysenc/2` for
+systems, `b2cfgenc/4` for configs -- so a record written by an older version describes a different
+ask and is recomputed rather than reused.  Nothing is lost and nothing is silently wrong; it is
+simply not reused.  That remains the honest outcome for as long as a record's ask does not carry
+the identity of the algorithm that answered it (#420).
 
 ### Removed
 
