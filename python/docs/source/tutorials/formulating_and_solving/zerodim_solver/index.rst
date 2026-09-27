@@ -1,12 +1,12 @@
 🎯 Solving a system with ZeroDimSolver
 ***************************************************
 
-``ZeroDimSolver`` is the algorithm for the most common task: given a polynomial system, find all of
+``ZeroDimSolver`` is the algorithm wrapper for the most common task: given a polynomial system, find all of
 its **isolated complex solutions**.  You hand it a system; it forms a start system and a homotopy,
 tracks the paths, and classifies the endpoints.  (If you instead already have a homotopy and a list
-of start points -- the parameter-homotopy workflow -- reach for :func:`~bertini.HomotopySolver`.)
+of start points, reach for :func:`~bertini.HomotopySolver`.)
 
-This tutorial shows ``ZeroDimSolver`` on the three shapes of input you will meet: a well-posed
+This tutorial shows ``ZeroDimSolver`` on three shapes of input: a well-posed
 **square** system, an **over-determined** system (more equations than unknowns), and an
 **under-determined** one (fewer).  The point is that ``ZeroDimSolver`` does the right thing -- and
 tells you clearly -- in each case.
@@ -15,10 +15,10 @@ tells you clearly -- in each case.
 
    import bertini
 
-A pleasant square system
+A square system
 ========================
 
-A *square* system has exactly one equation per variable, and generically finitely many isolated
+A *square* system has equal numbers of variables and equations, and generically finitely many isolated
 solutions.  Take the unit circle meeting the line :math:`x = y`:
 
 .. testcode::
@@ -46,8 +46,8 @@ There are two intersection points, :math:`\pm(1/\sqrt2,\, 1/\sqrt2)`:
 An over-determined system: extra equations, extraneous solutions filtered out
 =============================================================================
 
-An *over-determined* system has **more equations than variables**.  It can still have isolated
-solutions -- the points where *all* the equations vanish at once -- but a start system needs a
+An *over-determined* system has more equations than variables.  It can still have isolated
+solutions, but a start system needs a
 square target to track.  ``ZeroDimSolver`` handles this for you: it **randomizes** the system down
 to square (replacing the :math:`N` equations by :math:`n` generic combinations of them), solves the
 square system, and then **filters out the extraneous solutions** that the squaring introduces by
@@ -74,6 +74,10 @@ random combinations but not the original equations).  ``all_solutions()`` shows 
 ``solutions()`` returns only the genuine roots, and the extraneous ones -- flagged
 ``is_nonsolution`` in the metadata -- are surfaced separately by ``nonsolutions()``:
 
+.. note::
+    
+    Beware ``all_solutions``.  It may contain things you don't want!!!  
+
 .. testcode::
 
     n_all = len(solver.all_solutions())        # the squared system's full path count
@@ -89,11 +93,11 @@ for the nonsingular ones, ``solutions(infinite=True)`` to also include the at-in
 ``solutions(nonsolution=True)`` to opt the nonsolutions back in.  You can inspect the exact combinations the
 squaring used with ``solver.randomization_matrix()``.
 
-An under-determined system: a helpful refusal
+An under-determined system: refusal
 =============================================
 
-An *under-determined* system has **fewer equations than variables**, so its solution set is
-**positive-dimensional** -- a curve, a surface, ... -- not a finite set of points.  ``ZeroDimSolver``
+An *under-determined* system has fewer equations than variables, so its solution set is
+probably  positive-dimensional -- a curve, a surface, ...  ``ZeroDimSolver``
 computes isolated solutions only, so it declines, with an error that says why rather than quietly
 returning garbage:
 
@@ -117,8 +121,6 @@ zero-dimensional.
 
 Complete example
 ================
-
-The whole tutorial as one runnable script -- assemble nothing, just run it:
 
 .. literalinclude:: zerodim_solver.py
    :language: python
