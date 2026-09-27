@@ -69,8 +69,30 @@ _______________________________________________________________________________
 
 ## [4.0.0] - unreleased
 
-A correctness fix to the `MakeMovingHomotopy` guards: they decided function identity on a
-*presentation* rendering, which silently refused valid homotopies.
+The release where a solve tells you what it is doing.  Multiprecision numbers go straight onto a
+matplotlib axis, every object describes itself when printed instead of giving you its address, and
+a long solve reports how far it has got.  Underneath that sits a large correctness pass --
+precision, endpoint classification, the classic-format round trip, path crossings, start points --
+and Intel macOS wheels are built and tested again.
+
+**A major version because it breaks source compatibility.**  A `System` no longer carries a
+precision, because evaluation happens at the precision of the point it is handed.
+`final_tolerance` belongs to the endgame alone.  The tracker's predictor, tracking tolerance and
+path truncation threshold are a config rather than bare members.  `moving_homotopy` is gone,
+subsumed by `straight_line_homotopy`, which returns a record carrying the homotopy, its two ends
+and the gamma actually used.  `Homogenize()` throws where it used to half-succeed.
+
+**It also breaks quietly, which matters more**: code that still compiles can get different
+answers.  The default endgame is power series rather than Cauchy, `InEGOperatingZone` changed
+meaning, a system can now declare coordinates that the finiteness and realness tests must ignore,
+and `function(i)` addresses the patch rows on a patched system.  Read Changed and Fixed before
+upgrading a script whose answers you rely on.
+
+**Records written by 3.x are not recalled.**  Both content encodings moved -- `b2sysenc/2` for
+systems, `b2cfgenc/4` for configs -- so a record written by an older version describes a different
+ask and is recomputed rather than reused.  Nothing is lost and nothing is silently wrong; it is
+simply not reused.  That remains the honest outcome for as long as a record's ask does not carry
+the identity of the algorithm that answered it (#420).
 
 ### Removed
 
@@ -107,6 +129,18 @@ A correctness fix to the `MakeMovingHomotopy` guards: they decided function iden
 
 ### Added
 
+- **bertini's list containers compare by value.**  `sys.degrees() == [2, 2]` is now true when
+  the degrees are 2 and 2; before, every container's `==` was object identity, so it was false
+  -- as was comparing two calls of `sys.degrees()` -- and a check had to be written
+  `list(sys.degrees()) == [2, 2]`.  Every list container (`ListOfInt`, `VariableGroup`, the
+  solution lists, ...) is equal to any Python sequence of the same length whose elements are
+  equal pairwise; a solution vector counts as equal when all of its entries are.  Like
+  Python's own `list`, the containers are no longer hashable.
+- **Wheels for linux-aarch64** (#474).  `pip install bertini2` now works on 64-bit ARM Linux --
+  a Linux VM on an Apple silicon Mac, a Raspberry Pi 4 or 5, an ARM cloud instance -- instead of
+  requiring a build from source.  Every supported Python (3.10 through 3.14) is covered, and
+  aarch64 is tested like the other platforms: the C++ test suite, and the full pytest suite
+  inside the manylinux container for each wheel.
 - **A system can say which of its coordinates are auxiliary** (#403).  Bertini judges a point by
   its largest coordinate, three times over: the tracker truncates a path past
   `path_truncation_threshold`, the endgame abandons one past `Security.max_norm`, and the solver

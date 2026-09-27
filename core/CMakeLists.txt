@@ -603,12 +603,14 @@ endif()
 
 # From-source DEV / editable builds (NOT the wheel): mirror the freshly-built CLI into the
 # source-tree package at python/bertini/_bin/bertini2, so the console-script shim
-# (python/bertini/_cli.py, which an editable `pip install -e .` redirects to the source tree)
-# finds the binary.  The wheel build (SKBUILD) instead uses the install(TARGETS ... DESTINATION
-# _bin) rule below.  Together these keep EVERY build path delivering the `bertini2` command:
-# wheel (`pip install .`), editable (`pip install -e .`), and plain in-tree builds.  Guarded on the
+# (python/bertini/_cli.py, which an editable `pip install -e .` redirects to the source tree,
+# and which looks for _bin/ beside itself) finds the binary.  An editable install is a
+# scikit-build build too (SKBUILD set, SKBUILD_STATE "editable"), so it needs this rule as much
+# as a plain build does.  A wheel build instead uses the install(TARGETS ... DESTINATION _bin)
+# rule below.  Together these keep EVERY build path delivering the `bertini2` command: wheel
+# (`pip install .`), editable (`pip install -e .`), and plain in-tree builds.  Guarded on the
 # package dir existing so a stand-alone `core/` build does not create a stray tree.
-if(NOT SKBUILD AND EXISTS ${CMAKE_SOURCE_DIR}/python/bertini)
+if((NOT SKBUILD OR SKBUILD_STATE STREQUAL "editable") AND EXISTS ${CMAKE_SOURCE_DIR}/python/bertini)
   add_custom_command(TARGET bertini2_exe POST_BUILD
     COMMAND ${CMAKE_COMMAND} -E make_directory ${CMAKE_SOURCE_DIR}/python/bertini/_bin
     COMMAND ${CMAKE_COMMAND} -E copy $<TARGET_FILE:bertini2_exe> ${CMAKE_SOURCE_DIR}/python/bertini/_bin/bertini2
