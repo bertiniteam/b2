@@ -27,7 +27,7 @@ def sys_instance(s):
 def step_one():
     """Pick a generic member and solve it ab initio; its solutions are our start points."""
     start_param_val = bertini.random_complex()
-    generic = sys_instance(start_param_val)      
+    generic = sys_instance(start_param_val)
     first = bertini.ZeroDimSolver(generic, mptype='adaptive')
     first.solve()
     start_points = first.all_solutions()
@@ -73,7 +73,7 @@ def plot(results):
         ax.plot([line_x_min, line_x_max], [s/2,s/2],color='xkcd:pale blue',zorder=1) # https://xkcd.com/color/rgb/
 
     circle = plt.Circle((0,0), 1, color='b', fill=False,zorder=2)
-    
+
 
     ax.add_patch(circle)
     ax.scatter(solns[:,0],solns[:,1], zorder=3)

@@ -6,9 +6,9 @@
    import bertini
    from bertini import Variable, MonomialOrder
 
-For performance reasons, Bertini hash-conses the function tree: 
+For performance reasons, Bertini hash-conses the function tree:
 identical subexpressions become a single shared node.  For example, :math:`x^2` appearing multiple
-times in a system shouldn't need to evaluate this every time it appears -- there should be 
+times in a system shouldn't need to evaluate this every time it appears -- there should be
 only one "x squared" node in the tree.
 To this end, the library also **canonically
 orders** the operands of every sum and product -- so ``x + y`` and ``y + x`` are not just equal,

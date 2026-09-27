@@ -10,7 +10,7 @@ system, or the multihomogeneous -- or in :ref:`the parameter-homotopy tutorial
 <tutorials>`, we reuse the solutions of an earlier solve.  This tutorial is different: you author
 the start system, by hand, and construct the homotopy yourself.
 
-The form of the start system we'll construct 
+The form of the start system we'll construct
 is a product of linear forms.  A linear form is :math:`c\cdot[x;1]` (the trailing
 ``1`` carries the constant term, which we are normalizing), and the start function is a product of them:
 
@@ -73,7 +73,7 @@ trailing column being that factor's constant term.  So ``[[1, 0, '-1'], [1, 0, '
 
 .. note::
 
-    The coefficients of the linears should be complex, to guarantee 
+    The coefficients of the linears should be complex, to guarantee
     that this will genericall work.  The simple real numbers here
     are just for illustration.
 
@@ -110,7 +110,7 @@ There are :math:`2 \times 2 = 4` of them -- the Bézout number of the start syst
 .. note::
 
     In principle, one should do linear algebra to compute the start points, the above is just because
-    the linears are so simple.  
+    the linears are so simple.
 
 Form a homotopy and solve
 ===============================

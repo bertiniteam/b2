@@ -26,7 +26,7 @@ The slice: a stack of linear forms
 ==================================
 
 A :class:`~bertini.Slice` is a stack of linear forms :math:`M\,[x ; 1]` -- one row per
-form, the trailing column of each row holding that form's constant term (we're normalizing to 1). 
+form, the trailing column of each row holding that form's constant term (we're normalizing to 1).
 
 
 You can build a ``Slice`` from exact
@@ -57,13 +57,13 @@ or generate a generic one (the usual case in practice -- a witness set's slice i
 
    Coefficients must be **exact** (ints, ``fractions.Fraction``, exact strings like ``'3/4'``, or
    ``bertini.multiprec`` values). A Python ``float`` is refused -- its ~16 digits would cap the
-   precision of arbitrary-precision arithmetic during path tracking. 
+   precision of arbitrary-precision arithmetic during path tracking.
    See :func:`~bertini.coefficient`.
 
 Slicing ``Slice`` is Pythonic (i hope)
 ============================================================
 
-This is the part with "lots of semantics running around," so it is worth being precise.  
+This is the part with "lots of semantics running around," so it is worth being precise.
 This part is very much on the way to interact with ``bertini.Slice`` in Python.
 A slice behaves like a **Python sequence of its linear forms**, with the usual list semantics:
 
@@ -88,13 +88,13 @@ A slice behaves like a **Python sequence of its linear forms**, with the usual l
    # the whole matrix: always 2-D, (num_forms, num_variables + 1)
    assert s.coefficients().shape == (2, 3)
 
-The "always 2-D" is the important guarantee. The underlying linear algebra binding library 
+The "always 2-D" is the important guarantee. The underlying linear algebra binding library
 (eigenpy today) returns
 a *one-row* matrix to Python as a **1-D** array -- a data-dependent shape that silently breaks code
 written for the many-row case. This bites constantly in practice: a **curve** (dimension 1) has a
 **single-form** slice, so its coefficient matrix is exactly the one that would collapse.
 
-Bertini owns the shape in this part of the software, 
+Bertini owns the shape in this part of the software,
 so you do not have to think about it: ``coefficients()`` is **always** 2-D,
 even for one form, and the 1-D "vector" view is something you *ask for* by indexing an element
 (``s[i]``) -- never something the form count hands you by surprise.
@@ -106,7 +106,7 @@ even for one form, and the 1-D "vector" view is something you *ask for* by index
    assert np.asarray(one_form[0]).shape == (3,)       # the vector view is explicit
 
 
-.. note:: 
+.. note::
 
    The "why" -- and the list of accessors that still carry the raw hazard -- is recorded in
    ``docs/adr/0033``.  Silviana notes that this was a genuine pain in the butt to get right,
@@ -144,7 +144,7 @@ The witness set
 
    Improve this part of the tutorial once I get NID into the core library
    (as of sept 2026, silviana has an implementation in pure Python in a private
-   repo, but it's still work in progress) 
+   repo, but it's still work in progress)
 
 Now assemble the triple. You can build a witness set all at once, or incrementally -- add points as
 you find them:

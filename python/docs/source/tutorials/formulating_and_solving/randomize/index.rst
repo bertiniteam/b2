@@ -7,7 +7,7 @@
    import bertini
 
 Most tutorials solve a **square** system -- as many equations as unknowns. But polynomial models
-are often **overdetermined**: more equations than unknowns. The  zeros 
+are often **overdetermined**: more equations than unknowns. The  zeros
 we compute in numerical algebraic geometry are still
 isolated points, but you cannot hand an overdetermined system directly to a path tracker, which needs a
 square target (to do linear algebra, for example).
@@ -62,7 +62,7 @@ the minimum a randomization can achieve.
    degree-2 rows, rather than becoming a degree-1 target that a folded degree-2 function would
    inflate. The payoff grows with the degree spread.  For degrees :math:`(3, 2, 2)` randomization
    tracks :math:`3 \times 2 = 6` paths, where a degree-blind or dense squaring (every row pushed to the
-   maximum degree 3) would track :math:`3^2 = 9`. 
+   maximum degree 3) would track :math:`3^2 = 9`.
 
 .. note::
 
@@ -98,7 +98,7 @@ Part 2 -- variables in separate groups
 =======================================
 
 Now something different: when the unknowns are split into separate variable groups, randomization
-works group by group and the *multihomogeneous* start system can track far fewer paths than a total-degree 
+works group by group and the *multihomogeneous* start system can track far fewer paths than a total-degree
 start system.
 
 The vehicle is a **bilinear** system: each function is degree 1 in :math:`x` and degree 1 in

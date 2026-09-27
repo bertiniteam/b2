@@ -7,10 +7,10 @@
 
 The **critical points** of a curve :math:`f=0` with respect to a linear projection :math:`\pi`
 are the points where :math:`\pi` restricted to the curve has vanishing differential -- where
-:math:`\pi`'s gradient is orthogonal to the curve's tangent.  
+:math:`\pi`'s gradient is orthogonal to the curve's tangent.
 
 The naive way to write "the tangent is :math:`\pi`-critical" is a determinant of the Jacobian --
-but for a curve in :math:`n` variables that determinant has high degree.  
+but for a curve in :math:`n` variables that determinant has high degree.
 This is painful because degree is path count, and high degree also tends to demand
 high precision, making path tracking much slower.
 Another formulation says the same thing without the determinant: the Jacobian of
@@ -55,7 +55,7 @@ plane/cylinder pairs, the curve is (by Bézout, total degree :math:`3\cdot 3 = 9
 * a **quartic** where the two cylinders meet, :math:`\{x^2+y^2=1,\ (y-1)^2+z^2=1\}` (degree 4).
 
 :math:`1+2+2+4=9`.  In this example, we are **not** decomposing the curve (that is numerical irreducible
-decomposition, or numerical cellular decomposition, different algorithms) -- 
+decomposition, or numerical cellular decomposition, different algorithms) --
 we just want the critical points.  But the reducibility
 matters: the components cross each other, and those crossings are singular points of the curve,
 which the criticality system will pick up alongside the honest projection-critical points.

@@ -63,8 +63,8 @@ finite number of paths can reach them all.  The refusal to make a start system s
 A homotopy with sine in it
 ============================
 
-Strictly speaking, path tracking doesn't really need a start system.  
-It actually just needs a homotopy and points to start from.  
+Strictly speaking, path tracking doesn't really need a start system.
+It actually just needs a homotopy and points to start from.
 
 
 Let's build the two ends of the homotopy as ordinary systems and glue them together.  At :math:`t = 1` the homotopy is
@@ -106,7 +106,7 @@ The homotopy inherits the ``-1``: a blend of functions is polynomial only when e
 
 That ``gamma`` is the exact rational point :math:`(-24 + 7i)/25` on the unit circle, from the
 Pythagorean triple 7-24-25.  (A random gamma would do the same job; an exact one makes this page
-reproduce byte for byte for doctesting purposes.)  
+reproduce byte for byte for doctesting purposes.)
 Keeping coefficients exact matters more than usual here, because a
 decimal string becomes a binary float and any noise in a coefficient moves the singularity
 structure you are about to look at.
@@ -123,7 +123,7 @@ five roots.
     pi = bertini.multiprec.real_mp('3.14159265358979323846264338327950288419716939937511')
     start_points = [np.array([bertini.multiprec.complex_mp(pi * k)]) for k in (-2, -1, 0, 1, 2)]
 
-Want more roots?  Start from more multiples.  
+Want more roots?  Start from more multiples.
 
 Fixed multiple precision tracking
 ===================================

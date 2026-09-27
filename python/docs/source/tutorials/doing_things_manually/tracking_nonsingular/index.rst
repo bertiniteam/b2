@@ -260,7 +260,7 @@ Now that we've tracked a single path, you might want to loop over all start poin
     tr.set_stepping(stepping)
 
     results = [] # make an empty list into which to put the results
-    
+
     codes = []
     for ii in range(td.num_start_points()):
         results.append(np.zeros((2,),dtype=bertini.multiprec.complex_mp))

@@ -12,7 +12,7 @@ Solutions from the adaptive precision tracker and associated algorithms (the def
 come back as multiprecision numbers, and multiprecision numbers are not float64.
 A screen resolves about three digits, so drawing has to drop the rest somewhere -- this
 page is about where that happens, what you can hand straight to a plotting library, and the
-a bit about what Bertini cannot draw.  
+a bit about what Bertini cannot draw.
 
 Most of it is short: ``real_mp`` data goes onto a matplotlib axis like any other number.
 Complex data does not, and the reason is worth reading before you plot your first solve.
@@ -20,8 +20,8 @@ Complex data does not, and the reason is worth reading before you plot your firs
 .. note::
 
    ⚠️‼️⛔️☢️☣️🚨
-   Silviana notes up front an upstream limitation in Numpy that causes serious problems with 
-   the extended precision complex type ``bertini.complex_mp``: ``numpy.imag`` and ``numpy.real`` 
+   Silviana notes up front an upstream limitation in Numpy that causes serious problems with
+   the extended precision complex type ``bertini.complex_mp``: ``numpy.imag`` and ``numpy.real``
    PRODUCE WRONG VALUES for custom complex types.  I'm working on this, but I cannot fix it
    from b2.  It MUST be fixed in numpy.
 
@@ -188,7 +188,7 @@ through matplotlib and its converter.
 
 Sadly, ``DataFrame.plot()`` and ``.plot.hist()`` do not: pandas selects numeric columns by dtype
 *before* any drawing happens, and an object column is not numeric, so it reports "no numeric
-data to plot".  
+data to plot".
 
 The fix is to typecast the frame for those:
 

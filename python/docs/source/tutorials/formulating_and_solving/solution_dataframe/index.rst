@@ -104,7 +104,7 @@ solutions are genuine points of the real :math:`(x, y)` plane; the complex ones 
 all.  So we draw two different kinds of picture.
 
 To plot, let's pull the individual coordinates out of the ``solution`` cell -- each is a
-:class:`bertini.complex_mp` -- and lift them to Python ``complex``.  
+:class:`bertini.complex_mp` -- and lift them to Python ``complex``.
 This is the "split it yourself" step: one column per coordinate.
 
 .. testcode::

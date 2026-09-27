@@ -10,7 +10,7 @@
 
     the homotopy is the "cheater's homotopy" not a coefficient parameter homotopy.  Rewrite this so the homotopy is just in the coefficients.
 
-    
+
 .. testsetup:: *
 
    import bertini
@@ -31,7 +31,7 @@ with a moving line; a design swept across a range of settings.
 For such a family you should solve **once**, at generic complex parameter values, and then **reuse** those
 solutions as the start points of a *parameter homotopy* that deforms the coefficients to whatever
 value you actually care about -- as many times as you like, each move tracking just the solutions
-you already have.  
+you already have.
 
 The tools are :func:`bertini.nag_algorithm.straight_line_homotopy` (builds the homotopy)
 and :func:`bertini.HomotopySolver` (runs the full zero-dim pipeline -- pre-endgame
@@ -72,7 +72,7 @@ solutions are the start points we will reuse forever after:
 .. testcode::
 
     start_param_val = bertini.random_complex()
-    generic = sys_instance(start_param_val)      
+    generic = sys_instance(start_param_val)
     first = bertini.ZeroDimSolver(generic, mptype='adaptive')
     first.solve()
     start_points = first.all_solutions()
@@ -95,7 +95,7 @@ and track the start points through it:
 t\,\text{generic}` with ``t`` as the path variable: at :math:`t=1` it is ``generic`` (so its
 solutions are our start points) and at :math:`t=0` it is ``target``.
 
-Because we are making a homotopy in parameter space from generic to specific, we do not need the gamma trick, so 
+Because we are making a homotopy in parameter space from generic to specific, we do not need the gamma trick, so
 ``gamma=1`` is set when we construct the homotopy.
 
 Now the payoff -- sweep as many parameters as you want, reusing the *same* start points, never
@@ -136,11 +136,11 @@ I saved only the real solutions for each parameter point.  Here they are plotted
 A note on the recording system in Bertini 2
 =============================================
 
-The line of code back at the top 
+The line of code back at the top
 
 .. code::
 
-    bertini.records_dir("circle_sweep_records")   
+    bertini.records_dir("circle_sweep_records")
 
 were not decoration.  Naming the ambient directory with
 ``records_dir`` turns recording on for **every** solver in the process -- the bare

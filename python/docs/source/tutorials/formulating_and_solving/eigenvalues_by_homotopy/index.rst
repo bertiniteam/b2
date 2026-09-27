@@ -19,7 +19,7 @@ of variables, every equation has bidegree :math:`(1,1)`, and the **multihomogene
 Bézout number** is :math:`n` -- exactly the number of eigenvalues.  The naive total-degree
 count would be :math:`2^n`.  For an :math:`8\times 8` matrix, using a two-homogeneous
 variable group structure yields only 8 paths to track,
-instead of 256 if we use only a single variable group.  
+instead of 256 if we use only a single variable group.
 This is the payoff of Bertini's multihomogeneous start system for this system: it tracks one path per
 *actual* solution.
 

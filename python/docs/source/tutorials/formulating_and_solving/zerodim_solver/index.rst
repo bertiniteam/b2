@@ -75,8 +75,8 @@ random combinations but not the original equations).  ``all_solutions()`` shows 
 ``is_nonsolution`` in the metadata -- are surfaced separately by ``nonsolutions()``:
 
 .. note::
-    
-    Beware ``all_solutions``.  It may contain things you don't want!!!  
+
+    Beware ``all_solutions``.  It may contain things you don't want!!!
 
 .. testcode::
 

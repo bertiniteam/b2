@@ -6,8 +6,8 @@
    import bertini
 
 Homotopy continuation finds "all" the complex solutions of a system -- but the real part of a variety can have
-whole pieces that carry no isolated real solutions of :math:`f=0`. 
-(the Numerical Irreducible Decomposition computes a finite set representing positive dimensional components).  
+whole pieces that carry no isolated real solutions of :math:`f=0`.
+(the Numerical Irreducible Decomposition computes a finite set representing positive dimensional components).
 Jonathan Hauenstein's method :cite:`hauenstein2013numerically` gives a method: pick a random real point
 :math:`p`, and compute the **critical points of the squared distance** :math:`\lVert x - p
 \rVert^2` restricted to the variety.  Every bounded connected component contains a nearest (and a
