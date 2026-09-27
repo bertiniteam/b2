@@ -46,7 +46,14 @@ void ListVisitor<T>::visit(PyClass& cl) const
 
     .def("__str__", &ListVisitor::__str__)
     .def("__repr__", &ListVisitor::__repr__)
+
+    // compared by value, element by element, with any Python sequence
+    .def("__eq__", &ListVisitor::__eq__)
+    .def("__ne__", &ListVisitor::__ne__)
     ;
+    // a mutable container that compares by value must not hash (Python's own list does not):
+    // an identity hash would let two equal lists land in different dict slots
+    cl.attr("__hash__") = boost::python::object();
 }
 
 
