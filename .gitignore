@@ -105,6 +105,10 @@ dist/
 
 bertini_output/
 
+# Solve records the parameter homotopy tutorial script writes beside itself
+# (tools/refresh_doc_artifacts.py runs each plot script in its own directory)
+circle_sweep_records/
+
 # Local Claude Code config and personal working notes
 .claude/
 z_notes/

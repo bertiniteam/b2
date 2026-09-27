@@ -52,6 +52,8 @@ SVG_HASHSALT = "bertini2-docs"
 # Each entry: the regenerator script, the argv it needs, the image files it is expected to write
 # (relative to `outdir`, which is the script's own directory unless noted), and an optional
 # `needs` predicate for artifacts that require something extra (e.g. the built CLI binary).
+# The script runs with `outdir` as its working directory, so a plain `savefig("name.svg")`
+# lands where the docs expect it; the script needs no path handling of its own.
 class Plot:
     def __init__(self, key, script, outputs, argv=None, outdir=None, needs=None, note=None,
                  env=None):
@@ -187,7 +189,7 @@ def run_plot(plot: Plot, dry_run):
     scratch = tempfile.TemporaryDirectory(prefix="refresh_doc_artifacts_")
     env.update({k: v.format(tmpdir=scratch.name) for k, v in plot.env.items()})
     try:
-        proc = subprocess.run(cmd, cwd=REPO, env=env)
+        proc = subprocess.run(cmd, cwd=plot.outdir, env=env)
     finally:
         os.unlink(rc_path)
         scratch.cleanup()
