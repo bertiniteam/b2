@@ -1,6 +1,16 @@
 🔁 Parameter homotopy
 **********************************************************
 
+
+.. todo::
+
+    This is not a good example because the parameter homotopy saves 0 paths...
+
+.. todo::
+
+    the homotopy is the "cheater's homotopy" not a coefficient parameter homotopy.  Rewrite this so the homotopy is just in the coefficients.
+
+    
 .. testsetup:: *
 
    import bertini
@@ -31,10 +41,6 @@ a list of start points you already have).
 A family of systems
 ===================
 
-Todo: This is not a good example because the parameter homotopy saves 0 paths...
-
-Todo: the homotopy is the "cheater's homotopy" not a coefficient parameter homotopy.  Rewrite this so the homotopy is just in the coefficients.
-
 Take a fixed unit circle intersected with a horizontal line whose height is the parameter:
 
 .. testcode::
@@ -64,6 +70,7 @@ Pick a generic complex member and solve it the usual way (a total-degree start s
 solutions are the start points we will reuse forever after:
 
 .. testcode::
+
     start_param_val = bertini.random_complex()
     generic = sys_instance(start_param_val)      
     first = bertini.ZeroDimSolver(generic, mptype='adaptive')
@@ -88,13 +95,11 @@ and track the start points through it:
 t\,\text{generic}` with ``t`` as the path variable: at :math:`t=1` it is ``generic`` (so its
 solutions are our start points) and at :math:`t=0` it is ``target``.
 
-``gamma=1`` is what makes this a *parameter* homotopy rather than a general one. The deformation
-is a path in parameter space, so the gamma trick -- which the same function applies by default,
-and which is what keeps a general start-to-target path off the singular locus -- is not required. 
-Genericity comes instead from the coefficients of ``generic``.
+Because we are making a homotopy in parameter space from generic to specific, we do not need the gamma trick, so 
+``gamma=1`` is set when we construct the homotopy.
 
 Now the payoff -- sweep as many parameters as you want, reusing the *same* start points, never
-solving from scratch again:
+solving an expensive ab initio system from scratch again:
 
 .. testcode::
 

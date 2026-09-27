@@ -7,9 +7,6 @@ Run:  python parameter_homotopy.py
 import bertini
 from bertini import nag_algorithm
 
-# one line: every solver below records into this directory (see the automatic record keeping
-# tutorial).  Pinning the seed makes reruns REPLAY the same homotopies, so a killed
-# sweep resumes from the records instead of recomputing.
 bertini.records_dir("circle_sweep_records")
 bertini.random.set_random_seed(42)
 
@@ -35,16 +32,6 @@ def step_one():
     first.solve()
     start_points = first.all_solutions()
     return generic, start_points
-
-
-# def step_two(generic, start_points):
-#     """Move to another member via a parameter homotopy, without solving from scratch."""
-#     target = sys_instance(0)                                 # the line y = 0
-#     H = nag_algorithm.straight_line_homotopy(target, generic, gamma=1)
-#     solver = bertini.HomotopySolver(H, start_points, target)
-#     solver.solve()
-#     # moved.all_solutions() are now (+/- 1, 0)
-#     return solver
 
 
 def sweep(generic, start_points):
@@ -97,7 +84,7 @@ def plot(results):
     plt.savefig('parameter_homotopy_circle.svg')
 
 def main():
-    
+
     generic, start_points = step_one()
     results = sweep(generic, start_points)
 
