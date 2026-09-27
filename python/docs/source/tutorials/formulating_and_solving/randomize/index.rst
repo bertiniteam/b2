@@ -7,18 +7,19 @@
    import bertini
 
 Most tutorials solve a **square** system -- as many equations as unknowns. But polynomial models
-are often **overdetermined**: more equations than unknowns. The common zeros are still (at most)
-isolated points, but you cannot hand such a system to a total-degree start system, which needs a
-square target.
+are often **overdetermined**: more equations than unknowns. The  zeros 
+we compute in numerical algebraic geometry are still
+isolated points, but you cannot hand an overdetermined system directly to a path tracker, which needs a
+square target (to do linear algebra, for example).
 
-The fix is **randomization**: replace the :math:`N` functions with :math:`n` generic combinations
+The numerical algebraic geometric fix to overdetermination is **randomization**: replace the :math:`N` functions with :math:`n` generic combinations
 (:math:`n` = the number of unknowns). Every common zero of the original system is a zero of each
-combination, so the genuine solutions survive -- but the square randomized system has *extra*
-solutions too. The workflow is always: **randomize, solve the square system, then keep only the
-points that also satisfy the original system.**
+combination, so the genuine solutions survive -- but the square randomized system may have *extra*
+solutions. The workflow is: randomize, solve the square system, then keep only the
+points that also satisfy the original system.
 
-This tutorial does that twice, to show two different things: first an ordinary system in one block
-of variables, then a system whose variables split into groups -- where the grouping cuts the path
+This tutorial does that twice, to show two different things.  First, an ordinary system in one block
+of variables, and second a system whose variables split into groups -- where the grouping cuts the path
 count.
 
 Part 1 -- one block of variables
@@ -53,15 +54,19 @@ the minimum a randomization can achieve.
 
    assert randomized.num_functions() == 2          # squared up
    assert original.num_functions() == 3            # original unchanged
-   assert sorted(randomized.degrees()) == [2, 2]
+   assert randomized.degrees() == [2, 2]
 
 .. note::
 
    The descending sort is what keeps the count minimal: the degree-1 line is folded into the
-   degree-2 rows rather than becoming a degree-1 target that a folded degree-2 function would
-   inflate. The payoff grows with the degree spread -- for degrees :math:`(3, 2, 2)` randomization
-   tracks :math:`3 \times 2 = 6` paths, where a degree-blind squaring (every row pushed to the
-   maximum degree 3) would track :math:`3^2 = 9`. You may also pass your own exact matrix,
+   degree-2 rows, rather than becoming a degree-1 target that a folded degree-2 function would
+   inflate. The payoff grows with the degree spread.  For degrees :math:`(3, 2, 2)` randomization
+   tracks :math:`3 \times 2 = 6` paths, where a degree-blind or dense squaring (every row pushed to the
+   maximum degree 3) would track :math:`3^2 = 9`. 
+
+.. note::
+
+   You may also pass your own exact matrix ``R``, calling
    ``original.randomize(R)``, in which case the functions are kept in their given order.
 
 Solve the square system, then filter: evaluate the **original** system at each computed point and
@@ -92,10 +97,11 @@ two solve the random combination but not the original equations, so the filter d
 Part 2 -- variables in separate groups
 =======================================
 
-Now something different: when the unknowns split into separate **variable groups**, randomization
-works group by group and the *multihomogeneous* start system tracks far fewer paths.
+Now something different: when the unknowns are split into separate variable groups, randomization
+works group by group and the *multihomogeneous* start system can track far fewer paths than a total-degree 
+start system.
 
-The vehicle is a **bilinear** system -- each function is degree 1 in :math:`x` and degree 1 in
+The vehicle is a **bilinear** system: each function is degree 1 in :math:`x` and degree 1 in
 :math:`y` -- with :math:`x` and :math:`y` in their own groups. Three equations whose only common
 solution is :math:`(1, 1)`: from :math:`x = y` and :math:`x + y = 2` we get :math:`x = y = 1`, and
 indeed :math:`xy = 1`.
@@ -117,7 +123,7 @@ indeed :math:`xy = 1`.
 Solve with the **multihomogeneous** start system, which exploits the grouping. Two bilinear
 equations on :math:`\mathbb{P}^1 \times \mathbb{P}^1` meet in the multihomogeneous Bézout number
 of paths -- here :math:`2` (the coefficient of :math:`z_x z_y` in :math:`(z_x + z_y)^2`) -- whereas
-a total-degree start would track :math:`2^2 = 4`. Same answer, half the work.
+a total-degree start would track :math:`2^2 = 4`. Same answer, half the work.  Simple example; the difference can be much more dramatic.
 
 .. testcode::
 
@@ -141,8 +147,6 @@ start system see the bilinear structure and track fewer paths to the same answer
 
 Complete example
 ================
-
-The whole tutorial as one runnable script -- assemble nothing, just run it:
 
 .. literalinclude:: randomize.py
    :language: python
