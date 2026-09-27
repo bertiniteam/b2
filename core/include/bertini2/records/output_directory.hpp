@@ -39,6 +39,7 @@ travels inside every directory as its README.txt.
 
 #pragma once
 
+#include <cstddef>
 #include <cstdint>
 #include <filesystem>
 #include <fstream>
@@ -64,8 +65,9 @@ constexpr char RecordSchemaVersion[] = "b2rec/1";
 \brief One structured output directory: definitions/ + history/ + derived views.
 
 Construction ensures the directory skeleton and its self-documenting README.txt exist.
-One OutputDirectory instance = one writing session = at most one history file (claimed
-exclusively on first append).
+One OutputDirectory instance = one writing session = one history file at a time (claimed
+exclusively on first append, and claimed afresh if that file is deleted while the
+instance lives).  Through Shared(), one session spans the whole process.
 */
 class OutputDirectory
 {
@@ -82,8 +84,17 @@ public:
     constructing many writers in a loop (a parameter sweep attaching the ambient
     records to every solver, say) must share one instance: the per-second claim
     namespace is finite, and the history should not be shredded across a file per
-    solve.  Keyed by the weakly-canonical path; instances are held weakly, so a
-    directory nobody references anymore is released.
+    solve.  Keyed by the weakly-canonical path.
+
+    The instance is held for the life of the process, not only while someone holds
+    it: a sweep's solvers attach and release one after another, and a new instance
+    per solve is a new session file per solve.  A fresh instance replaces the held
+    one when the directory has been deleted since, or when the caller is a different
+    process (a forked child must not write into its parent's session file).  An
+    instance only this table still holds keeps no files open (it reopens its own
+    session file on its next record), and one whose directory is gone is dropped, so a
+    process that records into thousands of directories holds neither thousands of open
+    files nor thousands of instances.
 
     \param root The directory root (need not exist yet).
     \return The shared instance for this path in this process.
@@ -218,11 +229,22 @@ private:
     std::filesystem::path ResultsPath(std::string const& run_id) const;
     void EnsureSessionFile();
 
+    /// \brief Close every open file (the session file and the results files) while keeping
+    /// the session's claim: the next record reopens the same session file.  Called by
+    /// Shared() on instances nobody but its table holds.
+    void ReleaseFiles();
+
     std::filesystem::path root_;        ///< The directory root.
+    long pid_;                          ///< The process that created this instance; Shared() never hands it to another.
     std::ofstream session_;             ///< This session's history file (open after first append).
     std::filesystem::path session_path_; ///< Path of the session history file (empty until claimed).
     std::mutex append_mutex_;           ///< Serializes appends: a Shared() instance may be written from several threads.
-    std::map<std::string, std::ofstream> results_streams_;  ///< Open per-run results files (keyed by run id; bounded by concurrent runs).
+    std::map<std::string, std::ofstream> results_streams_;  ///< Open per-run results files, keyed by run id; at most kMaxOpenResultsFiles, reopened on demand.
+
+    /// \brief How many per-run results files an instance keeps open at once.  A Shared()
+    /// instance lives as long as the process, so a sweep of thousands of runs must not
+    /// hold a file handle for each.
+    static constexpr std::size_t kMaxOpenResultsFiles = 16;
 };
 
 /**

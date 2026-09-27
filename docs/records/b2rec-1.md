@@ -71,7 +71,8 @@ Definitions are written atomically (write-temp, rename) and idempotently (equal 
 The narrative: what was asked, when.  History contains **no per-path lines** -- the
 computed paths live in `results/`, referred to by the run header.  Files are named
 `YYYYMMDD_HHMMSS-pid<pid>[suffix].jsonl` — **one writer per file, ever** (the name is
-claimed with exclusive create).  Each line is one JSON object with a `kind`.  A reader
+claimed with exclusive create).  A writing session is one process: every solve a process
+records into a directory lands in the same file, however many solves there are.  Each line is one JSON object with a `kind`.  A reader
 MUST tolerate a torn final line (a crash mid-append) and MUST treat a torn interior
 line as corruption.  A reader MUST preserve records whose `kind` it does not recognize
 (the operation vocabulary is open; in-progress algorithms mint new kinds without

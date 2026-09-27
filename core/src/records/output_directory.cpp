@@ -64,8 +64,8 @@ is recomputing.
 
 LAYOUT -- three stores, separated by concern:
   history/      WHAT WAS ASKED, WHEN: run headers, declared results, annotations.
-                JSON, one object per line (JSONL), one file per writing session,
-                named by date.  Every line is small; the data it speaks of lives in
+                JSON, one object per line (JSONL), one file per writing session
+                (one process), named by date.  Every line is small; the data it speaks of lives in
                 the other two stores, referred to by id.  Read with eyes, grep, jq,
                 or pandas.read_json(..., lines=True).
   results/      WHAT WAS COMPUTED: one append-only JSONL file per run, at
@@ -275,10 +275,20 @@ that is the complete provenance of any point recorded here.
         return fallback;
     }
 
+    long CurrentPid()
+    {
+#ifdef _WIN32
+        return static_cast<long>(_getpid());
+#else
+        return static_cast<long>(getpid());
+#endif
+    }
+
 } // unnamed namespace
 
 
-OutputDirectory::OutputDirectory(std::filesystem::path root) : root_(std::move(root))
+OutputDirectory::OutputDirectory(std::filesystem::path root)
+    : root_(std::move(root)), pid_(CurrentPid())
 {
     std::filesystem::create_directories(root_ / "definitions");
     std::filesystem::create_directories(root_ / "history");
@@ -294,8 +304,11 @@ OutputDirectory::OutputDirectory(std::filesystem::path root) : root_(std::move(r
 
 std::shared_ptr<OutputDirectory> OutputDirectory::Shared(std::filesystem::path const& root)
 {
+    // held strongly: a sweep's solvers attach and release one after another, and a
+    // weakly held instance died between them, claiming a new session file per solve
+    // until the per-second claim namespace ran out
     static std::mutex table_mutex;
-    static std::map<std::filesystem::path, std::weak_ptr<OutputDirectory>> table;
+    static std::map<std::filesystem::path, std::shared_ptr<OutputDirectory>> table;
 
     std::error_code ec;
     auto key = std::filesystem::weakly_canonical(root, ec);
@@ -303,12 +316,28 @@ std::shared_ptr<OutputDirectory> OutputDirectory::Shared(std::filesystem::path c
         key = root;
 
     std::lock_guard<std::mutex> lock(table_mutex);
+
+    // instances nobody but this table holds: drop those whose directory is gone, and
+    // close the files of the rest, so an idle instance costs no file handle
+    for (auto it = table.begin(); it != table.end(); )
+    {
+        if (it->second.use_count() == 1)
+        {
+            if (!std::filesystem::is_directory(it->second->root_ / "history"))
+            {
+                it = table.erase(it);
+                continue;
+            }
+            it->second->ReleaseFiles();
+        }
+        ++it;
+    }
+
     auto& slot = table[key];
-    if (auto live = slot.lock())
-        return live;
-    auto made = std::make_shared<OutputDirectory>(root);
-    slot = made;
-    return made;
+    if (slot && slot->pid_ == CurrentPid() && std::filesystem::is_directory(slot->root_ / "history"))
+        return slot;
+    slot = std::make_shared<OutputDirectory>(root);
+    return slot;
 }
 
 std::string TimeStampNow()
@@ -488,15 +517,23 @@ bool OutputDirectory::HasDefinition(std::string const& id) const
 
 void OutputDirectory::EnsureSessionFile()
 {
-    if (session_.is_open())
-        return;
+    if (!session_path_.empty())
+    {
+        if (std::filesystem::exists(session_path_))
+        {
+            // still this session's file; reopen it if its handle was released
+            if (!session_.is_open())
+                session_.open(session_path_, std::ios::app);
+            return;
+        }
+        // the file was deleted under a live instance: writing on would lose every line
+        session_.close();
+        session_path_.clear();
+    }
     auto const stamp = TimeStamp("%Y%m%d_%H%M%S");
     auto const base = root_ / "history";
-#ifdef _WIN32
-    auto const pid = static_cast<long>(_getpid());
-#else
-    auto const pid = static_cast<long>(getpid());
-#endif
+    std::filesystem::create_directories(base);
+    auto const pid = CurrentPid();
     std::string suffix;
     for (char c = 'b'; c <= 'z'; ++c)
     {
@@ -624,15 +661,34 @@ void OutputDirectory::AppendResult(std::string const& run_id, json::object const
     if (!ValidRunId(run_id))
         throw std::invalid_argument("OutputDirectory: invalid run id '" + run_id + "'");
     std::lock_guard<std::mutex> lock(append_mutex_);
-    auto& stream = results_streams_[run_id];
-    if (!stream.is_open())
+    auto const path = ResultsPath(run_id);
+    auto open = results_streams_.find(run_id);
+    if (open != results_streams_.end() && !std::filesystem::exists(path))
     {
-        auto const path = ResultsPath(run_id);
-        std::filesystem::create_directories(path.parent_path());
-        stream.open(path, std::ios::app);
+        // deleted under a live instance: reopen rather than write into the unlinked file
+        results_streams_.erase(open);
+        open = results_streams_.end();
     }
+    if (open == results_streams_.end())
+    {
+        // this instance lives as long as the process, so it must not hold a handle per
+        // run ever written; every stream is append-mode and flushed, so closing them all
+        // loses nothing, and each reopens on its next record
+        if (results_streams_.size() >= kMaxOpenResultsFiles)
+            results_streams_.clear();
+        std::filesystem::create_directories(path.parent_path());
+        open = results_streams_.emplace(run_id, std::ofstream(path, std::ios::app)).first;
+    }
+    auto& stream = open->second;
     stream << SerializeReadable(record) << "\n";
     stream.flush();
+}
+
+void OutputDirectory::ReleaseFiles()
+{
+    std::lock_guard<std::mutex> lock(append_mutex_);
+    session_.close();              // session_path_ is kept: the claim survives the handle
+    results_streams_.clear();
 }
 
 std::vector<json::object> OutputDirectory::ResultsOf(std::string const& run_id) const
