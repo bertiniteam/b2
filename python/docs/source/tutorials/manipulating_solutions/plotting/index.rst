@@ -8,15 +8,28 @@
    import numpy as np
    import bertini
 
-Solutions come back as multiprecision numbers, and multiprecision numbers are not float64.
-A screen resolves about three digits, so drawing one has to drop the rest somewhere -- this
+Solutions from the adaptive precision tracker and associated algorithms (the default)
+come back as multiprecision numbers, and multiprecision numbers are not float64.
+A screen resolves about three digits, so drawing has to drop the rest somewhere -- this
 page is about where that happens, what you can hand straight to a plotting library, and the
-one thing bertini refuses to draw.
+a bit about what Bertini cannot draw.  
 
 Most of it is short: ``real_mp`` data goes onto a matplotlib axis like any other number.
 Complex data does not, and the reason is worth reading before you plot your first solve.
 
-Solving something to draw
+.. note::
+
+   ⚠️‼️⛔️☢️☣️🚨
+   Silviana notes up front an upstream limitation in Numpy that causes serious problems with 
+   the extended precision complex type ``bertini.complex_mp``: ``numpy.imag`` and ``numpy.real`` 
+   PRODUCE WRONG VALUES for custom complex types.  I'm working on this, but I cannot fix it
+   from b2.  It MUST be fixed in numpy.
+
+.. todo::
+
+   Fix this part of the tutorial when numpy fixes this bug.
+
+Solving
 =========================
 
 The unit circle meets the parabola :math:`y = x^2` in four points: two real, and a
@@ -73,9 +86,10 @@ The values themselves are untouched; only what goes to the axis becomes float64.
 Complex data is refused
 =======================
 
-numpy's ``.real`` and ``.imag`` are wired to its own three complex types.  On an array of
+⚠️‼️⛔️☢️☣️🚨 numpy's ``.real`` and ``.imag`` are wired to its own three complex types.  On an array of
 any other complex dtype -- ``complex_mp`` included -- ``.real`` hands back **the array
-itself** and ``.imag`` hands back **zeros**, with no error and no warning.  There is no
+itself** and ``.imag`` hands back **zeros**, with no error and no warning.  At the time
+of this writing (Fall 2026), there is no
 hook for a user dtype to correct that.
 
 So the spelling every numpy user reaches for would draw a picture that is wrong rather than
@@ -117,8 +131,8 @@ any slicing that drops the subclass.
    The real plane, and the complex :math:`x`-plane.  The two real solutions lie on the real
    axis; the conjugate pair is mirrored across it.
 
-Paths are already float64
-=========================
+Plotting paths from an observer
+=================================
 
 Path data does not come back multiprecision.  A collector records each step as it happened,
 in ``complex128``, so paths plot like any other numpy array -- ``.real`` and ``.imag``
@@ -163,8 +177,7 @@ For a complex array, take the part first: ``bertini.real(zs).astype(float)``.
 
 There is deliberately no automatic conversion.  ``real_mp`` and ``float64`` have no common
 dtype, so ``mp_array * 0.5`` does not quietly become a double array -- an automatic
-promotion would drop every digit past the sixteenth in ordinary arithmetic, silently,
-which is the thing this whole page is arranged to prevent.
+promotion would drop every digit past the sixteenth in ordinary arithmetic, silently.
 
 pandas
 ======
@@ -173,9 +186,11 @@ Multiprecision values live in an ``object`` column, where they stay exact: ``.su
 mp column is still multiprecision.  ``DataFrame.plot.scatter`` draws such a column directly,
 through matplotlib and its converter.
 
-``DataFrame.plot()`` and ``.plot.hist()`` do not: pandas selects numeric columns by dtype
+Sadly, ``DataFrame.plot()`` and ``.plot.hist()`` do not: pandas selects numeric columns by dtype
 *before* any drawing happens, and an object column is not numeric, so it reports "no numeric
-data to plot".  Cast the frame for those:
+data to plot".  
+
+The fix is to typecast the frame for those:
 
 .. testcode::
 
