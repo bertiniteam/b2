@@ -310,10 +310,16 @@ std::shared_ptr<OutputDirectory> OutputDirectory::Shared(std::filesystem::path c
     static std::mutex table_mutex;
     static std::map<std::filesystem::path, std::shared_ptr<OutputDirectory>> table;
 
+    // absolute first: weakly_canonical leaves a relative path none of whose parts exist
+    // as it is, so the default "bertini_output" keyed one way before its first solve
+    // created it and another way after, and the first solve got a session to itself.
+    // The instance keeps the absolute path too, so a later chdir cannot move its writes.
     std::error_code ec;
-    auto key = std::filesystem::weakly_canonical(root, ec);
+    auto const absolute = std::filesystem::absolute(root, ec);
+    auto const where = ec ? root : absolute;
+    auto key = std::filesystem::weakly_canonical(where, ec);
     if (ec)
-        key = root;
+        key = where;
 
     std::lock_guard<std::mutex> lock(table_mutex);
 
@@ -336,7 +342,7 @@ std::shared_ptr<OutputDirectory> OutputDirectory::Shared(std::filesystem::path c
     auto& slot = table[key];
     if (slot && slot->pid_ == CurrentPid() && std::filesystem::is_directory(slot->root_ / "history"))
         return slot;
-    slot = std::make_shared<OutputDirectory>(root);
+    slot = std::make_shared<OutputDirectory>(where);
     return slot;
 }
 

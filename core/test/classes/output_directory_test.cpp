@@ -285,6 +285,31 @@ BOOST_AUTO_TEST_CASE(a_sweep_that_releases_between_solves_keeps_one_session)
     BOOST_CHECK_EQUAL(OutputDirectory::Shared(dir)->Scan().size(), 30u);
 }
 
+BOOST_AUTO_TEST_CASE(a_relative_directory_is_one_session_from_its_first_solve)
+{
+    // the default ambient directory is the RELATIVE path "bertini_output", which does not
+    // exist until the first solve creates it.  weakly_canonical leaves such a path as it
+    // is, so the first attach was keyed "bertini_output" and every later one by the
+    // absolute path: the first solve of every process got a session file to itself.
+    auto const cwd = FreshDir("relative_cwd");
+    fs::create_directories(cwd);
+    auto const restore = fs::current_path();
+    fs::current_path(cwd);
+
+    OutputDirectory::Shared("relative_records")->Append({{"kind", "probe"}, {"n", 1}});
+    OutputDirectory::Shared("relative_records")->Append({{"kind", "probe"}, {"n", 2}});
+    BOOST_CHECK_EQUAL(SessionFileCount(cwd / "relative_records"), 1u);
+    BOOST_CHECK(OutputDirectory::Shared("relative_records")->Root().is_absolute());
+
+    // the instance keeps its absolute path: a later chdir does not move its writes
+    auto const held = OutputDirectory::Shared("relative_records");
+    fs::current_path(restore);
+    held->Append({{"kind", "probe"}, {"n", 3}});
+    BOOST_CHECK_EQUAL(OutputDirectory::Shared(cwd / "relative_records").get(), held.get());
+    BOOST_CHECK_EQUAL(held->Scan().size(), 3u);
+    BOOST_CHECK(!fs::exists(restore / "relative_records"));
+}
+
 BOOST_AUTO_TEST_CASE(many_directories_hold_no_idle_file_handles)
 {
     // instances live as long as the process, and a process may record into thousands of

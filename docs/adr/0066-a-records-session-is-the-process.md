@@ -25,6 +25,12 @@ The parallel parameter homotopy tutorial's figure could not be regenerated becau
 `Shared()` holds instances strongly, for the life of the process.  A process records into a
 directory through one instance and one history file, however many solves it runs.
 
+The table is keyed by `weakly_canonical(absolute(root))`, and the instance keeps the absolute
+path.  Without `absolute`, a relative path none of whose parts exist yet -- the default
+`bertini_output` before its first solve creates it -- canonicalizes to itself, and after
+creation to the absolute path, so a process's first recorded solve got a session of its own.
+The stored absolute path also keeps a later `chdir` from moving an instance's writes.
+
 Two cases replace the held instance with a fresh one: the directory has been deleted since
 (a test clearing a fixed temporary path, a user clearing `bertini_output/`), and the caller is
 a different process than the one that created it (a forked child must not write into its
@@ -53,6 +59,11 @@ record, so closing one loses nothing.
   `many_directories_hold_no_idle_file_handles` counts the open handles on Linux (600 without
   the release, 0 with it), and `results_files_stay_correct_past_the_open_file_cap` covers the
   cap.
+- **Do not key the table by `weakly_canonical(root)` alone.**  The default records path is
+  relative and does not exist before the first solve.
+  `a_relative_directory_is_one_session_from_its_first_solve` fails without `absolute`.
+  A consequence: `records_path()` on a solver recording to the default directory returns the
+  absolute path, not `bertini_output`.
 - A process's history for a directory is one file, so a long session's file grows for as long
   as the process records.  Readers already scan every file in `history/` and do not care how
   records are divided among them.
