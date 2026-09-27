@@ -28,6 +28,7 @@ prototype's cross-impl test reads, and READS one the prototype writes when prese
 
 #include <filesystem>
 #include <fstream>
+#include <cstdio>
 #include <cstdlib>
 #include <thread>
 #include <vector>
@@ -249,10 +250,173 @@ BOOST_AUTO_TEST_CASE(shared_is_one_instance_per_path_per_process)
             ++session_files;
     BOOST_CHECK_EQUAL(session_files, 1u);
 
-    // held weakly: once nobody references it, the instance is released
-    std::weak_ptr<OutputDirectory> watch = a;
+    // held for the life of the process: releasing every reference keeps the instance
+    auto const* const held = a.get();
     a.reset(); b.reset();
-    BOOST_CHECK(watch.expired());
+    BOOST_CHECK_EQUAL(OutputDirectory::Shared(dir).get(), held);
+}
+
+namespace {
+
+std::size_t SessionFileCount(fs::path const& dir)
+{
+    std::size_t count = 0;
+    for (auto const& entry : fs::directory_iterator(dir / "history"))
+        if (entry.path().extension() == ".jsonl")
+            ++count;
+    return count;
+}
+
+} // unnamed namespace
+
+BOOST_AUTO_TEST_CASE(a_sweep_that_releases_between_solves_keeps_one_session)
+{
+    // the parameter sweep case: each solve attaches, records, and lets go before the
+    // next starts.  A weakly held instance died between solves, so every solve claimed
+    // its own session file, and the 26th within one second found the claim namespace
+    // exhausted ("could not claim a session history file").  30 > 25 names per second.
+    auto const dir = FreshDir("sweep_releases");
+    for (int solve = 0; solve < 30; ++solve)
+    {
+        auto records = OutputDirectory::Shared(dir);
+        records->Append({{"kind", "probe"}, {"solve", solve}});
+    }
+    BOOST_CHECK_EQUAL(SessionFileCount(dir), 1u);
+    BOOST_CHECK_EQUAL(OutputDirectory::Shared(dir)->Scan().size(), 30u);
+}
+
+BOOST_AUTO_TEST_CASE(a_relative_directory_is_one_session_from_its_first_solve)
+{
+    // the default ambient directory is the RELATIVE path "bertini_output", which does not
+    // exist until the first solve creates it.  weakly_canonical leaves such a path as it
+    // is, so the first attach was keyed "bertini_output" and every later one by the
+    // absolute path: the first solve of every process got a session file to itself.
+    auto const cwd = FreshDir("relative_cwd");
+    fs::create_directories(cwd);
+    auto const restore = fs::current_path();
+    fs::current_path(cwd);
+
+    OutputDirectory::Shared("relative_records")->Append({{"kind", "probe"}, {"n", 1}});
+    OutputDirectory::Shared("relative_records")->Append({{"kind", "probe"}, {"n", 2}});
+    BOOST_CHECK_EQUAL(SessionFileCount(cwd / "relative_records"), 1u);
+    BOOST_CHECK(OutputDirectory::Shared("relative_records")->Root().is_absolute());
+
+    // the instance keeps its absolute path: a later chdir does not move its writes
+    auto const held = OutputDirectory::Shared("relative_records");
+    fs::current_path(restore);
+    held->Append({{"kind", "probe"}, {"n", 3}});
+    BOOST_CHECK_EQUAL(OutputDirectory::Shared(cwd / "relative_records").get(), held.get());
+    BOOST_CHECK_EQUAL(held->Scan().size(), 3u);
+    BOOST_CHECK(!fs::exists(restore / "relative_records"));
+}
+
+BOOST_AUTO_TEST_CASE(many_directories_hold_no_idle_file_handles)
+{
+    // instances live as long as the process, and a process may record into thousands of
+    // directories (the python suite gives every test its own); an idle instance must not
+    // keep its session and results files open
+    auto const run = std::string("abcdef");
+    int const dirs = 300;   // past macOS's default limit of 256 open files
+    for (int i = 0; i < dirs; ++i)
+    {
+        auto out = OutputDirectory::Shared(FreshDir("many_dirs_" + std::to_string(i)));
+        out->Append({{"kind", "probe"}, {"i", i}});
+        out->EnsureResultsFile(run, {{"kind", "results_header"}, {"run", run}});
+        out->AppendResult(run, {{"kind", "path"}, {"run", run}, {"index", 0}});
+    }
+    // one more attach releases the last directory's files too
+    auto const again = OutputDirectory::Shared(FreshDir("many_dirs_probe"));
+
+#ifdef __linux__
+    std::size_t open = 0;
+    for (auto const& fd : fs::directory_iterator("/proc/self/fd"))
+    {
+        std::error_code ec;
+        auto const target = fs::read_symlink(fd.path(), ec);
+        if (!ec && target.string().find("b2_outdir_test_many_dirs_") != std::string::npos)
+            ++open;
+    }
+    BOOST_CHECK_EQUAL(open, 0u);
+#endif
+
+    // and each directory still got exactly its own records
+    auto const out = OutputDirectory::Shared(fs::temp_directory_path() / "b2_outdir_test_many_dirs_7");
+    BOOST_CHECK_EQUAL(out->Scan().size(), 1u);
+    BOOST_CHECK_EQUAL(out->ResultsOf(run).size(), 2u);
+    for (int i = 0; i < dirs; ++i)
+        fs::remove_all(fs::temp_directory_path() / ("b2_outdir_test_many_dirs_" + std::to_string(i)));
+    fs::remove_all(fs::temp_directory_path() / "b2_outdir_test_many_dirs_probe");
+}
+
+BOOST_AUTO_TEST_CASE(shared_replaces_an_instance_whose_directory_was_deleted)
+{
+    auto const dir = FreshDir("deleted_dir");
+    auto const first = OutputDirectory::Shared(dir);
+    first->Append({{"kind", "probe"}, {"n", 1}});
+
+    fs::remove_all(dir);
+    auto const second = OutputDirectory::Shared(dir);
+    BOOST_CHECK(second.get() != first.get());
+    BOOST_CHECK(fs::exists(dir / "README.txt"));
+    second->Append({{"kind", "probe"}, {"n", 2}});
+
+    auto const records = second->Scan();
+    BOOST_REQUIRE_EQUAL(records.size(), 1u);
+    BOOST_CHECK_EQUAL(records[0].at("n").as_int64(), 2);
+}
+
+BOOST_AUTO_TEST_CASE(a_deleted_session_file_is_claimed_afresh)
+{
+    // a live instance must not keep writing into a file somebody deleted: every line
+    // after the deletion would be lost
+    auto const dir = FreshDir("deleted_session");
+    auto const out = OutputDirectory::Shared(dir);
+    out->Append({{"kind", "probe"}, {"n", 1}});
+    for (auto const& entry : fs::directory_iterator(dir / "history"))
+        fs::remove(entry.path());
+
+    out->Append({{"kind", "probe"}, {"n", 2}});
+    auto const records = out->Scan();
+    BOOST_REQUIRE_EQUAL(records.size(), 1u);
+    BOOST_CHECK_EQUAL(records[0].at("n").as_int64(), 2);
+}
+
+BOOST_AUTO_TEST_CASE(results_files_stay_correct_past_the_open_file_cap)
+{
+    // a process-lifetime instance writes many runs; it keeps a bounded number of results
+    // files open and reopens on demand, so every run's file must stay whole
+    auto const dir = FreshDir("many_runs");
+    auto const out = OutputDirectory::Shared(dir);
+    auto const run_id = [](int i) {
+        char buf[16];
+        std::snprintf(buf, sizeof buf, "%06x", i);
+        return std::string(buf);
+    };
+    int const runs = 40;
+    for (int i = 0; i < runs; ++i)
+    {
+        out->EnsureResultsFile(run_id(i), {{"kind", "results_header"}, {"run", run_id(i)}});
+        out->AppendResult(run_id(i), {{"kind", "path"}, {"run", run_id(i)}, {"index", 0}});
+    }
+    // back to the first run, long since closed by the cap
+    out->AppendResult(run_id(0), {{"kind", "path"}, {"run", run_id(0)}, {"index", 1}});
+
+    BOOST_CHECK_EQUAL(out->ResultsOf(run_id(0)).size(), 3u);
+    for (int i = 1; i < runs; ++i)
+        BOOST_CHECK_EQUAL(out->ResultsOf(run_id(i)).size(), 2u);
+
+#ifdef __linux__
+    // and it really does not hold one handle per run
+    std::size_t open_results = 0;
+    for (auto const& fd : fs::directory_iterator("/proc/self/fd"))
+    {
+        std::error_code ec;
+        auto const target = fs::read_symlink(fd.path(), ec);
+        if (!ec && target.string().find("b2_outdir_test_many_runs") != std::string::npos)
+            ++open_results;
+    }
+    BOOST_CHECK_LE(open_results, 17u);   // the capped results files, plus the session file
+#endif
 }
 
 BOOST_AUTO_TEST_CASE(hostile_ids_kinds_and_labels_are_refused)

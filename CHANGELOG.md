@@ -395,6 +395,18 @@ A correctness fix to the `MakeMovingHomotopy` guards: they decided function iden
 
 ### Fixed
 
+- **A fast parameter sweep no longer dies after 25 recorded solves** (ADR-0066).  Every
+  recorded solve that found no other solver attached to its records directory started a new
+  session, and a session claims a history file named for the current second, the process id,
+  and one of 25 suffixes.  `parameter_sweep` runs its solves one after another, so each
+  started its own session, and the 26th solve within a second failed with
+  `OutputDirectory: could not claim a session history file`.  A records session now lasts as
+  long as the process: however many solves a process records into a directory, they share one
+  history file (including the first solve into the default relative `bertini_output`, which
+  used to get a session of its own; `records_path()` now reports that directory's absolute
+  path).  A deleted directory or session file is recreated rather than written into,
+  a forked child starts its own session, and neither a long sweep nor a process recording
+  into many directories accumulates open files.
 - **Four ways to crash the interpreter from python, all closed** (#389).  `int()` of a `real_mp`
   or a `complex_mp` segfaulted, and `byteswap()` on either -- as a scalar or across a whole array
   -- aborted inside mpfr.  Both types become subclasses of `numpy.generic` when their dtypes are
