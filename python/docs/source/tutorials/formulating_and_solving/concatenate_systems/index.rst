@@ -61,7 +61,7 @@ untouched.
    assert system.num_functions() == 4 and system.num_variables() == 4
    assert geometry.num_functions() == 2        # inputs unchanged
    assert constraints.num_functions() == 2
-   assert list(system.degrees()) == [2, 2, 1, 1]
+   assert system.degrees() == [2, 2, 1, 1]
 
 The combined system is square, so a total-degree start system can solve it. Its path count is the
 product of the degrees, :math:`2 \times 2 \times 1 \times 1 = 4`.

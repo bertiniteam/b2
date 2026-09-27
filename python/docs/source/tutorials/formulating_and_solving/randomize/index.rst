@@ -40,7 +40,7 @@ points you can read off by hand.
    original.add_function(x - y)              # the line x = y       (degree 1)
    original.add_function(2*x*x - 1)          # the lines x = ±1/√2  (degree 2)
 
-   assert list(original.degrees()) == [2, 1, 2]   # three equations, two unknowns: overdetermined
+   assert original.degrees() == [2, 1, 2]   # three equations, two unknowns: overdetermined
 
 :func:`~bertini.System.randomize` returns a **new** square system; the original is left untouched.
 For a single variable group it sorts the functions by descending degree and forms :math:`R = [\,I
@@ -54,7 +54,7 @@ the minimum a randomization can achieve.
 
    assert randomized.num_functions() == 2          # squared up
    assert original.num_functions() == 3            # original unchanged
-   assert list(randomized.degrees()) == [2, 2]
+   assert randomized.degrees() == [2, 2]
 
 .. note::
 

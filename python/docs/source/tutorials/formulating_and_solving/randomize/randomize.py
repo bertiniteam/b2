@@ -18,7 +18,7 @@ def part1_one_block():
     original.add_function(x - y)              # the line x = y       (degree 1)
     original.add_function(2*x*x - 1)          # the lines x = ±1/√2  (degree 2)
 
-    assert list(original.degrees()) == [2, 1, 2]   # three equations, two unknowns: overdetermined
+    assert original.degrees() == [2, 1, 2]   # three equations, two unknowns: overdetermined
 
     # randomize returns a new square system; the original is untouched
     randomized = original.randomize()

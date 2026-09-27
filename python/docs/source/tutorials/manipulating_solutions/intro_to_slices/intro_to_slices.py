@@ -121,7 +121,7 @@ def start_from_slices(x, y):
     sa = Slice.from_coefficients([[1, 0, -1], [1, 0, 1]], [x, y])    # (x - 1)(x + 1)
     sb = Slice.from_coefficients([[0, 1, -1], [0, 1, -2]], [x, y])   # (y - 1)(y - 2)
     start.add_slices_as_products([sa, sb])
-    assert list(start.degrees()) == [2, 2]
+    assert start.degrees() == [2, 2]
 
 
 def main():

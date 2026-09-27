@@ -36,7 +36,7 @@ Sine has no degree.  Ask, and Bertini tells you so:
     sys.add_variable_group(bertini.VariableGroup([x]))
     sys.add_function(bertini.symbolics.sin(x) - bertini.coefficient('1/2'))
 
-    print(list(sys.degrees()))
+    print(sys.degrees())
     print(sys.is_polynomial())
 
 .. testoutput::
@@ -84,7 +84,7 @@ target.
     gamma = bertini.coefficient('-24/25') + bertini.I * bertini.coefficient('7/25')
     H = bertini.system.make_homotopy(target, start, gamma=gamma)
 
-    print(H.have_path_variable(), H.num_functions(), list(H.degrees()))
+    print(H.have_path_variable(), H.num_functions(), H.degrees())
 
 .. testoutput::
 

@@ -34,7 +34,7 @@ def build_start(x, y):
         [[0, 1, '-1'], [0, 1, '-2']],    # s1 = (y - 1)(y - 2)
     ])
 
-    assert list(start.degrees()) == [2, 2]   # a product's degree is its number of factors
+    assert start.degrees() == [2, 2]   # a product's degree is its number of factors
     return start
 
 

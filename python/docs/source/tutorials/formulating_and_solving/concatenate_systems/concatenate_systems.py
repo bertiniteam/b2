@@ -36,7 +36,7 @@ def stack(geometry, constraints):
     assert system.num_functions() == 4 and system.num_variables() == 4
     assert geometry.num_functions() == 2        # inputs unchanged
     assert constraints.num_functions() == 2
-    assert list(system.degrees()) == [2, 2, 1, 1]
+    assert system.degrees() == [2, 2, 1, 1]
 
     return system
 
