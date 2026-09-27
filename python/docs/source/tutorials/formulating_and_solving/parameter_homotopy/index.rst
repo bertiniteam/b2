@@ -1,4 +1,4 @@
-🔁 Parameter homotopy: solve once, re-solve many times
+🔁 Parameter homotopy
 **********************************************************
 
 .. testsetup:: *
@@ -18,11 +18,10 @@ that differ only in their coefficients: the same equations, evaluated at differe
 values.  The eigenvalues of :math:`A(s)` as :math:`s` varies; the intersections of a fixed curve
 with a moving line; a design swept across a range of settings.
 
-For such a family you should solve **once**, at a generic parameter, and then **reuse** those
-solutions as the start points of a *parameter homotopy* that slides the coefficients to whatever
+For such a family you should solve **once**, at generic complex parameter values, and then **reuse** those
+solutions as the start points of a *parameter homotopy* that deforms the coefficients to whatever
 value you actually care about -- as many times as you like, each move tracking just the solutions
-you already have.  This is bertini's "evaluate as little as possible" in action, and it is
-pleasantly parallel across the parameter values.
+you already have.  
 
 The tools are :func:`bertini.nag_algorithm.straight_line_homotopy` (builds the homotopy)
 and :func:`bertini.HomotopySolver` (runs the full zero-dim pipeline -- pre-endgame
@@ -31,6 +30,10 @@ a list of start points you already have).
 
 A family of systems
 ===================
+
+Todo: This is not a good example because the parameter homotopy saves 0 paths...
+
+Todo: the homotopy is the "cheater's homotopy" not a coefficient parameter homotopy.  Rewrite this so the homotopy is just in the coefficients.
 
 Take a fixed unit circle intersected with a horizontal line whose height is the parameter:
 
@@ -46,7 +49,7 @@ Take a fixed unit circle intersected with a horizontal line whose height is the 
     # interpolates the members' equations, so they must be built over the same Variable objects.
     x, y = bertini.Variable('x'), bertini.Variable('y')
 
-    def member(s):
+    def sys_instance(s):
         """The system { x^2 + y^2 - 1, 2y - s }: the unit circle meeting the line y = s/2."""
         sys = bertini.System()
         sys.add_variable_group(bertini.VariableGroup([x, y]))
@@ -54,20 +57,20 @@ Take a fixed unit circle intersected with a horizontal line whose height is the 
         sys.add_function(2*y - s)
         return sys
 
-Solve once, ab initio
+Ab initio solve
 =====================
 
-Pick a generic member and solve it the usual way (a total-degree start system).  Its two
+Pick a generic complex member and solve it the usual way (a total-degree start system).  Its two
 solutions are the start points we will reuse forever after:
 
 .. testcode::
-
-    generic = member(1)                                # the line y = 1/2
+    start_param_val = bertini.random_complex()
+    generic = sys_instance(start_param_val)      
     first = bertini.ZeroDimSolver(generic, mptype='adaptive')
     first.solve()
-    start_points = first.all_solutions()                   # (+/- sqrt(3)/2, 1/2)
+    start_points = first.all_solutions()
 
-Move the parameter -- without solving again
+Move the parameter
 ===========================================
 
 To reach another member, build the parameter homotopy from that member back to the generic one
@@ -75,11 +78,11 @@ and track the start points through it:
 
 .. testcode::
 
-    target = member(0)                                 # the line y = 0
+    target = sys_instance(0)                                 # the line y = 0
     H = nag_algorithm.straight_line_homotopy(target, generic, gamma=1)
-    moved = bertini.HomotopySolver(H, start_points, target)
-    moved.solve()
-    # moved.all_solutions() are now (+/- 1, 0)
+    solver = bertini.HomotopySolver(H, start_points, target)
+    solver.solve()
+    # solver.all_solutions() are now (+/- 1, 0)
 
 ``straight_line_homotopy(target, generic, gamma=1)`` is just :math:`(1-t)\,\text{target} +
 t\,\text{generic}` with ``t`` as the path variable: at :math:`t=1` it is ``generic`` (so its
@@ -87,33 +90,54 @@ solutions are our start points) and at :math:`t=0` it is ``target``.
 
 ``gamma=1`` is what makes this a *parameter* homotopy rather than a general one. The deformation
 is a path in parameter space, so the gamma trick -- which the same function applies by default,
-and which is what keeps a general start-to-target path off the singular locus -- has no place in
-it. Genericity comes instead from the coefficients of ``generic``.
+and which is what keeps a general start-to-target path off the singular locus -- is not required. 
+Genericity comes instead from the coefficients of ``generic``.
 
 Now the payoff -- sweep as many parameters as you want, reusing the *same* start points, never
 solving from scratch again:
 
 .. testcode::
 
-    for s in [0, -1, 1]:                               # lines y = 0, -1/2, 1/2
-        target = member(s)
+    import numpy as np
+    results = {'param_vals':[], 'solns':[]}
+    for s in np.linspace(-2, 2, 20, dtype=bertini.real_mp):                               # lines y = 0, -1/2, 1/2
+        target = sys_instance(s)
         H = nag_algorithm.straight_line_homotopy(target, generic, gamma=1)
         solver = bertini.HomotopySolver(H, start_points, target)
         solver.solve()
-        roots = [p for p in solver.all_solutions() if len(p) == 2]
+        roots = [p for p in solver.all_solutions()]
         for p in roots:
             xv, yv = complex(p[0]), complex(p[1])
             assert abs(xv*xv + yv*yv - 1) < 1e-8       # on the circle
-            assert abs(2*yv - s) < 1e-8                # on the line y = s/2
+            assert abs(2*yv - np.float64(s)) < 1e-8                # on the line y = s/2
+
+        results['param_vals'].append(s)
+        results['solns'].extend(solver.real_solutions())
 
 Each iteration tracks only the two solutions we already have, to the new line -- not a fresh
 total-degree solve.  Across a large sweep that is the difference between tracking a handful of
 paths per parameter and tracking the full Bézout count every time.
 
-The sweep, on the record
-========================
 
-Those two lines back at the top were not decoration.  Naming the ambient directory with
+A plot
+========
+
+I saved only the real solutions for each parameter point.  Here they are plotted, together with the circle and the lines.
+
+.. figure:: parameter_homotopy_circle.svg
+   :align: center
+   :width: 62%
+
+A note on the recording system in Bertini 2
+=============================================
+
+The line of code back at the top 
+
+.. code::
+
+    bertini.records_dir("circle_sweep_records")   
+
+were not decoration.  Naming the ambient directory with
 ``records_dir`` turns recording on for **every** solver in the process -- the bare
 :class:`~bertini.ZeroDimSolver` and :class:`~bertini.HomotopySolver` used here included,
 not just :func:`bertini.solve`.  Every solve above wrote durable records of what it
@@ -121,40 +145,13 @@ computed, and every solve *consults* the records before computing.  The pinned s
 what makes that pay: with the same seed a rerun of the script rebuilds the *same*
 homotopies (randomness is seed-rooted), so every already-answered solve recalls from
 the records instead of tracking again.  Kill a thousand-member sweep at member 700 and
-rerun -- the first 700 come back instantly and the sweep continues where it died.
+rerun -- the first 700 come back nearly instantly and the sweep continues where it died.
 Without a pinned seed each run draws fresh randomness, and there is nothing to resume
-*from*.
+from.
 
-Read the sweep back with the navigation tools (see :doc:`../../record_keeping/automatic_record_keeping/index` for the
-full story):
-
-.. testcode::
-
-    runs = bertini.runs("circle_sweep_records")
-    print(len(runs) >= 5, all(runs['num_paths'] == 2))
-
-.. testoutput::
-
-    True True
-
-One ab-initio solve, then nothing but two-path parameter moves: exactly the yoga this
-tutorial preaches, now auditable after the fact.
-
-Choosing the generic member
-===========================
-
-A parameter homotopy works because the *singular* parameter values -- where solutions collide or
-run off to infinity -- form a measure-zero set, so a straight-line path between two generic
-values misses them.  In the example above the real path stays safely inside :math:`|s| < 2`
-(the circle and line stay transverse), so a real generic value is fine.  In general, choose the
-generic member's coefficients to be **generic complex numbers**; then the path avoids the bad
-set with probability one.  And keep coefficients *exact* -- :mod:`bertini.linalg` refuses python
-floats so low-precision literals cannot silently cap your precision.
 
 Complete example
 ================
-
-The whole tutorial as one runnable script -- assemble nothing, just run it:
 
 .. literalinclude:: parameter_homotopy.py
    :language: python
