@@ -24,10 +24,10 @@ diverge.  This system delivers exactly that:
 
    f_1 = (x y - 3x + 2)(x - 4), \qquad f_2 = y - x^2 .
 
-Substituting :math:`y = x^2` gives :math:`(x-1)^2 (x+2)(x-4) = 0`: 
+Substituting :math:`y = x^2` gives :math:`(x-1)^2 (x+2)(x-4) = 0`:
 
 * a double root at :math:`x=1` — a *singular* endpoint reached by two paths
-* simple roots at :math:`x=-2, 4` (*nonsingular*).  
+* simple roots at :math:`x=-2, 4` (*nonsingular*).
 * The total-degree start system has 6 paths, so the remaining two diverge to infinity (the homogenizing coordinate goes to zero).
 
 Collecting the paths, classified by endpoint
@@ -74,4 +74,3 @@ Run it (needs ``matplotlib``)::
 The same shape as the hand drawing — start points on the right, three flavors of endpoint on the
 left, two paths funnelling into the single singular point, two diverging to infinity — but now every
 wiggle is a real tracked path of an actual homotopy.
-
