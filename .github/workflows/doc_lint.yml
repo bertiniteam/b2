@@ -61,7 +61,7 @@ env:
 jobs:
   cpp_doc_lint:
     name: Doxygen doc lint (C++)
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     steps:
       - uses: actions/checkout@v5
 
@@ -80,7 +80,7 @@ jobs:
   # Runs in parallel with cpp_doc_lint.  Pure-stdlib ast, no build, no pip deps.
   python_doc_lint:
     name: Docstring lint (Python)
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     steps:
       - uses: actions/checkout@v5
 
@@ -96,7 +96,7 @@ jobs:
   # rule is in .editorconfig, and `python tools/whitespace_lint.py --fix` applies it.
   whitespace_lint:
     name: Whitespace lint (tabs, trailing whitespace, line endings)
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     steps:
       - uses: actions/checkout@v5
 

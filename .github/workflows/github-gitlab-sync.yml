@@ -11,7 +11,7 @@ on:
 
 jobs:
   sync:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     env:
       GITLAB_CONFIGURED: ${{ secrets.GITLAB_URL != '' }}
     steps:
