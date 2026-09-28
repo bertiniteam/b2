@@ -5,14 +5,14 @@
 
    import bertini
 
-Homotopy continuation finds *all* the complex solutions of a system -- but a real curve can have
-whole pieces that carry no isolated real solution of :math:`f=0` by itself, and simply solving
-:math:`f=0` does not tell you a real point on each one.  Jonathan Hauenstein's method (2013,
-*"Numerically computing real points on algebraic sets"*) gives one: pick a random real point
+Homotopy continuation finds "all" the complex solutions of a system -- but the real part of a variety can have
+whole pieces that carry no isolated real solutions of :math:`f=0`.
+(the Numerical Irreducible Decomposition computes a finite set representing positive dimensional components).
+Jonathan Hauenstein's method :cite:`hauenstein2013numerically` gives a method: pick a random real point
 :math:`p`, and compute the **critical points of the squared distance** :math:`\lVert x - p
 \rVert^2` restricted to the variety.  Every bounded connected component contains a nearest (and a
 farthest) point to :math:`p`, so the critical set contains **at least one real point on every
-component** -- and those are honest solutions of a square polynomial system we can solve.
+component** -- and those are isolated solutions of a square polynomial system we can solve.
 
 The critical-point system
 =========================
@@ -26,7 +26,7 @@ are the solutions of the square system
 
    f = 0, \qquad (x - p_x)\, f_y - (y - p_y)\, f_x = 0 .
 
-We will use the **Trott curve**, a smooth quartic famous for having four separate oval
+We will use the **Trott curve**, a smooth quartic famous for having four separate oval-like
 components:
 
 .. math::
@@ -36,9 +36,9 @@ components:
 Building and solving it
 =======================
 
-We let bertini differentiate :math:`f` for us, and keep every coefficient exact -- the random
-point's coordinates are exact rationals, since ``bertini`` (rightly) refuses python
-floats that would silently cap precision:
+We let Bertini differentiate :math:`f` for us, and keep every coefficient exact -- the random
+point's coordinates are exact rationals, since ``bertini`` (rightly) refuses low-precision
+floats (``float64``, ``float``, etc) that would silently cap precision:
 
 .. testcode::
 
@@ -82,7 +82,7 @@ so every connected component of the curve is witnessed by a real point.
 Plotting the curve, the point, and the distances
 ================================================
 
-Plot the curve as an implicit contour, mark :math:`p` and the real critical points, and draw a
+Let's plot the curve as an implicit contour, mark :math:`p` and the real critical points, and draw a
 segment from :math:`p` to each one so the distances are visible:
 
 .. testcode::
@@ -110,14 +110,19 @@ segment from :math:`p` to each one so the distances are visible:
    The four ovals of the Trott curve, the hardcoded random point :math:`p` (★), the eight real
    distance-critical points (●), and a segment from :math:`p` to each.
 
-The method needs nothing special of the curve: pick a random real :math:`p` (a generic choice
+The method needs nothing special of the plane curve: pick a random real :math:`p` (a generic choice
 avoids the measure-zero set where a component's nearest point is non-isolated), build the same
 two equations for *your* :math:`f`, solve, and keep the real solutions.
 
+
+.. note::
+
+    This method works in higher dimensions, too!  I just chose
+    a plane curve so it's easy to plot without special tools.
+    I hope you're having a very nice day.
+
 Complete example
 ================
-
-The whole tutorial as one runnable script -- it saves the figure(s) shown above:
 
 .. literalinclude:: real_points.py
    :language: python

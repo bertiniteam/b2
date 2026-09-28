@@ -1,4 +1,4 @@
-🧮 Canonical ordering, and opting out
+🧮 Canonical monomial ordering, and opting out
 *************************************************
 
 .. testsetup:: *
@@ -6,8 +6,11 @@
    import bertini
    from bertini import Variable, MonomialOrder
 
-Bertini hash-conses the function tree: identical subexpressions become a single shared node.
-For that sharing to fire on expressions you build *separately*, the library also **canonically
+For performance reasons, Bertini hash-conses the function tree:
+identical subexpressions become a single shared node.  For example, :math:`x^2` appearing multiple
+times in a system shouldn't need to evaluate this every time it appears -- there should be
+only one "x squared" node in the tree.
+To this end, the library also **canonically
 orders** the operands of every sum and product -- so ``x + y`` and ``y + x`` are not just equal,
 they are the **same node**. This tutorial shows what that ordering does, how to choose it, and how
 to turn it off when you want to keep the exact operand order you wrote.
@@ -36,7 +39,7 @@ You can ask whether canonicalization is on, and toggle it, with :func:`bertini.c
 Choosing the monomial order
 ===========================
 
-The order is a pluggable monomial order -- ``Lex``, ``RevLex``, or ``GrevLex`` (the default,
+The order is a selectable monomial order -- ``Lex``, ``RevLex``, or ``GrevLex`` (the default,
 graded so higher total degree leads). It is a session-global setting, because it determines which
 expressions share a node.
 
@@ -56,8 +59,8 @@ Opting out
 ==========
 
 Canonicalization is the right default -- it maximizes sharing and keeps the compiled
-straight-line program small. But sometimes you have arranged the operands of an expression
-**deliberately**, and you want the library to leave that arrangement alone. Turn canonicalization
+straight-line program small. But maybe you arranged the operands of an expression
+**deliberately** to reduce numerical error or something, and you want the library to leave that arrangement alone. Turn canonicalization
 off while you build that expression, and the authored operand order is preserved:
 
 .. testcode::
@@ -85,8 +88,6 @@ do *not* opt out of stays canonicalized -- and keeps sharing.
 
 Complete example
 ================
-
-The whole tutorial as one runnable script -- assemble nothing, just run it:
 
 .. literalinclude:: canonical_ordering.py
    :language: python

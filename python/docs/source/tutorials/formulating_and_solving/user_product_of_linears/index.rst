@@ -5,13 +5,14 @@
 
    import bertini
 
-Every other tutorial lets bertini *generate* the start system for you -- a total-degree start
-system, or the multihomogeneous one -- or (in :ref:`the parameter-homotopy tutorial
-<tutorials>`) reuses the solutions of an earlier solve.  This one is different: **you** author
-the start system, by hand, and drive the homotopy yourself.
+Other tutorials lets Bertini generate the start system for you -- a total-degree start
+system, or the multihomogeneous -- or in :ref:`the parameter-homotopy tutorial
+<tutorials>`, we reuse the solutions of an earlier solve.  This tutorial is different: you author
+the start system, by hand, and construct the homotopy yourself.
 
-The vehicle is a **product of linear forms**.  A linear form is :math:`c\cdot[x;1]` (the trailing
-``1`` carries the constant term), and a start function is a product of them:
+The form of the start system we'll construct
+is a product of linear forms.  A linear form is :math:`c\cdot[x;1]` (the trailing
+``1`` carries the constant term, which we are normalizing), and the start function is a product of them:
 
 .. math::
 
@@ -20,10 +21,10 @@ The vehicle is a **product of linear forms**.  A linear form is :math:`c\cdot[x;
 Each factor :math:`c_{i,r}\cdot[x;1] = 0` is a **hyperplane**, so a start solution is just an
 intersection of one hyperplane per function -- something you can write down and check by eye.  No
 opaque generated coefficients: you see exactly why the start points are what they are.  The
-machinery underneath is the same first-class evaluation block bertini's own multihomogeneous
-start system uses, exposed through :mod:`bertini`.
+machinery underneath is the same first-class evaluation block Bertini 2's multihomogeneous
+start system and total degree linear product start systems use.
 
-A target you can check by hand
+Target system
 ==============================
 
 Take a unit circle meeting a parabola -- two quadratics in two variables, so Bézout says four
@@ -48,10 +49,10 @@ Substituting :math:`y = x^2` into :math:`x^2 + y^2 - 1` gives :math:`y^2 + y - 1
 :math:`(\pm\sqrt{y}, y)`; the smaller is negative and yields a **purely imaginary** :math:`x`
 pair.  Keep those four exact answers in your pocket -- we will check against them at the end.
 
-A start system you can write down
+Start system
 =================================
 
-For a target of degrees :math:`(2, 2)` we need a start system of the same degrees with solutions
+For a target with degrees :math:`(2, 2)` we need a start system of the same degrees with solutions
 we already know.  Make each start function a product of **two** linear forms, chosen so the
 factors are coordinate-aligned:
 
@@ -64,11 +65,17 @@ factors are coordinate-aligned:
         [[0, 1, '-1'], [0, 1, '-2']],    # s1 = (y - 1)(y - 2)
     ])
 
-    assert list(start.degrees()) == [2, 2]   # a product's degree is its number of factors
+    assert start.degrees() == [2, 2]   # a product's degree is its number of factors
 
 Each entry of the list is one function's coefficient matrix: **one row per linear factor**, the
 trailing column being that factor's constant term.  So ``[[1, 0, '-1'], [1, 0, '1']]`` is
 :math:`(1\,x + 0\,y - 1)(1\,x + 0\,y + 1) = (x-1)(x+1)`.
+
+.. note::
+
+    The coefficients of the linears should be complex, to guarantee
+    that this will genericall work.  The simple real numbers here
+    are just for illustration.
 
 .. note::
 
@@ -77,11 +84,13 @@ trailing column being that factor's constant term.  So ``[[1, 0, '-1'], [1, 0, '
    downstream computation.  Pass ints, :class:`fractions.Fraction`, exact strings (``'-1'``,
    ``'3/4'``), or :mod:`bertini.multiprec` values.
 
+.. note::
+
    This is a genuine *product* (degree = number of factors), the first-class C++
    ``ProductsOfLinearsBlock``.  It is **not** the same as
    :meth:`~bertini.System.add_linear_forms`, which adds a *stack* of degree-1 linear forms.
 
-Start points are intersections of hyperplanes
+Start points
 ==============================================
 
 Because :math:`s_0` vanishes when :math:`x = \pm 1` and :math:`s_1` vanishes when
@@ -98,7 +107,12 @@ solves the resulting linear system.  Here that is just the grid :math:`x \in \{1
 
 There are :math:`2 \times 2 = 4` of them -- the Bézout number of the start system, as it must be.
 
-Blend into a homotopy and solve
+.. note::
+
+    In principle, one should do linear algebra to compute the start points, the above is just because
+    the linears are so simple.
+
+Form a homotopy and solve
 ===============================
 
 Now couple the start system to the target with the gamma-trick straight-line homotopy
@@ -152,13 +166,13 @@ Classify the endpoints
 
 Rather than hand-rolling cutoffs, ask the solver's metadata which endpoints are finite, real, or
 singular.  Two of our four solutions are real (the :math:`(\pm\sqrt{y_1}, y_1)` pair); the other
-two have purely imaginary :math:`x`:
+two have complex coordinates:
 
 .. testcode::
 
     assert len(solver.finite_solutions()) == 4       # all four endpoints are finite
     assert len(solver.nonsingular_solutions()) == 4  # ... and all nonsingular
-    assert len(solver.real_solutions()) == 2         # two real, two with purely imaginary x
+    assert len(solver.real_solutions()) == 2         # two real, two complex
 
 That is the whole arc: an exact, hand-authored product-of-linears start system, four start points
 you wrote down yourself, blended into a homotopy and tracked through the same solver bertini uses
@@ -167,8 +181,6 @@ complex.
 
 Complete example
 ================
-
-The whole tutorial as one runnable script -- assemble nothing, just run it:
 
 .. literalinclude:: user_product_of_linears.py
    :language: python

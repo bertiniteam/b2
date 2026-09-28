@@ -7,23 +7,25 @@
    import bertini
    from bertini import nag_algorithm
 
-Regeneration and witness-set work share a shape: most equations are **fixed** -- the polynomial
-system, plus "below" linear slices that cut the dimension -- and only a small part **moves** along
-the path variable. The fixed equations should be evaluated **once** per step: never duplicated,
+This tutorial is about a performance minded feature of Bertini 2.
+
+Regeneration and witness-set work share a shape: most equations are fixed -- the polynomial
+system, plus "below" linear slices that cut the dimension -- and only a small part moves along
+the path variable. The fixed equations should be evaluated just once per step: never duplicated,
 never scaled by the path coefficient, never differentiated in :math:`t`.
 
-:func:`~bertini.nag_algorithm.straight_line_homotopy` builds exactly that. Hand it the two endpoints
-of the rows that move and, as ``fixed=``, the equations that do not, and it returns
+:func:`~bertini.nag_algorithm.straight_line_homotopy` builds exactly that. Hand it the target and start block
+of rows that move and, as ``fixed=``, the equations that do not, and it returns
 
 .. math::
 
    H \;=\; \bigl[\; \text{fixed's blocks} \;;\; (1-t)\,\text{target} + \gamma\,t\,\text{start} \;\bigr],
 
-keeping the fixed equations as their own evaluation blocks and deforming only the rest. Those rows
+keeping the fixed equations as their own evaluation blocks, and deforming only the moving parts. Those rows
 are the whole of the path-variable dependence: they are evaluated once per step rather than blended,
 and contribute exactly zero to :math:`dH/dt`.
 
-It hands back the homotopy **and the systems at both ends** -- ``.homotopy``, ``.target``,
+It hands back the homotopy and the systems at both ends -- ``.homotopy``, ``.target``,
 ``.start`` -- so neither end is yours to assemble. That matters for more than typing: the rows must
 come fixed-first, and nothing would catch it if they did not.
 
@@ -72,8 +74,8 @@ diagonal intersections.
 A static slice and a moving slice
 =====================================
 
-Now in three variables, the genuinely regeneration-flavored case: a fixed unit **sphere** (a
-surface) cut to dimension zero by **two** slices -- a **static** one ``z = 0`` and a **moving** one
+Now in three variables, the genuinely regeneration-flavored case: a fixed unit sphere (a
+surface) cut to dimension zero by two slices -- a static one ``z = 0`` and a moving one
 that slides ``y = 0`` :math:`\to` ``y - x = 0``. Two blocks are fixed (the sphere and the static
 slice); only the moving slice carries :math:`t`:
 
@@ -104,9 +106,9 @@ slice); only the moving slice carries :math:`t`:
     r = round(1 / np.sqrt(2), 4)
     assert roots == sorted([(r, r, 0.0), (-r, -r, 0.0)])
 
-**The fixed system is left out of the motion.** Ask the homotopy for :math:`dH/dt`: the rows of the
+The fixed system is left out of the homotopy's "motion". Ask the homotopy for :math:`dH/dt`: the rows of the
 two fixed blocks (the sphere and the static slice) are exactly zero -- they are evaluated once and
-never differentiated as the slice moves -- while only the moving row is nonzero:
+never differentiated as the slice moves -- while only the moving row can be nonzero:
 
 .. testcode::
 
@@ -130,9 +132,9 @@ The homotopy above is built over **projective** coordinates: the builder homogen
 the three systems before combining them, so a path heading to infinity reaches an ordinary point
 instead of running off. That is what the zero-dimensional solver has always done with the systems
 it builds for itself, and a homotopy can only be made projective where it is *built* -- once its
-blend exists, the operand systems are fixed.
+blend exists, the operand systems are fixed (for performance and recording reasons).
 
-You see it in the shape: a homogenizing coordinate per affine group, and a patch row.
+You can see projectivity in the shape: a homogenizing coordinate per affine group, and a patch row.
 
 .. testcode::
 
@@ -147,7 +149,7 @@ The solver bridges the two for you: hand it your affine target and affine start 
 and it brings both into the homotopy's coordinates. Pass ``projectivize=False`` to build the
 homotopy exactly as written, which is what you want when the affine coordinates are the point --
 all-real tracking, for instance. Mixing the two, a projective system with an affine one, is
-refused rather than quietly repaired.
+refused rather than quietly mangled.
 
 Deform a product of linears into a polynomial
 =============================================
@@ -189,8 +191,6 @@ work a regeneration cascade repeats -- and at every step the fixed equations are
 
 Complete example
 ================
-
-The whole tutorial as one runnable script -- assemble nothing, just run it:
 
 .. literalinclude:: moving_slice.py
    :language: python

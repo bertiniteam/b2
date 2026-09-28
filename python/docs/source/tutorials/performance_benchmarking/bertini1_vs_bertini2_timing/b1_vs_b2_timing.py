@@ -13,7 +13,7 @@ crescendo is a plot.
 Run (needs matplotlib; Bertini 1 optional)::
 
     python python/examples/b1_vs_b2_timing.py \
-        --bertini2 ./build/core/bertini2 --bertini1 /usr/local/bin/bertini --out .
+        --bertini2 ./build/core/bertini2 --bertini1 /usr/local/bin/bertini
 """
 import argparse
 import datetime
@@ -172,7 +172,6 @@ def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--bertini2", default="./build/core/bertini2")
     ap.add_argument("--bertini1", default=shutil.which("bertini"))
-    ap.add_argument("--out", default=".")
     ap.add_argument("--mptype", type=int, default=2)
     args = ap.parse_args()
 
@@ -189,8 +188,7 @@ def main():
             name, t2 or float("nan"), n2,
             "{:.3f}s".format(t1) if t1 else "n/a", n1))
 
-    os.makedirs(args.out, exist_ok=True)
-    svg, png = make_plot(rows, prov, os.path.join(args.out, "b1_vs_b2_timing"))
+    svg, png = make_plot(rows, prov, "b1_vs_b2_timing")
     print("wrote", svg, "\n      ", png)
 
 

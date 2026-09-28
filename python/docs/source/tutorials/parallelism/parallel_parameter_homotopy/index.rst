@@ -1,4 +1,4 @@
-⚗️ A bistable reaction network, mapped in parallel
+⚗️ Parameter homotopy in parallel
 ***************************************************
 
 .. testsetup:: *
@@ -22,7 +22,8 @@ for which rate constants does the network have more than one steady state?
 The Schlögl model
 =================
 
-The Schlögl network is the textbook example of a bistable reaction network.  Its single species
+The Schlögl network is a textbook example of a bistable reaction network :cite:`vellela2008stochastic`.
+A single species
 :math:`X` has a steady state wherever production balances degradation, which works out to a cubic:
 
 .. math::
@@ -30,13 +31,11 @@ The Schlögl network is the textbook example of a bistable reaction network.  It
    k_2\,X^3 \;-\; k_1\,X^2 \;+\; k_4\,X \;-\; k_3 \;=\; 0 .
 
 The rate constants :math:`k_1,\dots,k_4` are the parameters, and they live in the **positive
-orthant** (rates are positive).  A *steady state* is a **positive real** root.  By Descartes' rule
+orthant** (rates are positive).  We've set the parameters :math:`a = b = 1` for simplicity.
+A *steady state* is a **positive real** root.  By Descartes' rule
 of signs this cubic has either **one** or **three** positive real roots -- monostable or bistable
 -- and which one depends on where you are in parameter space.  Mapping that boundary is the goal.
 
-The family is one system at many coefficient values, so we build it with a factory over **shared**
-variables (a parameter homotopy interpolates coefficients, so every member must use the same
-``Variable`` object):
 
 .. testcode::
 
@@ -146,9 +145,8 @@ Both produce the **identical** map -- parallelism changes the wall-clock, never 
    :width: 75%
 
    The Schlögl network's steady states over a slice of its positive-orthant parameter space.  The
-   red tongue is the **bistable** region -- three positive real steady states; outside it there is
-   one.  Each pixel is one parameter homotopy track; the picture is an MPI-across-pixels,
-   threads-within-pixel solve.
+   red is the **bistable** region: three positive real steady states. In the blue region, there is
+   one posreal solution.
 
 Where to go from here
 =====================
@@ -158,5 +156,4 @@ Where to go from here
   point, so the per-point threading earns more.
 * Push ``--grid`` up and spread the ranks across a cluster with a hostfile
   (``mpirun --hostfile hosts ...``); the sweep code does not change.
-* See :doc:`/tutorials/parallelism/solving_at_scale/index` for the other axis -- distributing the *paths of a single solve*
-  across ranks -- and :doc:`/tutorials/observing_metadata_more/observers_and_path_data/index` to watch the tracking itself.
+* See :doc:`/tutorials/parallelism/solving_at_scale/index` for the other axis -- distributing the paths of a single solve across ranks -- and :doc:`/tutorials/observing_metadata_more/observers_and_path_data/index` to watch the tracking itself.

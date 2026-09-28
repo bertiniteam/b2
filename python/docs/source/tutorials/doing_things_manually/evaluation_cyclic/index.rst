@@ -20,7 +20,7 @@ Let's start by making some variables, programmatically [1]_.
     for ii in range(num_vars):
         x[ii] = bertini.Variable('x' + str(ii))
 
-Huzzah, we have `num_vars` variables!  This was hard to do in Bertini 1's classic style input files.  Now we can do it directly! 🎯
+Huzzah, we have ``num_vars`` variables!  This was hard to do in Bertini 1's classic style input files.  Now we can do it directly! 🎯
 
 Write a function to produce the cyclic :math:`n` polynomials :cite:`cyclic_n`.
 
@@ -41,7 +41,7 @@ Write a function to produce the cyclic :math:`n` polynomials :cite:`cyclic_n`.
         f[-1] = numpy.prod(vars)-1
         return f
 
-Now we will make a System, and put the cyclic polynomials into it.
+Now we will make a ``System``, and put the cyclic polynomials into it.
 
 .. testcode::
 
@@ -71,13 +71,9 @@ We also need to associate the variables with the system.  Unassociated variables
         vg.append(var)
     sys.add_variable_group(vg)
 
-Let's simplify this.  It will modify elements of the constructed function tree, even those held externally -- Bertini uses shared pointers under the hood, so pay attention to where you re-use parts of your functions, because later modification of them without deep cloning will cause ... modification elsewhere, too.
 
-.. testcode::
 
-    bertini.system.simplify(sys)
-
-Now, let's evaluate it at the origin -- all zero's (0 is the default value for multiprecision complex numbers in Bertini2).  The returned value should be all zero's except the last entry, which should be -1.
+Now, let's evaluate it at the origin -- all zero's.  The returned value should be all zero's except the last entry, which should be -1.
 
 .. testcode::
 
@@ -86,7 +82,7 @@ Now, let's evaluate it at the origin -- all zero's (0 is the default value for m
     assert complex(result[-1]) == -1                       # last cyclic function is (prod x) - 1
     assert all(complex(v) == 0 for v in result[:-1])       # the rest vanish at the origin
 
-Yay, all zeros, except the last one is -1.  Huzzah.
+Yay, all zeros, except the last one is :math:`-1`.  Huzzah.
 
 Let's change the values of our vector, and re-evaluate.
 
@@ -97,14 +93,14 @@ Let's change the values of our vector, and re-evaluate.
     result = sys.eval(s)
 
 
-There is much more one can do, too!  Please write the authors, particularly Silviana, for more.
+There is much more one can do, too!  Check out the other tutorials.  This is one of the older ones.
 
 .. [1] This is one of the reasons we wrote Bertini2's symbolic C++ core and exposed it to Python.
 
 Complete example
 ================
 
-The whole tutorial as one runnable script -- assemble nothing, just run it:
+The whole tutorial as one runnable script:
 
 .. literalinclude:: evaluation_cyclic.py
    :language: python

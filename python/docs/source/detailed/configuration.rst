@@ -1,9 +1,15 @@
 ⚙️ Configuration reference
 ==========================
 
-Every setting bertini2 has, with its default and what it does. The tables below are read out of
-the library when these docs are built, so they describe the version you are reading about rather
-than the version someone last wrote a table for.
+This page collects every tracker and algorithm setting the Python interface to
+Bertini 2 has, with its default and what it does.
+
+
+.. note::
+
+  The tables below are read out of
+  the library when these docs are built, so they describe the version you are reading about rather
+  than the version someone last wrote a table for.
 
 Three ways to set a setting
 ---------------------------
@@ -40,6 +46,10 @@ both give the exact rational, or pass an ``int``, a :class:`fractions.Fraction`,
 
 Tracker settings that have no config struct
 -------------------------------------------
+
+.. todo::
+
+  Get these into a config, so the interface is uniform.
 
 These are set by calling a method on the tracker rather than by naming a field, so they appear in
 no config listing, including the generated ones below. They are among the most consequential

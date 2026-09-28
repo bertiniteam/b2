@@ -56,7 +56,7 @@ Let's check that the degrees of our functions are correct:
 
     d = sys.degrees()
     assert(d[0]==2)  # f is degree 2 (highest power in any term is 2)
-    assert(d[1]==1)  # g is degree 1 (highest power in any term is 2)
+    assert(d[1]==1)  # g is degree 1 (highest power in any term is 1)
 
 
 Aside -- a brief exploration into non-algebraic things
@@ -109,7 +109,7 @@ It's trivial to make a total degree start system (:class:`~bertini.system.start_
 Note that you have to pass in the target system into the constructor of the total degree, or you get an error.
 
 
-Wonderful, now we have an easy-to-solve system ``td``, the structure of which mirrors that of our target system.  Every start system comes with a method ``start_point_*`` for generating its start points, by integer index.
+Wonderful, now we have an easy-to-solve system ``td``, the structure of which mirrors that of our target system.  Every start system comes with method ``start_point_*`` for generating its start points in double or multiple precision (at the current default precision), by integer index.  Of course, you get an error if the index is out of bounds.
 
 .. testcode::
 
@@ -125,7 +125,6 @@ Forming a homotopy
 
 
 We turn next to the act of path tracking.  This is the core computational method of numerical algebraic geometry, and it requires a continuous deformation between systems, called a "homotopy".
-
 A homotopy in Numerical Algebraic Geometry glues together a start system and a target system, such that we can later "continue" from one into the other.   Observe:
 
 
@@ -144,6 +143,7 @@ Now, we have the minimum theoretical ingredients for solving a polynomial system
 #. and a start system ``td``.
 
 as well as a few other incidentals which will be implicitly used, such as a path variable ``t``.
+I note at this point, a straight line homotopy like this without the gamma trick can suffer from path crossings.  The ``ZeroDimSolver`` will happily construct both the start system and gamma for you, but this is a tutorial about doing things manually :)
 
 
 Tracking a single path
@@ -175,11 +175,11 @@ We associate a system with a tracker when we make it.  You cannot make a tracker
     tr.set_stepping(stepping)
 
 
-Once we feel comfortable with the configs (of which there are many, see the book or elsewhere in this site, perhaps), we can track a path.
+Once we feel comfortable with the configs (of which there are many, the top-level page in this documentation for interface notes and available settings), we can track a path.
 
 .. testcode::
 
-    result = np.zeros((2,), dtype=bertini.multiprec.complex_mp)
+    result = np.zeros((2,), dtype=bertini.multiprec.complex_mp) # result of `track_path` is pass-by-refenrence
     tr.track_path(result,bertini.multiprec.complex_mp(1),bertini.multiprec.complex_mp(0), td.start_point_mp(0))
 
 Logging to inspect the path that was tracked
@@ -208,12 +208,13 @@ If you are going to keep tracking, but want to turn off the logging, remove the 
 
     tr.remove_observer(g)
 
+There's a whole tutorial just on observers!
 
 A complete tracking of paths
 =============================
 
 
-Now that we've tracked a single path, you might want to loop over all start points.  Awesome!  The next blob takes all the above, and puts it into a single blob.  Enjoy!
+Now that we've tracked a single path, you might want to loop over all start points.  Awesome!  The next blob takes all the above, and puts it into a single chunk of code.  Enjoy!
 
 
 .. testcode:: tracking_nonsingular_main
@@ -259,16 +260,16 @@ Now that we've tracked a single path, you might want to loop over all start poin
     tr.set_stepping(stepping)
 
     results = [] # make an empty list into which to put the results
-    expected_code = bertini.SuccessCode.Success
+
     codes = []
     for ii in range(td.num_start_points()):
         results.append(np.zeros((2,),dtype=bertini.multiprec.complex_mp))
         codes.append(tr.track_path(result=results[-1], start_time=bertini.multiprec.complex_mp(1), end_time=bertini.multiprec.complex_mp(0), start_point=td.start_point_mp(ii)))
 
-    #tr.remove_observer(g)
-
     # the tracked endpoints are now in the list ``results``
-    print(codes == [expected_code]*2)
+
+    # every path for this homotopy should have been successful
+    print(codes == [bertini.SuccessCode.Success]*2)
 
 .. testoutput:: tracking_nonsingular_main
 
