@@ -52,7 +52,7 @@ condition number with a ``LineCollection`` and scattering a marker at each preci
 
 Run the whole thing (needs ``matplotlib`` and ``pandas``)::
 
-    python python/docs/source/tutorials/seeing_precision_change/amp_precision_plot.py .
+    python python/docs/source/tutorials/seeing_precision_change/amp_precision_plot.py
 
 .. image:: amp_precision_cyclic5.png
    :width: 100%
