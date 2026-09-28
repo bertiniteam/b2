@@ -41,7 +41,8 @@ How to read it (for the run shown — see the caption for date/versions/machine)
 * Bertini 2 is still **slower** than Bertini 1 on most of these problems — level on the tiny
   diagonal system, up to about 4.4× on ``diag-6``.  This is honest: Bertini 1 is hand-tuned C
   with its own linear algebra; Bertini 2 trades constant-factor speed for a templated,
-  observable, arbitrary-precision design.
+  observable design.  Silviana knows some low-hanging fruit to be able to go further (eliminating
+  more linear algebra in Eigen, because Eigen causes churn for allocated types like ``complex_mp``.)
 * The diagonal family ``diag-3/5/6`` is **well-conditioned** (every path stays in double precision),
   so its growing slowdown is pure **per-step tracking overhead** scaling with problem size — a
   standing performance lever, independent of the endgame.
