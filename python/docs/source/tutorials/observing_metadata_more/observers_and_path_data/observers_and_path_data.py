@@ -286,7 +286,7 @@ def solve_griewank_osborn():
     sys.add_function(bertini.coefficient(Fraction(29, 16)) * x**3 - 2*x*y)  # exact rational coeff
     sys.add_function(y - x**2)
 
-    solver = ZeroDimSolver(sys, mptype='adaptive')
+    solver = ZeroDimSolver(sys, mptype='adaptive', endgame='cauchy')
     A = SolutionPathCollector()
     solver.add_observer(A)
     solver.solve()
