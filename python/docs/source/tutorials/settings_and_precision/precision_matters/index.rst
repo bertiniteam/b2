@@ -9,7 +9,7 @@ Tracking a path is a numerical tightrope walk.  Most paths are easy, but a few c
 singularity, where the system's Jacobian is nearly rank-deficient and a tiny numerical error gets
 amplified enormously.  In ``double`` precision -- 53 bits, about 16 digits -- the tracker can run
 out of room on such a path: it shrinks the step size to keep the error in check, hits the floor,
-and **gives up**.  When that happens you do not get a wrong answer, you get a *missing* one: a
+and gives up.  When that happens you do not get a wrong answer, you get a *missing* one: a
 genuine solution silently absent from the results.
 
 The cure is **adaptive precision**.  Instead of failing, the tracker raises the working precision
@@ -21,7 +21,7 @@ A system with near-singular paths
 
 The cyclic-:math:`n` roots system is a classic benchmark.  For :math:`n = 5` it has a number of
 finite solutions that is *known exactly* -- **70** -- so we have a ground truth to check against
-(G. Björck and R. Fröberg, *J. Symbolic Comput.* 12(3), 1991).  Its total-degree homotopy tracks
+:cite:`bjorck1991faster`.  A total-degree homotopy tracks
 :math:`5! = 120` paths; 70 converge to finite roots and the other 50 diverge to infinity.  Several
 of the 70 sit in tight, near-coincident clusters (the system has a dihedral symmetry), and the
 paths leading to them are ill-conditioned -- the kind double precision struggles with.
@@ -44,7 +44,7 @@ paths leading to them are ill-conditioned -- the kind double precision struggles
 Solve it reliably, with adaptive precision
 ==========================================
 
-Ask for adaptive precision with ``mptype='adaptive'``, solve, and check the answer the way a careful
+Ask for adaptive precision with ``mptype='adaptive'`` (the default), solve, and check the answer the way a careful
 user should -- not by trusting the raw endpoint count, but by asking the solver for its **report**:
 
 .. testcode::
@@ -73,8 +73,8 @@ Zero of them here.  (The report also exposes ``all_paths_resolved``, a stricter 
 *additionally* requires the midpath check to have cleared every path crossing -- a separate,
 predictor-driven concern covered in :doc:`/tutorials/settings_and_precision/crossed_paths/index`, not a precision one.)
 
-How a count can lie
-===================
+Double precision is risky
+==========================
 
 The same solve in ``double`` precision is faster, and *most* of the time it also finds all 70.  But
 about one run in ten, one of those near-singular paths fails -- the tracker hits its minimum step
@@ -109,20 +109,19 @@ reports 69 and moves on, silently wrong.  ``report.all_paths_resolved`` does.
 The lesson
 ==========
 
-Two habits keep a solve honest:
+Two habits help a solve be successul:
 
-#. **Reach for adaptive precision when paths are hard.**  ``mptype='adaptive'`` costs more
-   arithmetic than ``'double'``, but it spends that cost *only* where the geometry demands it, and it
-   turns "sometimes 69" into "always 70".  Pinning a random seed only makes a flaky run
+#. Use adaptive precision.  It's the default.  Sadly, ``mptype='adaptive'`` costs more
+   arithmetic than ``'double'``, but it spends that cost pretty much only where the geometry demands it, and
+   it often turn "sometimes 69" into "always 70".
+#.  Pinning a random seed only makes a flaky run
    *reproducible*; it is never the fix.
-#. **Check** ``report().num_failed``\ **, not just the count.**  The solve report classifies every
+#. Check ``report().num_failed``. The solve report classifies every
    path; if any *failed to track*, ``num_failed`` is nonzero and ``failures_by_reason`` names the
    reason.  A count alone can hide a root the tracker silently lost.
 
 Complete example
 ================
-
-The whole tutorial as one runnable script -- assemble nothing, just run it:
 
 .. literalinclude:: precision_matters.py
    :language: python
