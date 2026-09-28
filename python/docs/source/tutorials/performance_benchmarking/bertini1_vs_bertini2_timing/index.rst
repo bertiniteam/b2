@@ -38,10 +38,10 @@ Run it (needs ``matplotlib``; Bertini 1 optional)::
 
 How to read it (for the run shown — see the caption for date/versions/machine):
 
-* Bertini 2 is still **slower** than Bertini 1 on these problems — from a small factor on the tiny
-  diagonal system to ~25× on cyclic-5.  This is honest: Bertini 1 is hand-tuned C with its own linear
-  algebra; Bertini 2 trades constant-factor speed for a templated, observable, arbitrary-precision
-  design.
+* Bertini 2 is still **slower** than Bertini 1 on most of these problems — level on the tiny
+  diagonal system, up to about 4.4× on ``diag-6``.  This is honest: Bertini 1 is hand-tuned C
+  with its own linear algebra; Bertini 2 trades constant-factor speed for a templated,
+  observable, arbitrary-precision design.
 * The diagonal family ``diag-3/5/6`` is **well-conditioned** (every path stays in double precision),
   so its growing slowdown is pure **per-step tracking overhead** scaling with problem size — a
   standing performance lever, independent of the endgame.
@@ -52,12 +52,9 @@ How to read it (for the run shown — see the caption for date/versions/machine)
   system — cyclic-5 in adaptive precision is now ~Bertini-1 speed (~0.4 s serial, with **0 of 70**
   finite paths needing to escalate above double).
 
-  The bar shown here is **larger** than that, because this benchmark hands both solvers a
-  **total-degree** classic input, and that start system currently makes Bertini 2's endgame *stall*
-  near :math:`t = 0` (it takes far too many tiny steps).  The run stays mostly in double — so the
-  per-step speedup does apply — but the step *count* is the problem.  That stall, not precision and
-  not the endgame's arithmetic, is the current top lever for this particular path, and is tracked
-  separately from this endgame work.
+  This benchmark hands both solvers a **total-degree** classic input instead, and on it Bertini 2
+  takes about 1.8× Bertini 1's time on cyclic-5 — well below the diagonal family's 4.4× at
+  ``diag-6``.
 
 Both solvers report the **same solution counts** (shown under the bars), so this is a like-for-like
 comparison, not a speed/accuracy trade.
