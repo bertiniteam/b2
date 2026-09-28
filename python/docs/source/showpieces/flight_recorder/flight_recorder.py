@@ -28,7 +28,6 @@ Run standalone:  python flight_recorder.py
 """
 
 import math
-import os
 
 import numpy as np
 
@@ -42,7 +41,6 @@ import bertini
 from bertini import ZeroDimSolver, SolutionPathCollector
 from bertini.sympy_bridge import from_sympy
 
-_OUT = os.path.dirname(os.path.abspath(__file__))
 _BG = '#070a10'
 _INK = '#d6e2f0'
 _DIM = '#7f8da0'
@@ -277,9 +275,9 @@ def render_setup(setup, out):
 
 def main():
     render_setup(record_convergence(m=7, n=5, seed=2),
-                 os.path.join(_OUT, 'flight_recorder_setup.png'))
+                 'flight_recorder_setup.png')
     render(record_hard_path(m=7, n=5, final_tolerance=1e-24, seed=2),
-           os.path.join(_OUT, 'flight_recorder.png'))
+           'flight_recorder.png')
 
 
 if __name__ == '__main__':

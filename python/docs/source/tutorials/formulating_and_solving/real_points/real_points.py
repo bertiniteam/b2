@@ -8,7 +8,6 @@ component -- and plot the curve, the random point p, and the distances.
 Run:  python real_points.py
 """
 
-import os
 import matplotlib
 matplotlib.use('Agg')            # headless backend, must precede pyplot import
 import matplotlib.pyplot as plt
@@ -16,8 +15,6 @@ import matplotlib.pyplot as plt
 import numpy as np
 from fractions import Fraction
 import bertini
-
-_OUT = os.path.dirname(os.path.abspath(__file__))
 
 
 def build_system():
@@ -68,7 +65,7 @@ def plot(crit, PX, PY):
     ax.set_aspect('equal'); ax.legend(loc='upper right', fontsize=8)
     ax.set_title('A real point on every component of the Trott curve')
 
-    fig.savefig(os.path.join(_OUT, 'real_points.png'), dpi=150)
+    fig.savefig('real_points.png', dpi=150)
 
 
 def main():

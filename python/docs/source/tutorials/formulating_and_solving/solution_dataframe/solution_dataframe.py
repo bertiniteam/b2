@@ -8,7 +8,6 @@ solutions by category, and draws two figures: the real plane and the complex pla
 Run:  python solution_dataframe.py
 """
 
-import os
 
 import matplotlib
 matplotlib.use('Agg')            # headless: no display needed
@@ -19,8 +18,6 @@ import pandas as pd
 
 import bertini
 from bertini.nag_algorithm import ZeroDimSolver
-
-_OUT = os.path.dirname(os.path.abspath(__file__))
 
 
 def two_plane_curves():
@@ -79,8 +76,8 @@ def plot_real_plane(real_simple, singular):
     ax.scatter(real_simple.x_re, real_simple.y_re, c='k', marker='o', s=70, label='real, simple')
     ax.scatter(singular.x_re,    singular.y_re,    c='r', marker='*', s=300, label='real, singular')
     ax.legend(); ax.set_xlabel('x'); ax.set_ylabel('y'); ax.set_aspect('equal')
-    fig.savefig(os.path.join(_OUT, 'solution_dataframe_real_plane.svg'))
-    fig.savefig(os.path.join(_OUT, 'solution_dataframe_real_plane.png'), dpi=150)
+    fig.savefig('solution_dataframe_real_plane.svg')
+    fig.savefig('solution_dataframe_real_plane.png', dpi=150)
 
 
 def plot_complex_planes(df, real_simple, singular):
@@ -97,8 +94,8 @@ def plot_complex_planes(df, real_simple, singular):
             ax.scatter(sub[re], sub[im], c=color, marker=marker, s=size, label=label)
         ax.set_title(title); ax.set_xlabel('real part'); ax.set_ylabel('imaginary part')
     axes[0].legend()
-    fig.savefig(os.path.join(_OUT, 'solution_dataframe_complex_planes.svg'))
-    fig.savefig(os.path.join(_OUT, 'solution_dataframe_complex_planes.png'), dpi=150)
+    fig.savefig('solution_dataframe_complex_planes.svg')
+    fig.savefig('solution_dataframe_complex_planes.png', dpi=150)
 
 
 def main():

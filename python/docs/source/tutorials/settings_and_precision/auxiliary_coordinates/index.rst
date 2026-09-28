@@ -6,17 +6,26 @@ critical-point system in null-vector form is ``f; v^T M; patch``, where ``v`` ne
 or the system would admit the zero null vector.  That patch fixes a normalization, so ``v``'s
 direction is the meaningful object and its magnitude is whatever the patch made it.
 
-Bertini judges a point by its largest coordinate.  It does this three times: the tracker truncates
+Bertini 2 judges a point by its largest coordinate.  It does this three times: the tracker truncates
 a path whose point exceeds ``path_truncation_threshold``, the endgame abandons one that exceeds
 ``Security.max_norm``, and the solver classifies an endpoint as at infinity when it exceeds
 ``endpoint_finite_threshold``.  If the largest coordinate belongs to a block like ``v``, all three
-are reading a number nobody chose.  No threshold is the right one, because the quantity is not
+are reading a number nobody really cares about.  No threshold is the right one, because the quantity is not
 governed.
 
 The fix is to say which coordinates the question is about.
 
-Declaring them
-==============
+.. note::
+
+   This part of the system is motivated by the real cellular decomposition,
+   which uses nullvectors a lot to compute critical points.  And the nullvectors'
+   coordinates often trip the loss of a solution because the nullvector has large coordinates,
+   even though the critical point doesn't.  So, I implemented this,
+   so that I can say to the tracker "i don't care about how large these coordinates are".
+   Perhaps you also find it useful?
+
+Declaring variables as auxiliary
+=================================
 
 A system is told which of its coordinates are auxiliary, by variable group or by index:
 
@@ -53,11 +62,14 @@ not separate the two kinds of coordinate.  Indices are into a point in your own 
 variable-group order, so they still mean the same thing after the solver homogenizes and patches.
 The two lists are unioned; either can be emptied by passing ``[]``.
 
-What it changes in a solve
+Solving with auxiliaries
 ==========================
 
 ``{x^2 - 1, v - 100}`` has the solutions ``(1, 100)`` and ``(-1, 100)``.  With the finiteness
-threshold at 10, ``v`` puts both of them past it:
+threshold at 10, ``v`` puts both of them past it, and the solutions are labeled as
+infinite.  The problem can be even worse, if the tracker would truncate!  On the other hand
+if we set the v's as aux, then the solutions get labeled as finite.
+I know this example is contrived, but it's the simplest possible to illustrate what I mean.
 
 .. testcode::
 
@@ -83,13 +95,15 @@ threshold at 10, ``v`` puts both of them past it:
    (0, 0)
    (2, 2)
 
-Both runs track the same two paths to the same two points, and both report ``Success``.  What
-changes is the verdict: without the declaration the solver calls two ordinary roots infinite, and
+Both runs track the same two paths to the same two points, and both report ``Success``.
+Without the aux declaration, the solver calls two ordinary roots infinite, and
 calls them complex as well, because realness is measured over the same coordinates.
 
-The half you cannot work around
-===============================
+More notes on aux vars
+===========================
 
+The post-processor vs during-path properties
+-----------------------------------------------
 Classification happens after the solve, so a caller who disagrees with it can always compute
 their own.  Truncation happens during tracking.  A path the tracker abandoned partway, because a
 coordinate that was never the question grew large, is simply not there afterwards, and no
@@ -97,8 +111,8 @@ post-processing recovers it.  That is the reason this belongs to the system rath
 setting applied at the end: the same declaration reaches the tracker and the endgame, which is
 where it matters most.
 
-What it does not mean
-=====================
+What aux does not mean
+-------------------------
 
 Bertini attaches no further meaning to the word.  An auxiliary coordinate is tracked like any
 other, is stored in the solution, is written to records, and is returned to you.  It is excluded
@@ -107,8 +121,8 @@ from two questions and nothing else.
 Marking every coordinate auxiliary is refused.  A point with nothing left to judge would be
 finite and real unconditionally, which is not a verdict worth rendering.
 
-It is part of the system's identity
-===================================
+aux's and the recording system
+--------------------------------------
 
 Two systems that differ only in which coordinates are auxiliary have different content digests:
 

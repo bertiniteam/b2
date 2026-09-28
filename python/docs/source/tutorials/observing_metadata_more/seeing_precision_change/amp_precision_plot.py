@@ -1,10 +1,10 @@
-"""Recreate the homotopy-continuation "cartoon" from real tracked data, and use it to *see*
+"""Plot paths from real tracked data, and *see*
 adaptive-multiprecision (AMP) precision changes.
 
 The textbook picture of homotopy continuation (see
 ``doc_resources/images/homotopycontinuation_generic.png``) draws paths flowing from smooth start
 points at ``t=1`` (right) to the solutions of the target at ``t=0`` (left), past an "endgame
-boundary".  Those drawings are cartoons.  This script makes the *same* picture from a real solve:
+boundary".  Those drawings are cartoons.  This script makes a similar (but different!!) from a real solve:
 we attach a ``PathCollectionObserver`` to the tracker, solve cyclic-5 with the adaptive-precision
 Cauchy solver, collect every path into a pandas DataFrame, and plot it.
 
@@ -19,11 +19,8 @@ What the plot shows, from real data:
     stays in double; only a couple, which track unusually deep into the endgame, ever escalate.
 
 Run (needs matplotlib + pandas):
-    python python/examples/amp_precision_cartoon.py            # writes SVG + PNG next to cwd
-    python python/examples/amp_precision_cartoon.py /tmp/out   # writes into /tmp/out
+    python amp_precision_plot.py            # SVG + PNG to the current directory
 """
-import os
-import sys
 
 import numpy as np
 import bertini as pb
@@ -124,8 +121,7 @@ def make_plot(paths, out_stem):
 
     ax.set_xlabel(r"$\log_{10}|t|$   (start $t=1$ at right $\;\to\;$ target $t=0$ at left)")
     ax.set_ylabel(r"$\mathrm{Re}(x_1)$  (dehomogenized)")
-    ax.set_title("cyclic-5 homotopy paths from real data — colored by condition number\n"
-                 "(adaptive precision; stars mark where the tracker left double precision)")
+    ax.set_title("cyclic-5 homotopy paths colored by condition number")
     ax.set_yscale("symlog", linthresh=1.0)
     ax.margins(x=0.02)
     if esc_x:
@@ -142,15 +138,12 @@ def make_plot(paths, out_stem):
 
 
 def main():
-    out_dir = sys.argv[1] if len(sys.argv) > 1 else os.getcwd()
-    os.makedirs(out_dir, exist_ok=True)
     paths = collect_paths()
 
     n_escalating = sum(int((np.diff(p["precision"].to_numpy()) > 0).any()) for p in paths)
     print("collected {} paths; {} ever raised precision".format(len(paths), n_escalating))
 
-    stem = os.path.join(out_dir, "amp_precision_cartoon_cyclic5")
-    svg, png = make_plot(paths, stem)
+    svg, png = make_plot(paths, "amp_precision_cyclic5")
     print("wrote {}\n      {}".format(svg, png))
 
 

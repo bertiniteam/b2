@@ -1,10 +1,12 @@
 Chained homotopies: provenance all the way back
 ###############################################
 
-A *chain* is a sequence of solves where each solve's start points are the previous
-solve's solutions — the workhorse pattern of parameter continuation.  Because every
-solve records where each of its paths started (see :doc:`../automatic_record_keeping/index`), a
-chain is more than its final answers: it is a **directed graph of points**, and any
+I'm thinking of a chain of homotopies as a sequence of
+solves where each solve's start points are the previous
+solve's solutions.  This is the pattern of parameter continuation, as well
+as lots of steps in the numerical cellular decomposition.  Because
+solving can record where each of its paths started (see :doc:`../automatic_record_keeping/index`), a
+chain can be more than its final answers, namely a directed graph of points, so that any
 final solution can be walked back through every intermediate run to the very first
 start point.
 
@@ -12,8 +14,8 @@ This tutorial builds a small chain from the family :math:`\{x^2 - a^2,\; xy - 1\
 for growing :math:`a`, and then reads its own records back with the navigation tools.
 The family is deliberately not all sunshine: each member has just **two** finite roots
 (:math:`(\pm a, \pm 1/a)`) but total degree four, so the first solve tracks four paths
-and two of them have nowhere finite to go — they head to infinity.  Each is an
-**answer, not a failure**: it either converges to an infinite endpoint or is truncated
+and two of them have nowhere finite to go — they head to infinity.
+Each is a result: it either converges to an infinite endpoint or is truncated
 near infinity (``diverged``); either way it is recorded, and only the finite solutions
 are carried forward, so those lineages simply end.  The complete script is
 :download:`chained_homotopies.py <../../../../../examples/chained_homotopies.py>`:
@@ -22,7 +24,8 @@ are carried forward, so those lineages simply end.  The complete script is
    :language: python
    :caption: examples/chained_homotopies.py
 
-Chaining is two keyword arguments
+
+How to chain
 =================================
 
 The root of a chain is an ordinary solve.  Every further link passes the homotopy you
@@ -36,11 +39,11 @@ built and where its paths start:
 ``start=`` accepts a prior :class:`~bertini.records.SolveResult` (or its solutions) —
 those points carry provenance, so the new run's records link back to them with
 ``point_ref`` references.  Raw arrays work too: they are archived as a **given**, and
-provenance bottoms out honestly at data you supplied.  To chain from a run recorded in
-*another session* — or by the command-line ``bertini2`` — read its endpoints cold with
+provenance bottoms out at the data you supplied.  To chain from a run recorded in
+*another session* — or by the command-line ``bertini2`` — read its endpoints with
 :func:`bertini.solutions_of`; they come back as points with provenance, ready to chain.
 
-Reading the chain back
+Reading a chain back
 ======================
 
 The navigation tools read the plain records — any directory, any producer, no solver
@@ -58,8 +61,8 @@ objects:
 * :func:`bertini.provenance` — the walk for a single point: its chain of
   ``{'run', 'index'}`` hops, ending at a start label or a given.
 
-The picture
-===========
+Visualizing a chain of homotopies
+==================================
 
 :func:`bertini.plot_chain` draws the chain **left to right** — each run a column,
 paths flowing rightward from their origins (squares) through every run, colored by
@@ -82,18 +85,11 @@ continue for other reasons (a singular endpoint, say, spotted by its
 solver's metadata): what you pass as ``start=`` is what gets carried, and the graph
 records exactly what you chose.
 
-Large solves are a design constraint, not an afterthought: a run with more than
+Large solves are visualizable, with settings to help the plot
+not get overwhelming.  A run with more than
 ``max_paths_drawn`` paths (default 200) is not drawn path-by-path — the figure
 automatically aggregates to one node per run, with edge widths showing how many paths
 flow between runs, so a million-path chain renders instead of crashing your session.
 The same instinct applies to :func:`~bertini.provenance_graph`: pass ``runs=`` to
 restrict a big directory to the chains you care about before building a graph out of
 it.
-
-Regenerating the figure
-=======================
-
-The images above (``.png`` and ``.svg``, both committed) regenerate through the
-standard artifact refresher, from the repository root::
-
-   python tools/refresh_doc_artifacts.py --plots --only chained_homotopies

@@ -12,17 +12,18 @@
 
    bertini.default_precision(_saved_precision)
 
-The :doc:`previous tutorial <../tracking_nonsingular/index>` pauses
+The :doc:`tracking nonsingular solutions tutorial <../tracking_nonsingular/index>` pauses
 partway through to add a sine to a system, observes that its degree comes back as ``-1``, remarks
 that homotopy continuation on non-algebraic systems is possible anyway, and then deletes the
 system and goes back to polynomials.
 
-This page is the part it skipped.
+This page picks up where that other tutorial turned away.
+
 
 Why there is no start system
 ==============================
 
-A start system exists to be solved without effort, and to have enough roots to reach every
+A start system exists to be solved with little, and to have enough roots to reach every
 solution of the target.  Both halves lean on the degree.  A total-degree start system is built
 from the degrees of the target's functions, and the number of paths it provides is their product.
 
@@ -31,25 +32,25 @@ Sine has no degree.  Ask, and Bertini tells you so:
 .. testcode::
 
     x = bertini.Variable('x')
-    trouble = bertini.System()
-    trouble.add_variable_group(bertini.VariableGroup([x]))
-    trouble.add_function(bertini.symbolics.sin(x) - bertini.coefficient('1/2'))
+    sys = bertini.System()
+    sys.add_variable_group(bertini.VariableGroup([x]))
+    sys.add_function(bertini.symbolics.sin(x) - bertini.coefficient('1/2'))
 
-    print(list(trouble.degrees()))
-    print(trouble.is_polynomial())
+    print(sys.degrees())
+    print(sys.is_polynomial())
 
 .. testoutput::
 
     [-1]
     False
 
-That is not an evasion, it is the truth: ``sin(x) = 1/2`` has infinitely many solutions, and no
-finite number of paths could reach them all.  Asking for a start system says so out loud.
+That is not an evasion, it is the truth: :math:`\sin(x) = 1/2` has infinitely many solutions, and no
+finite number of paths can reach them all.  The refusal to make a start system says so out loud.
 
 .. testcode::
 
     try:
-        bertini.system.start_system.TotalDegreeLinearProduct(trouble)
+        bertini.system.start_system.TotalDegreeLinearProduct(sys)
     except RuntimeError as refused:
         print('refused')
 
@@ -57,13 +58,16 @@ finite number of paths could reach them all.  Asking for a start system says so 
 
     refused
 
-But path tracking never needed a start system.  It needs a homotopy and some points to start
-from.  Supply those two things and everything else in the library works unchanged.
+
 
 A homotopy with sine in it
 ============================
 
-Build the two ends as ordinary systems and glue them together.  At :math:`t = 1` the homotopy is
+Strictly speaking, path tracking doesn't really need a start system.
+It actually just needs a homotopy and points to start from.
+
+
+Let's build the two ends of the homotopy as ordinary systems and glue them together.  At :math:`t = 1` the homotopy is
 ``gamma*sin(x)``, whose roots are the integer multiples of :math:`\pi`; at :math:`t = 0` it is the
 target.
 
@@ -80,7 +84,7 @@ target.
     gamma = bertini.coefficient('-24/25') + bertini.I * bertini.coefficient('7/25')
     H = bertini.system.make_homotopy(target, start, gamma=gamma)
 
-    print(H.have_path_variable(), H.num_functions(), list(H.degrees()))
+    print(H.have_path_variable(), H.num_functions(), H.degrees())
 
 .. testoutput::
 
@@ -101,13 +105,14 @@ target.
 The homotopy inherits the ``-1``: a blend of functions is polynomial only when every part is.
 
 That ``gamma`` is the exact rational point :math:`(-24 + 7i)/25` on the unit circle, from the
-Pythagorean triple 7-24-25.  A random gamma would do the same job; an exact one makes this page
-reproduce byte for byte.  Keeping coefficients exact matters more than usual here, because a
+Pythagorean triple 7-24-25.  (A random gamma would do the same job; an exact one makes this page
+reproduce byte for byte for doctesting purposes.)
+Keeping coefficients exact matters more than usual here, because a
 decimal string becomes a binary float and any noise in a coefficient moves the singularity
 structure you are about to look at.
 
-You choose the window
-=======================
+You choose the start points for analytic systems
+==================================================
 
 Here is the part with no polynomial analogue.  Nobody can hand you all the solutions, so you
 decide which ones you want by choosing where to start.  Five multiples of :math:`\pi` will chase
@@ -118,9 +123,9 @@ five roots.
     pi = bertini.multiprec.real_mp('3.14159265358979323846264338327950288419716939937511')
     start_points = [np.array([bertini.multiprec.complex_mp(pi * k)]) for k in (-2, -1, 0, 1, 2)]
 
-Want more roots?  Start from more multiples.  The count is yours, not the system's.
+Want more roots?  Start from more multiples.
 
-Tracking, at a precision you pick
+Fixed multiple precision tracking
 ===================================
 
 .. testcode::
@@ -151,8 +156,8 @@ Every one of those is a root of :math:`\sin x = 1/2`, which the closed form puts
 
 Five starts, five distinct roots, each correct to the tolerance we asked for.
 
-Why the precision model is not the default one
-================================================
+Adaptive precision needs you to provide some bounds
+=======================================================
 
 ``mptype='multiple'`` above was not an accident.  Ask for the default, adaptive precision, and
 Bertini declines:
@@ -170,13 +175,13 @@ Bertini declines:
 
 Adaptive precision decides how many digits a step needs by comparing measured quantities against
 two error bounds, one for evaluating the functions and one for evaluating the Jacobian.  For a
-polynomial system those bounds come from its degree and the size of its coefficients.  With no
+polynomial system, those bounds come from its degree and the size of its coefficients.  With no
 degree there is no such recipe, and the criteria have nothing to compare against.
 
 Fixed precision carries no such constants, which is why it just works.  Choose enough digits for
 the problem and the tracker does the rest.
 
-If you want adaptive precision anyway, you supply the two bounds yourself, and the solver takes
+If you want adaptive precision, you supply the two bounds yourself, and the solver takes
 them:
 
 .. testcode::
@@ -196,30 +201,30 @@ them:
     5
 
 Numbers you can defend for your own system, that is.  What those bounds *should* be for an
-analytic system is a genuinely open question, and the reading is gathered in `issue 439
+analytic system feels like a genuinely open question, and a reading is gathered in `issue 439
 <https://github.com/bertiniteam/b2/issues/439>`_.
 
-The endgame still knows what it is doing
-==========================================
+Endgames work correctly for analytic systems
+==============================================
 
-Push the right-hand side to 1 and the roots collide: :math:`\sin x = 1` has a double root at
+Push the right-hand side from 1/2 to 1 and the roots collide: :math:`\sin x = 1` has a double root at
 :math:`\pi/2`.  This is where you might expect the machinery to give up, since the endgame's
-theory is usually stated for polynomials.
+theory is usually stated for polynomials.  But check this out:
 
 .. testcode::
 
-    hard_target = bertini.System()
-    hard_target.add_variable_group(bertini.VariableGroup([x]))
-    hard_target.add_function(bertini.symbolics.sin(x) - bertini.coefficient(1))
+    target = bertini.System()
+    target.add_variable_group(bertini.VariableGroup([x]))
+    target.add_function(bertini.symbolics.sin(x) - bertini.coefficient(1))
 
-    hard = bertini.system.make_homotopy(hard_target, start, gamma=gamma)
-    two = [np.array([bertini.multiprec.complex_mp(pi * k)]) for k in (0, 1)]
+    H = bertini.system.make_homotopy(target, start, gamma=gamma)
+    start_pts = [np.array([bertini.multiprec.complex_mp(pi * k)]) for k in (0, 1)]
 
-    collide = bertini.HomotopySolver(hard, two, hard_target, mptype='multiple')
-    collide.solve()
+    solver = bertini.HomotopySolver(H, start_pts, target, mptype='multiple')
+    solver.solve()
 
-    print([m.cycle_num for m in collide.solution_metadata()])
-    print([round(complex(s[0]).real, 6) for s in collide.all_solutions()])
+    print([m.cycle_num for m in solver.solution_metadata()])
+    print([round(complex(s[0]).real, 6) for s in solver.all_solutions()])
 
 .. testoutput::
 
@@ -229,12 +234,10 @@ theory is usually stated for polynomials.
 Cycle number 2, correctly, and both paths land on :math:`\pi/2`.
 
 It works for a reason worth knowing.  The power series endgame assumes the path behaves like a
-Puiseux series near its endpoint, which is a statement about algebraic branching.  Weierstrass
-preparation says that an analytic function with an isolated zero of order :math:`k` factors
-locally as a unit times a polynomial of degree :math:`k`.  So near a finite endpoint an analytic
-family branches exactly like an algebraic one, and the endgame's assumption survives.  Nothing in
-the cycle-number estimate consults a degree either: it works from the spacing of the samples it
-took.
+Puiseux series near its endpoint, which is a statement about algebraic branching.  `The Weierstrass Preparation Theorem <https://en.wikipedia.org/wiki/Weierstrass_preparation_theorem>`__ says that an analytic function with an isolated zero of order :math:`k` factors
+locally as a unit times a polynomial of degree :math:`k`.  Near a finite endpoint, an analytic
+family branches exactly like an algebraic one, and the endgame's assumption survives.  The endgames are super cool in another way, too: nothing in
+the cycle-number estimation routine consults a system's degree.
 
 Two pictures
 ==============
@@ -244,14 +247,14 @@ Two pictures
          roots of sin(x) = 1/2.  Right, two paths converging on pi/2 from opposite sides.
    :align: center
 
-   Both frames are real tracked data.  Open circles are the zeros of sine we chose to start from,
-   stars are the endpoints, and each vertex is a step the tracker actually took.  On the left,
-   five paths leave the real axis, loop through the complex plane and return to five distinct
+   Analytic paths in the complex plane.  Open circles are the roots of sine we chose to start from,
+   stars are the endpoints, and each vertex is a step the tracker took.  Remember, the homotopy uses a complex gamma.
+   On the left, five paths leave the real axis, loop through the complex plane and return to five distinct
    roots.  On the right, the two paths approach :math:`\pi/2` from opposite sides and arrive
-   together: the picture of a branch point, and of the cycle number 2 the endgame reported.
+   together.
 
-What you do not get
-=====================
+Limits on analytic systems in Bertini 2
+========================================
 
 Worth being plain about the limits, since they are real and they are not bugs.
 
@@ -262,12 +265,12 @@ There is no completeness guarantee.  Choosing more start points finds more roots
 tells you when to stop.
 
 Paths that run to infinity have no theory behind them here.  For a polynomial system, divergence
-is understood through the degree and projective space.  An exponential has an essential
+is understood through the degree and projective space.  But an exponential, for example, has an essential
 singularity at infinity, and the usual reasoning does not transfer.  Tracking such a path is not
 forbidden; just do not expect the diverging-path heuristics to mean what they mean for a
 polynomial.
 
-Adaptive precision needs bounds you chose, as above.
+Lastly, adaptive precision needs bounds you chose, as above.
 
 The source
 ============

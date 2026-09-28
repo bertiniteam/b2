@@ -17,16 +17,16 @@ a system that is degree 1 in the eigenvector coordinates :math:`x` and degree 1 
 eigenvalue :math:`\lambda`.  Treating :math:`x` and :math:`\lambda` as *separate* groups
 of variables, every equation has bidegree :math:`(1,1)`, and the **multihomogeneous
 Bézout number** is :math:`n` -- exactly the number of eigenvalues.  The naive total-degree
-count would be :math:`2^n`.  For an :math:`8\times 8` matrix that is 8 paths to track
-instead of 256.
-
-This is the payoff of Bertini's multihomogeneous start system: it tracks one path per
-*actual* solution, not one per total-degree phantom.
+count would be :math:`2^n`.  For an :math:`8\times 8` matrix, using a two-homogeneous
+variable group structure yields only 8 paths to track,
+instead of 256 if we use only a single variable group.
+This is the payoff of Bertini's multihomogeneous start system for this system: it tracks one path per
+*actual* solution.
 
 Setting up the system
 =====================
 
-We need ``numpy`` for the matrix and the cross-check, and ``bertini`` for the solve and
+We'll use ``numpy`` for the matrix and the cross-check, and ``bertini`` for the solve and
 for writing the equations as actual linear algebra:
 
 .. testcode::
@@ -51,7 +51,7 @@ is just ``A @ x - lam*x``:
 .. testcode::
 
     x = np.array(bertini.variables('x', n), dtype=object)   # array([x0, x1, x2], dtype=object)
-    lam = bertini.Variable('lam')
+    lam = bertini.Variable('𝛌')
 
 .. note::
 
@@ -76,7 +76,7 @@ add one generic linear equation :math:`c\cdot x = 1` to pin the scale:
 
     def build_affine():
         x = np.array(bertini.variables('x', n), dtype=object)
-        lam = bertini.Variable('lam')
+        lam = bertini.Variable('𝛌')
         c = np.array([5, 8, 3])                          # any generic integer vector
         sys = bertini.System()
         sys.add_functions(A @ x - lam * x)               # the rows of (A - lam I) x
@@ -93,7 +93,7 @@ quotiented out, so **no normalization equation is needed**:
 
     def build_projective():
         x = np.array(bertini.variables('x', n), dtype=object)
-        lam = bertini.Variable('lam')
+        lam = bertini.Variable('𝛌')
         sys = bertini.System()
         sys.add_functions(A @ x - lam * x)               # nothing else!
         sys.add_hom_variable_group(bertini.VariableGroup(list(x)))   # x in P^{n-1}
@@ -116,9 +116,9 @@ eigenvector):
     def eigenvalues_of(system):
         solver = ZeroDimSolver(system, mptype='adaptive', startsystem='mhom')
         solver.solve()
-        good = solver.finite_solutions()                 # the n eigenpairs (lam is the last coord)
-        assert len(good) == n                            # one path per eigenvalue
-        return sorted(complex(s[len(s) - 1]).real for s in good)
+        solns = solver.finite_solutions()                 # the n eigenpairs (lam is the last coord)
+        assert len(solns) == n                            # one path per eigenvalue
+        return sorted(complex(s[len(s) - 1]).real for s in solns)
 
 Both formulations recover ``numpy``'s eigenvalues:
 
@@ -170,15 +170,9 @@ what ``bertini``'s linear-algebra support gives you, and this problem is its mot
 example.  Coefficients on variables stay exact, so the precision of the solve is never
 silently capped by a stray floating-point literal.
 
-The same idea extends to **matrices of variables** (a NumPy object array of ``Variable``), which is
-where problems like rank conditions and regeneration are headed.  Today the vector
-equations are expanded into scalar polynomials; a future evaluation block will carry the
-matrix structure all the way into the numerics for larger problems.
-
 Complete example
 ================
 
-The whole tutorial as one runnable script -- assemble nothing, just run it:
 
 .. literalinclude:: eigenvalues_by_homotopy.py
    :language: python

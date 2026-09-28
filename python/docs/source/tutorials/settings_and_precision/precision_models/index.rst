@@ -6,7 +6,7 @@
    import numpy as np
    import bertini
 
-Bertini can track in three precision models, and ``ZeroDimSolver`` selects between them with ``mptype``:
+Bertini 2 can track in three precision models, and ``ZeroDimSolver`` selects between them with ``mptype``:
 
 * ``'double'`` -- hardware double precision (≈16 digits). Fastest; fine when the paths are
   well-conditioned.
@@ -32,16 +32,12 @@ story), see :doc:`/tutorials/settings_and_precision/precision_matters/index`.
    assert names['multiple'] == 'ZeroDimSolverPowerSeriesFixedMultiplePrecision'
    assert names['adaptive'] == 'ZeroDimSolverPowerSeriesAdaptivePrecision'
 
-   # The solver type encodes the endgame and the precision model, but NOT the start system -- that is
-   # a construction choice now (the algorithm holds the start system polymorphically), so it no longer
-   # appears as a suffix on the class name.
-
 Reading solutions: convert with ``complex()``
 =============================================
 
 The model changes the **type** of the numbers you get back. A double solve returns NumPy
 ``complex128``; a multiprecision solve returns arrays of :class:`bertini.complex_mp` (NumPy
-arrays with ``dtype`` ``complex_mp``). The portable habit -- works in every model -- is to convert
+arrays with ``dtype`` ``complex_mp``). A very portable habit is to convert
 each coordinate with :func:`complex`:
 
 .. testcode::
@@ -62,10 +58,12 @@ each coordinate with :func:`complex`:
        pts = sorted(tuple(np.round(to_python(s).real, 4)) for s in solver.all_solutions())
        assert pts == [(-0.7071, 0.7071), (0.7071, -0.7071)]
 
+But it potentially loses precision.  You choose.  I don't know what the right thing to do is.
+
 Setting the precision
 =====================
 
-A **fixed multiple** solve works at one precision *everywhere*: the tracker and every point it
+A **fixed multiple** solve works at one precision everywhere: the tracker and every point it
 produces carry the same number of digits, taken from the default precision when the solver is
 constructed. There is nothing to set on the system. A ``System`` carries no precision of its own --
 it evaluates at the precision of whatever point it is handed -- so the same ``system`` object serves
@@ -80,9 +78,6 @@ a 16-digit solve, a 40-digit solve and an adaptive solve unchanged:
    assert m.all_solutions()[0][0].precision == 40  # the points carry the digits
 
    bertini.default_precision(30)                  # restore a modest default
-
-(Earlier versions required ``system.precision(40)`` to match the solver, and raised on a mismatch.
-That call no longer exists: the precision belongs to the points, and a system follows them.)
 
 An **adaptive** solve manages precision itself; its knobs live in the AMP config -- most usefully
 ``maximum_precision``, the ceiling above which a path is declared to have failed:
@@ -110,14 +105,11 @@ and so on are not precision-stamped. That is exactly why a settings bundle carri
        names = set(bertini.ZeroDimSolver(system, mptype=mptype).config_names())
        assert shared <= names
 
-So the rule of thumb: reach for ``'adaptive'`` by default; drop to ``'double'`` for speed when the
-problem is well-conditioned; use ``'multiple'`` when you want a fixed, known precision throughout. And
-read every solution through :func:`complex` so your code does not care which model produced it.
+A rule of thumb: reach for ``'adaptive'`` by default; drop to ``'double'`` for speed when the
+problem is well-conditioned; use ``'multiple'`` when you want a fixed, known precision throughout.
 
 Complete example
 ================
-
-The whole tutorial as one runnable script -- assemble nothing, just run it:
 
 .. literalinclude:: precision_models.py
    :language: python

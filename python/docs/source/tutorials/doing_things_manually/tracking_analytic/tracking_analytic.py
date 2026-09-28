@@ -32,8 +32,6 @@ Run:  python tracking_analytic.py
       (or via tools/refresh_doc_artifacts.py --plots --only tracking_analytic)
 """
 
-import os
-
 import matplotlib
 matplotlib.use('Agg')            # headless: no display needed
 import matplotlib.pyplot as plt
@@ -42,8 +40,6 @@ import numpy as np
 
 import bertini
 from bertini import SolutionPathCollector
-
-_OUT = os.path.dirname(os.path.abspath(__file__))
 
 PI_50 = '3.14159265358979323846264338327950288419716939937511'
 
@@ -131,9 +127,9 @@ def plot():
         ax.set_box_aspect(1)
 
     fig.tight_layout()
-    fig.savefig(os.path.join(_OUT, 'tracking_analytic.svg'))
-    fig.savefig(os.path.join(_OUT, 'tracking_analytic.png'), dpi=150)
-    print('wrote tracking_analytic.svg and .png to', _OUT)
+    fig.savefig('tracking_analytic.svg')
+    fig.savefig('tracking_analytic.png', dpi=150)
+    print('wrote tracking_analytic.svg and .png')
 
 
 def report():

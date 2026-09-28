@@ -8,13 +8,14 @@ points are fixed, tracking solution #3 needs nothing from solution #57.  So the 
 a solve is, in principle, the cost of the slowest single path, no matter how many paths there are,
 *if* you have enough workers to go around.
 
-Bertini turns that "in principle" into a one-line change.  This tutorial shows the two knobs:
+Bertini 2 turns that "in principle" into a simple changes to get
+the parallel payoff.  This tutorial shows the two knobs:
 
 * **MPI ranks** -- a *manager-worker* pool, possibly spread across many machines.  Pass a
-  communicator to :func:`solve` and rank 0 hands paths out to the rest.
+  communicator to :func:`solve` and rank ``0`` hands paths out to the rest.
 * **threads per rank** -- each worker can track several paths at once.  Set ``OMP_NUM_THREADS``.
 
-The two scale *multiplicatively*: ``R`` worker ranks of ``T`` threads each track ``R × T`` paths
+Ideally, the two knobs scale *multiplicatively*: ``R`` worker ranks of ``T`` threads each track ``R × T`` paths
 at a time.  We demonstrate on two driving problems -- a **cyclic-n** system (hundreds of cheap
 paths) and an **eigenvalue** solve (a few dozen heavy, uneven paths) -- because they stress the
 scheduler in opposite ways, and the same manager-worker pool handles both.
@@ -29,7 +30,7 @@ scheduler in opposite ways, and the same manager-worker pool handles both.
 The manager-worker model
 ========================
 
-A bertini solve already has a definite shape -- track every path *before* the endgame, run a
+A Bertini 2 solve already has a definite shape -- track every path *before* the endgame, run a
 midpath check, then run the endgame on each path -- and the parallel solve keeps **exactly** that
 shape.  There is no separate "parallel solver": you call the same :func:`solve`, only with a
 communicator.
@@ -123,19 +124,6 @@ note below.)
    offending paths; with the default predictor and tolerances it essentially never triggers.  The
    :doc:`/tutorials/settings_and_precision/crossed_paths/index` tutorial provokes one on purpose and shows what to do about it.
 
-.. _correctness-across-ranks:
-
-.. admonition:: Correctness, not just a path count
-
-   A parallel solve is only useful if it gives the *same answer* as the serial one.  This is
-   subtler than it sounds: every rank constructs the homotopy independently, and the start system,
-   patch, and :math:`\gamma` are all **random**.  If the ranks disagree on those random choices,
-   "path #7" means a different path on each worker and the manager stitches together nonsense --
-   the solve finishes, reports a plausible count, and is silently wrong.  Bertini guards against
-   this by broadcasting one rank's random seed to all of them at the start of the parallel solve,
-   so every rank forms the identical homotopy.  The cyclic check above -- *distinct finite count
-   equals the known value* -- is what catches a regression here, which is why one of these two
-   examples must verify results and not merely tally paths.
 
 Run the ladder (serial, then 2, 4, 8 workers):
 
@@ -209,9 +197,9 @@ faster than 8** (|tw-eigen-12w-speedup| vs |tw-eigen-floor-speedup|): past the p
 path has a worker, handing out more workers changes nothing, because there is no 25th path to give
 them.  That is the sharp contrast with cyclic-6 above, which has |tw-cyclic-paths| paths and so keeps
 gaining out to 12 workers.  Same lesson either way -- distributing helps right up until you hit the
-longest path, which is exactly the bound the opening promised.
+longest path.
 
-Threads within ranks: the hybrid model
+Using both threads and processes
 ======================================
 
 Each worker rank can itself track several paths concurrently, one per thread, set with the
@@ -225,11 +213,11 @@ rank's threads spread across the machine::
     OMP_NUM_THREADS=4 mpirun -n 3 --bind-to none python python/examples/solve_cyclic.py --n 6
     #               4 threads  x  (3 ranks = 1 manager + 2 workers)  =  8 paths at a time
 
-Why have two knobs for the same cores?  **Reach versus footprint.**  MPI ranks can live on
+Why have two knobs for the same cores?  MPI ranks can live on
 *different machines* -- that is the only way past one box's core count -- but each rank is a full
 process with its own copy of the system.  Threads share one process's memory and stay on one
-machine, so they add parallelism without the per-rank memory cost.  The usual recipe: **one rank
-per machine (or per NUMA node), threads to fill that machine's cores.**
+machine, so they add parallelism without the per-rank memory cost.  The usual recipe: one rank
+per machine (or per NUMA node), threads to fill that machine's cores.
 
 At a fixed budget of |tw-perf-cores| worker-cores, here is the same cyclic-6 solve split between
 ranks and threads:

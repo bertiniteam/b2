@@ -11,7 +11,7 @@ multi-stage pipeline -- each runs *many* related solves, and you usually want th
 settings on every one of them. Re-typing tolerances and step controls for each solver is both tedious
 and a place for them to silently drift apart.
 
-Bertini gives every **config owner** -- every tracker and every solver -- the same small interface for
+Bertini 2 gives every **config owner** -- every tracker and every solver -- the same small interface for
 this. (Owning configs is a capability, not a class: a tracker is not a solver, but both carry configs,
 so both get these methods.)
 
@@ -75,8 +75,8 @@ field. ``final_tolerance`` is the endgame's:
    solver.configure(endgame={'final_tolerance': "1e-8"})       # named
    assert solver.get_config(EndgameConfig).final_tolerance == 1e-8
 
-Carry a whole bundle
-====================
+Carry a whole group of settings
+===================================
 
 :meth:`get_settings` hands you the owner's entire configuration as a plain dict ``{name: config}`` --
 independent, picklable copies. :meth:`set_settings` applies one back. So you configure **once** and
@@ -138,13 +138,8 @@ Pass ``strict=True`` to instead require every config in the bundle to be applica
    except KeyError:
        pass
 
-Put together, the pattern for any multi-solve workflow is: **tune one owner, ``get_settings()``, and
-``set_settings()`` on each of the rest.**
-
 Complete example
 ================
-
-The whole tutorial as one runnable script -- assemble nothing, just run it:
 
 .. literalinclude:: carrying_settings.py
    :language: python
