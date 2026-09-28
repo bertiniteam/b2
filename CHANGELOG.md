@@ -440,7 +440,9 @@ the identity of the algorithm that answered it (#420).
   used to get a session of its own; `records_path()` now reports that directory's absolute
   path).  A deleted directory or session file is recreated rather than written into,
   a forked child starts its own session, and neither a long sweep nor a process recording
-  into many directories accumulates open files.
+  into many directories accumulates open files: a directory's files close as soon as no solve
+  is using it, so on Windows a finished solve's records directory can be deleted while the
+  process is still running.
 - **Four ways to crash the interpreter from python, all closed** (#389).  `int()` of a `real_mp`
   or a `complex_mp` segfaulted, and `byteswap()` on either -- as a scalar or across a whole array
   -- aborted inside mpfr.  Both types become subclasses of `numpy.generic` when their dtypes are

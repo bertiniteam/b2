@@ -90,14 +90,19 @@ public:
     it: a sweep's solvers attach and release one after another, and a new instance
     per solve is a new session file per solve.  A fresh instance replaces the held
     one when the directory has been deleted since, or when the caller is a different
-    process (a forked child must not write into its parent's session file).  An
-    instance only this table still holds keeps no files open (it reopens its own
-    session file on its next record), and one whose directory is gone is dropped, so a
-    process that records into thousands of directories holds neither thousands of open
-    files nor thousands of instances.
+    process (a forked child must not write into its parent's session file).
+
+    What callers receive is a lease on that instance, shared by everyone using the
+    directory at the same time.  When the last holder lets go, the instance closes its
+    files at once, keeping its session (it reopens the same session file on its next
+    record).  So a directory nobody is writing to holds no open files: a process that
+    records into thousands of directories does not run out of file handles, and on
+    Windows, which cannot delete an open file, a finished solve's directory can be
+    deleted while the process lives.  Instances whose directory is gone and that nobody
+    is using are dropped.
 
     \param root The directory root (need not exist yet).
-    \return The shared instance for this path in this process.
+    \return A lease on the shared instance for this path in this process.
     */
     static std::shared_ptr<OutputDirectory> Shared(std::filesystem::path const& root);
 
@@ -230,8 +235,8 @@ private:
     void EnsureSessionFile();
 
     /// \brief Close every open file (the session file and the results files) while keeping
-    /// the session's claim: the next record reopens the same session file.  Called by
-    /// Shared() on instances nobody but its table holds.
+    /// the session's claim: the next record reopens the same session file.  Called when
+    /// the last holder of a lease handed out by Shared() lets go.
     void ReleaseFiles();
 
     std::filesystem::path root_;        ///< The directory root.
