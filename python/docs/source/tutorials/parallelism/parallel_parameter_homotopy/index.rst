@@ -156,4 +156,4 @@ Where to go from here
   point, so the per-point threading earns more.
 * Push ``--grid`` up and spread the ranks across a cluster with a hostfile
   (``mpirun --hostfile hosts ...``); the sweep code does not change.
-* See :doc:`/tutorials/parallelism/solving_at_scale/index` for the other axis -- distributing the *paths of a single solve across ranks -- and :doc:`/tutorials/observing_metadata_more/observers_and_path_data/index` to watch the tracking itself.
+* See :doc:`/tutorials/parallelism/solving_at_scale/index` for the other axis -- distributing the paths of a single solve across ranks -- and :doc:`/tutorials/observing_metadata_more/observers_and_path_data/index` to watch the tracking itself.
