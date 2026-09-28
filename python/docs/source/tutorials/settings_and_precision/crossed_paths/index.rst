@@ -1,36 +1,48 @@
-🪢 Crossed paths: when two paths become one
-*********************************************
+🪢 Crossed paths: when two paths (accidentally) become one
+***********************************************************
 
 Homotopy continuation tracks one path per start point, from a generic start system at :math:`t=1`
 to your target system at :math:`t=0`.  The homotopy carries a random parameter :math:`\gamma`, and
 that randomness is load-bearing: it guarantees, *with probability 1*, that the paths stay
 **separate** for all :math:`0 < t \le 1`.  Distinct paths simply do not meet.
 
-So if two distinct paths *do* arrive at the **same** point, something has gone wrong.  It is not a
+But we don't live in a probability 1 world.  We live in the world of finite precision
+and number specifications.  Bertini 2 does not currently offer pre-certified
+path tracking.  So path crossings CAN and DO happen.
+
+If two distinct paths *do* arrive at the **same** point at the endgame boundary, something has gone wrong.
+It is not a
 benign "duplicate" -- it is a **path crossing**: somewhere along the way the numerical tracker took
-a step coarse enough to jump from one path onto a neighbouring one, and from there the two are
+a step coarse enough to jump from one path onto a neighbouring one, or Newton correcting
+took us from the correct basin into another, and from there the two paths are
 indistinguishable.  They reach the endgame boundary as the same point, the endgame sends both to
-the same solution, and you are left with a duplicate where there should have been two answers --
-**a solution silently lost.**
+the same solution, and you are left with a duplicate where there should have been two answers.
+A solution silently lost.  A solution's multiplicity incorrectly computed.
 
-This tutorial does three things: provoke a crossing on purpose, see how Bertini 2 detects and
-*fixes* it, and -- the real point -- show why you should never see one with the defaults.
+This tutorial provokes a crossing on purpose, and shows how Bertini 2 detects and attempts to
+fix it.
 
-What Bertini does at the endgame boundary
+.. note::
+
+    There is a research opportunity here to improve algorithms and heuristics for how to
+    automatically fix detected path crossings.  Consider this public work in progress.
+
+At the endgame boundary
 =========================================
 
-A zero-dim solve has a definite shape: track every path to the **endgame boundary** (by default
-:math:`t = 0.1`), then run the endgame from there to :math:`t=0`.  In between sits the **midpath
-check**.  It compares every pair of boundary points and, if two agree to within a relaxed
+A zero-dim solve has a definite shape: track every path to the endgame boundary (by default
+:math:`t = 0.1`), then run the endgame from there to :math:`t=0`.  In between sits the midpath
+check.  It compares every pair of boundary points and, if two agree to within a relaxed
 same-point tolerance, flags a crossing.  Then :func:`EGBoundaryAction` re-tracks the offending
-paths with **tightened settings** -- a smaller tolerance *and* a higher-order predictor -- and
+paths with tightened settings -- a smaller tolerance and a higher-order predictor -- and
 checks again, up to ``max_num_crossed_path_resolve_attempts`` times (default 2).
 
-Two distinct paths agreeing to several digits at :math:`t=0.1` is a measure-zero coincidence, which
+Two distinct paths agreeing to several digits at :math:`t=0.1` is theoretically
+a measure-zero coincidence, which
 is exactly why it is a reliable alarm: under correct tracking it never fires.
 
-Provoking one
-=============
+Provoking a path crossing
+==========================
 
 The classic way to under-resolve paths is a low-order predictor with a loose tolerance.  We use the
 **Euler** predictor (order 1) and a loose pre-endgame tolerance on the cyclic-5 system (120 paths,
@@ -61,7 +73,7 @@ The key knobs are three lines on the solver:
    seed is **never** the fix for a flaky solve -- the fixes are tolerance, precision, and predictor.
    See :doc:`/tutorials/parallelism/solving_at_scale/index`.
 
-Seeing the damage, then the repair
+Path crossing resolution
 ===================================
 
 Run with re-tracking **disabled** first, so the crossing stands uncorrected:
@@ -96,7 +108,7 @@ Now the default behaviour, re-tracking **enabled**:
 One re-track attempt -- tighter tolerance, and Euler bumped up to the default RKF45 -- pulls the two
 paths back apart, and the missing solution reappears.  **70 of 70.**
 
-Reading the report
+Midpath report
 ==================
 
 Every solve exposes what the midpath check found, via :func:`endgame_boundary_metadata`:
@@ -125,8 +137,8 @@ have to know the report exists:
 Its success codes still read ``Success``: the path tracked without incident, and what the solver
 cannot vouch for is that it ended on the branch it set out along.
 
-Reading it back later
-=====================
+Crossings and the recording system
+====================================
 
 A recording solve writes both into the records, so the verdict outlives the solver object and the
 terminal it printed to.  :func:`bertini.crossing_checks` gives one row per run's check, and
@@ -160,6 +172,11 @@ What to actually do about crossings
   ``report.passed`` and decide.  This is the conservative choice when you would rather re-solve the
   whole system with better settings than retry individual paths.
 
-The honest summary: a crossing is a signal you tracked too coarsely.  Bertini 2 will catch it and,
+A crossing is a signal you tracked too coarsely.  Bertini 2 will hopefully catch it and,
 within a bounded number of attempts, usually fix it -- but the best solve is the one where the
 predictor and tolerance are good enough that the alarm never sounds.
+
+.. note::
+
+    There's a whole family of path crossing problems that are NOT detectable.
+    Taylor Brysiewicz has some cool recent work on this topic.
