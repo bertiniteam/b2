@@ -3,7 +3,7 @@ channels:
   - conda-forge
   - nodefaults
 dependencies:
-  - gxx==13.3.0
+  - gxx==15.3.0
   - numpy
   - gmp
   - mpfr
