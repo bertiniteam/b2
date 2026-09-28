@@ -1,11 +1,12 @@
 ⏱️ Timing Bertini 1 vs Bertini 2
 *********************************
 
-Bertini 2 is a from-scratch C++17 rewrite; a fair question is how its speed compares to Bertini 1.7.
+Bertini 2 is a from-scratch C++ and Python rewrite of Bertini 1.  We started the rewrite in about 2014.
+A fair question is how its speed compares to Bertini 1.7.
 This tutorial benchmarks the two on the same systems and ends in a plot — and records *what* was
 timed and *where*, so the numbers can be refreshed as the library improves.
 
-Comparing fairly
+The comparison
 ================
 
 The fair way to compare two solvers is to hand them the **same problem with the same settings**.  We
@@ -22,17 +23,8 @@ fastest of a few repeats, serial (``OMP_NUM_THREADS=1``):
 (The maintained, fuller harness — which also sweeps MPI ranks and appends a committed ``history.csv``
 — is ``benchmark/comparison/run_comparison.py``; this tutorial is a small self-contained cousin.)
 
-Record the provenance
-=====================
 
-Timing numbers are meaningless without context, and they go stale.  We capture the date, both solver
-versions (with the Bertini 2 git commit), and the machine, and stamp them onto the figure:
-
-.. literalinclude:: b1_vs_b2_timing.py
-   :language: python
-   :pyobject: provenance
-
-The result
+Results
 ==========
 
 Run it (needs ``matplotlib``; Bertini 1 optional)::
@@ -69,3 +61,14 @@ How to read it (for the run shown — see the caption for date/versions/machine)
 
 Both solvers report the **same solution counts** (shown under the bars), so this is a like-for-like
 comparison, not a speed/accuracy trade.
+
+
+Some record keeping
+=====================
+
+Timing numbers are meaningless without context, and they go stale.  We capture the date, both solver
+versions (with the Bertini 2 git commit), and the machine, and stamp them onto the figure:
+
+.. literalinclude:: b1_vs_b2_timing.py
+   :language: python
+   :pyobject: provenance
