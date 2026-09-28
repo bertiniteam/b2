@@ -1,7 +1,8 @@
 Automatic record keeping
 ========================
 
-Every solve writes a **structured output directory**: a durable, plain-text record of
+By default, a solve in Bertini 2 using `bertini.solve(...)`
+writes to a structured output directory: a durable, plain-text record of
 what was computed — which system, which settings, which seed, and every path's endpoint
 with its provenance.  You are free to delete it (the only consequence is recomputing),
 free to ``grep`` it, and free to read it in ten years with no bertini installed: the
@@ -9,8 +10,7 @@ directory carries its own ``README.txt`` explaining the format.
 
 How to think about it: the records are ordinary program *output*, like the ``.log``
 file LaTeX writes — always produced, never precious, occasionally exactly what you
-need.  They are **not** a database you administer.  There is nothing to configure, no
-schema to migrate, no server; just files you can read.
+need.  I hope they are not a database you need to administer.
 
 What it gains you:
 
@@ -20,13 +20,13 @@ What it gains you:
   command finishes the last hour.  This works for the CLI and Python alike, with no
   flags — resuming *is* rerunning.
 * **Reproducibility.**  ``seed=42`` names the exact homotopy — same gamma, start
-  points, and patch, on every machine, forever.  Even a run where you *omitted* the
+  points, and patch, on every machine.  Even a run where you *omitted* the
   seed records the one it drew, so accidental results remain reproducible.
 * **Provenance.**  Every path remembers where it started; chained solves link runs
   into a walkable graph (see :doc:`../chained_homotopies/index`), so any final point
   answers "which chain of homotopies and start points produced you?" — all the way to
   the beginning.
-* **An audit trail.**  Every tracked path is recorded whatever its outcome —
+* **An audit trail.**  Every tracked path is recorded whatever its outcome:
   ``success``, ``diverged`` (a path that went to infinity: an answer, not a failure),
   or ``failed`` (the tracker gave up) — so "what happened to my 50 missing paths?" is
   a one-line pandas query, not a mystery.
@@ -34,7 +34,7 @@ What it gains you:
 Turning it on and off
 ---------------------
 
-It is on by default, everywhere.  Off is one line:
+It is on by default.  Off is one line:
 
 .. testcode::
 
@@ -47,16 +47,17 @@ It is on by default, everywhere.  Off is one line:
 
    True
 
-For the command line, the switch is the environment: ``BERTINI_RECORDS_DIR=""``
+For the command line interface (running ``bertini2`` from the command line, not in Python),
+disabling the recording system is setting an empty environment variable: ``BERTINI_RECORDS_DIR=""``
 (empty) runs ``bertini2`` with no records, and any non-empty value relocates them
-(``BERTINI_RECORDS_DIR=~/project/records bertini2 input``).  With recording off there
+(eg ``BERTINI_RECORDS_DIR=~/project/records bertini2 input``).  With recording off there
 is nothing to resume from — the trade is yours to make.
 
-The solver classes (:class:`~bertini.ZeroDimSolver`, :class:`~bertini.HomotopySolver`)
+On the other hand, the solver classes (:class:`~bertini.ZeroDimSolver`, :class:`~bertini.HomotopySolver`)
 record *ambiently*: they join in once the ambient directory has been named, either by
 ``bertini.records_dir("my_records")`` in your script (one line — see
 :doc:`../../formulating_and_solving/parameter_homotopy/index` for it in action) or by the ``BERTINI_RECORDS_DIR``
-environment variable.  Until then they run bare, exactly as they always have.
+environment variable.  Until then they run without recording.
 
 The three verbs
 ---------------
@@ -185,8 +186,8 @@ travel with the points:
 
 A complete runnable chain lives in ``python/examples/chained_homotopies.py``.
 
-What is in the directory
-------------------------
+Records directory contents
+---------------------------
 
 Nothing here needs bertini to read — three stores, separated by concern::
 
@@ -211,8 +212,8 @@ command again.  Point the records somewhere else — a project directory on a cl
 never scratch — with the ``BERTINI_RECORDS_DIR`` environment variable (under MPI, pass
 ``mpirun -x BERTINI_RECORDS_DIR``; only the manager rank writes).
 
-Navigating what you have
-------------------------
+Reading records back into Bertini 2
+------------------------------------
 
 Four tools read the plain records back — any directory, any producer, no solver
 objects: :func:`bertini.runs` and :func:`bertini.tracks` (pandas DataFrames of the
@@ -220,6 +221,6 @@ runs and the tracked paths), :func:`bertini.provenance_graph` (a networkx graph 
 the points), and :func:`bertini.plot_chain` (the chain drawn left to right).  They
 are the subject of :doc:`../chained_homotopies/index`.
 
-Power users: the solver objects underneath expose the same machinery —
+The solver objects expose the same machinery —
 ``solver.record_to(path)``, ``solver.num_paths_recalled()``, ``solver.records_run_id()``
 — and the full record schema is documented in ``docs/records/b2rec-1.md``.
