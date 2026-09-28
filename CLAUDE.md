@@ -44,6 +44,11 @@ brew install gmp mpfr libmpc eigen@3 eigenpy boost boost-python3
 
 Use `environment.yml` (Ubuntu) or `environment-win.yml` (Windows) with conda/mamba/micromamba.
 
+**Compiler: GCC 15.**  CI's Linux C++ jobs run on Ubuntu 26.04 and compile with its GCC 15, and
+`environment.yml` pins `gxx==15.3.0` to match, so code that builds locally builds in CI.  GCC 15
+is stricter than 13 (e.g. about headers that used to arrive indirectly); when moving the
+compiler, the build directory must be recreated -- CMake will not switch compilers in place.
+
 ## Running Tests
 
 ### C++ Tests (Boost.Test)
@@ -99,6 +104,18 @@ through `tools/refresh_doc_artifacts.py`.  Mind the flags: the default (no flags
 **timing benchmark tables**, not plots -- to redraw one figure use
 `python tools/refresh_doc_artifacts.py --plots --only <name>`.
 
+How the plot refresh works, so a new plot script fits it:
+- The tool runs each script **with its image folder as the working directory**, so a script
+  saves with plain filenames (`fig.savefig('name.svg')`) and needs no path handling.  A new
+  figure needs an entry in the tool's `_plots()` manifest.
+- A plot **fails** if its image folder does not exist, or if any image its entry lists was not
+  written during the run -- a clean exit alone is not success.
+- Solve records go under the docs' gitignored build output, never into `python/docs/source`:
+  the refresh records each plot to `python/docs/build/refresh_records/<plot>/`, and the doctest
+  build (via `conf.py`) to `python/docs/build/doctest_records/`.  Both are **emptied before each
+  run**: records kept from an earlier run would *recall* a solve instead of computing it, which
+  draws a figure from an older library and leaves path observers with nothing to see.
+
 ## Architecture
 
 The project has three layers, built in order:
@@ -109,7 +126,7 @@ The project has three layers, built in order:
    - `trackers/` -- Path tracking (fixed-precision and adaptive-precision trackers, predictors, Newton correctors)
    - `endgames/` -- Power series and Cauchy endgames for singular endpoint handling
    - `nag_algorithms/` -- Higher-level algorithms (zero-dim solve; numerical irreducible decomposition is *framework scaffolding* -- not yet implemented, its `Solve()` throws)
-   - `records/` -- The structured output directory (record schema `b2rec/1`, spec at `docs/records/b2rec-1.md`): durable, self-describing run records with full provenance and resume-by-recall.  `OutputDirectory` = append-only JSONL `history/` + content-addressed `definitions/` under kind folders (`systems/`, `configs/`, `givens/`, ...); `README.txt`/`INDEX.txt`/`results.json` are derived, rebuildable views, never truth.  Solvers write through the emission seam in `nag_algorithms` (`RecordTo(...)` or the ambient `BERTINI_RECORDS_DIR`); `bertini.solve` is *ensure-answered* -- paths already recorded for an identical ask (system digest + settings digest + seed) are **recalled**, not recomputed.  See ADR-0042..0047 and "Persistent digests" below.
+   - `records/` -- The structured output directory (record schema `b2rec/1`, spec at `docs/records/b2rec-1.md`): durable, self-describing run records with full provenance and resume-by-recall.  `OutputDirectory` = append-only JSONL `history/` + content-addressed `definitions/` under kind folders (`systems/`, `configs/`, `givens/`, ...); `README.txt`/`INDEX.txt`/`results.json` are derived, rebuildable views, never truth.  Solvers write through the emission seam in `nag_algorithms` (`RecordTo(...)` or the ambient `BERTINI_RECORDS_DIR`); `bertini.solve` is *ensure-answered* -- paths already recorded for an identical ask (system digest + settings digest + seed) are **recalled**, not recomputed.  See ADR-0042..0047 and "Persistent digests" below.  A records **session lasts the whole process**: `OutputDirectory::Shared()` keeps one instance -- one history file -- per directory per process however many solves attach, and a directory's files close as soon as no solve is using it (ADR-0066).  Do not return it to weak ownership: a parameter sweep then claims a session file per solve and dies after 25 in one second.
    - `io/parsing/` -- Boost.Spirit Qi parsers for classic Bertini input format.  `io/json_writer.hpp` renders a System's parts (variable groups, functions, blocks, patches) as JSON for the records archive -- classic syntax is an INPUT/compat format only (it cannot express block structure) and never appears inside records.
    - `blackbox/` -- CLI executable entry point (CMake target `bertini2_exe`, binary named `bertini2`)
 
@@ -158,13 +175,14 @@ Rules that follow:
 - **GMP/MPFR/MPC** -- Arbitrary-precision arithmetic (found via custom CMake modules in `cmake/`)
 - **Eigen 3** -- Linear algebra. **Not** pinned in cmake (`find_package(Eigen3)`, no version floor). In practice the version is coupled to the eigenpy build: the wheel CI builds **eigen 3.4.0** and then builds eigenpy against it (a dev env may use newer, e.g. `eigen=5.0.1`). Newer Eigen is welcome -- we *want* upstream improvements -- but it must be matched by an eigenpy built against the same Eigen (they share Eigen types across the binding ABI).
 - **Boost** (serialization, filesystem, log, graph, regex, timer, chrono, thread, unit_test_framework, python) -- no minimum version pinned in cmake; `boost_system` is conditionally linked for Boost < 1.89 (header-only from 1.89). Boost.Python is ABI-locked to one CPython version, so it is built **per target Python** -- but this now happens **once, up front, in the prebuilt CI deps** (Linux image / macOS tarballs, ADR-0049), *not* recompiled in every wheel run.
-- **eigenpy** -- Eigen/NumPy bridge for Python bindings. **Prebuilt** into the CI deps (image/tarballs), not built-from-source per run, against the chosen Eigen -- eigenpy and bertini must use the *same* Eigen. The version is single-sourced in `.github/ci-deps-versions.env` (`EIGENPY_VERSION`, currently `3.13.0`); eigenpy >= 3.13 sets the Python floor (>= 3.10).
+- **eigenpy** -- Eigen/NumPy bridge for Python bindings. **Prebuilt** into the CI deps (image/tarballs), not built-from-source per run, against the chosen Eigen -- eigenpy and bertini must use the *same* Eigen. The version is single-sourced in `.github/ci-deps-versions.env` (`EIGENPY_VERSION`, currently `3.13.0`); eigenpy >= 3.13 sets the Python floor (>= 3.10).  **A wheel is not ABI-coupled to a user's own eigenpy:** `auditwheel`/`delocate` bundle private, renamed copies of eigenpy and Boost.Python (`bertini2.libs/libeigenpy-<hash>.so`, `libboost_python3XX-<hash>.so...`), and Python loads extensions `RTLD_LOCAL`, so a PyPI `eigenpy` in the same process loads its own copies beside ours (verified 2026-09-28: both import orders, no warnings, arrays pass both ways).  Only numpy arrays cross between the two; another library's Boost.Python objects do not convert (a clean `TypeError`).  The coupling that does exist is for **source builds** against shared libraries (conda, Homebrew), which must use the same eigenpy and Eigen as the environment.
 - **jrl-cmakemodules** -- CMake helper macros (auto-fetched via FetchContent if not found)
 
 ## Build System Notes
 
 - The root `CMakeLists.txt` uses `jrl-cmakemodules` (fetched automatically). It currently only adds `core/` as a subdirectory; `python_bindings/` and `python/` subdirectory calls are commented out (the wheel build via scikit-build-core handles them).
 - `pyproject.toml` configures scikit-build-core: wheel packages from `python/bertini/`, build dir is `bld/`.
+- **Developing: install b2 into the environment for real** -- `pip install --no-deps --no-build-isolation -e . -Cbuild-dir=build "-Cbuild.targets=_pybertini;bertini2_exe"` -- so `importlib.metadata.version("bertini2")` reports `VERSION` and the installed `_pybertini` is the one imports load.  One build directory serves both the editable install and direct `cmake --build build` work; after rebuilding bindings, `cmake --install build --prefix <site-packages>/bertini` refreshes the installed copy.  Do not hand-make a `.pth` or a stub `dist-info` to point at the source tree: nothing keeps its version current.
 - Cross-platform: Linux builds in a **custom prebuilt manylinux image** (`ghcr.io/bertiniteam/b2-manylinux-deps`, ADR-0049) + `auditwheel`, one image per architecture -- x86_64 on `ubuntu-26.04`, aarch64 on native `ubuntu-26.04-arm` runners (every workflow names its Ubuntu version rather than `ubuntu-latest`, so an image change is a deliberate edit; the Linux C++ test job compiles with the runner's GCC 15) (tag suffix `-aarch64`); both are full matrix members (C++ tests + every wheel); macOS uses Homebrew + **prebuilt Boost/eigenpy tarballs** (the `ci-deps` release); Windows uses conda-forge (which already ships prebuilt Boost/eigenpy) + clang-cl (MSVC has template compilation issues).
 - `-Werror` is disabled globally. `-pedantic` is stripped from flags.
 
