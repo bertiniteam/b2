@@ -101,7 +101,7 @@ def _plots():
              ["classic_continuation_cartoon.svg", "classic_continuation_cartoon.png"]),
         Plot("seeing_precision_change",
              TUT / "observing_metadata_more" / "seeing_precision_change" / "amp_precision_plot.py",
-             ["amp_precision_cartoon_cyclic5.svg", "amp_precision_cartoon_cyclic5.png"]),
+             ["amp_precision_cyclic5.svg", "amp_precision_cyclic5.png"]),
         Plot("parallel_parameter_homotopy",
              EXAMPLES / "parallel_parameter_homotopy.py",
              ["parallel_parameter_homotopy.svg"],
