@@ -390,8 +390,6 @@ class TestPrecisionPreservation:
                                        np.reciprocal, np.conj, np.rint],
                              ids=lambda u: u.__name__)
     def test_unary_output_precision(self, dtype, ufunc):
-        if dtype is complex_mp and ufunc is np.rint:
-            pytest.skip("rint is real-only")
         v = self._high_precision_sample(dtype)
         assert ufunc(v)[0].precision == self.HIGH
 
