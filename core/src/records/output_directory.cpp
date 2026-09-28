@@ -304,11 +304,19 @@ OutputDirectory::OutputDirectory(std::filesystem::path root)
 
 std::shared_ptr<OutputDirectory> OutputDirectory::Shared(std::filesystem::path const& root)
 {
-    // held strongly: a sweep's solvers attach and release one after another, and a
-    // weakly held instance died between them, claiming a new session file per solve
-    // until the per-second claim namespace ran out
+    // The instance is held strongly: a sweep's solvers attach and release one after another,
+    // and a weakly held instance died between them, claiming a new session file per solve
+    // until the per-second claim namespace ran out.  Callers get a LEASE on it instead: one
+    // shared handle for everyone using the directory at once, whose last release closes the
+    // instance's files.  Windows cannot delete an open file, so a directory nobody is writing
+    // to must hold none -- not only until the next solve attaches.
+    struct Entry
+    {
+        std::shared_ptr<OutputDirectory> instance;  // lives as long as the process
+        std::weak_ptr<OutputDirectory> lease;       // alive while anyone is using the instance
+    };
     static std::mutex table_mutex;
-    static std::map<std::filesystem::path, std::shared_ptr<OutputDirectory>> table;
+    static std::map<std::filesystem::path, Entry> table;
 
     // absolute first: weakly_canonical leaves a relative path none of whose parts exist
     // as it is, so the default "bertini_output" keyed one way before its first solve
@@ -323,27 +331,34 @@ std::shared_ptr<OutputDirectory> OutputDirectory::Shared(std::filesystem::path c
 
     std::lock_guard<std::mutex> lock(table_mutex);
 
-    // instances nobody but this table holds: drop those whose directory is gone, and
-    // close the files of the rest, so an idle instance costs no file handle
+    // instances nobody is using whose directory is gone: drop them, so a process recording
+    // into thousands of short-lived directories does not keep an instance for each
     for (auto it = table.begin(); it != table.end(); )
     {
-        if (it->second.use_count() == 1)
-        {
-            if (!std::filesystem::is_directory(it->second->root_ / "history"))
-            {
-                it = table.erase(it);
-                continue;
-            }
-            it->second->ReleaseFiles();
-        }
-        ++it;
+        if (it->second.lease.expired()
+            && !std::filesystem::is_directory(it->second.instance->root_ / "history"))
+            it = table.erase(it);
+        else
+            ++it;
     }
 
-    auto& slot = table[key];
-    if (slot && slot->pid_ == CurrentPid() && std::filesystem::is_directory(slot->root_ / "history"))
-        return slot;
-    slot = std::make_shared<OutputDirectory>(where);
-    return slot;
+    auto& entry = table[key];
+    bool const reusable = entry.instance && entry.instance->pid_ == CurrentPid()
+                          && std::filesystem::is_directory(entry.instance->root_ / "history");
+    if (reusable)
+    {
+        if (auto live = entry.lease.lock())
+            return live;
+    }
+    else
+        entry.instance = std::make_shared<OutputDirectory>(where);
+
+    // a fresh lease: it keeps the instance alive, and its last release closes the files
+    auto instance = entry.instance;
+    std::shared_ptr<OutputDirectory> lease(instance.get(),
+        [instance](OutputDirectory* self) { self->ReleaseFiles(); });
+    entry.lease = lease;
+    return lease;
 }
 
 std::string TimeStampNow()
