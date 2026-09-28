@@ -44,6 +44,13 @@ jobs:
           # validation regex above -- a naive `\.(dev|a|b|rc)` would misread rc1 as a FINAL release
           # and route it to real PyPI + a GitHub Release instead of TestPyPI.
           echo "$TAG" | grep -Eq '(\.dev[0-9]+|a[0-9]+|b[0-9]+|rc[0-9]+)$' && echo "is_prerelease=true" >> $GITHUB_OUTPUT || echo "is_prerelease=false" >> $GITHUB_OUTPUT
+      # The GitHub release publishes CHANGELOG.md's top block as its notes.  Check it here, in
+      # the release's first job, so a changelog that is not ready (undated, the wrong version,
+      # no separators) fails the release in seconds instead of after every wheel has built.
+      # Final releases only: prereleases go to TestPyPI and make no GitHub release.
+      - name: Check the release notes
+        if: steps.check.outputs.is_prerelease == 'false'
+        run: python tools/release_notes.py --tag "$GITHUB_REF_NAME"
 
   check_timing_freshness:
     name: Check tutorial timings are fresh
@@ -168,8 +175,7 @@ jobs:
             ./dist/*.whl
 
       - name: Get Newest Changelog
-        run: |
-          python -c 'import re; from pathlib import Path; text=re.sub("<!--(.*?)-->", "", (Path.cwd() / "CHANGELOG.md").read_text(), flags=re.DOTALL); print(text); start=text.find("_" * 79); (Path.cwd() / "TEMP_CHANGELOG.md").write_text(text[start:text.find("_" * 79, start+1)])'
+        run: python tools/release_notes.py --tag "$GITHUB_REF_NAME" --output TEMP_CHANGELOG.md
 
       - name: Create GitHub Release
         id: create_release
