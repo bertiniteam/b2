@@ -86,7 +86,7 @@ jobs:
           mv build/docs/cpp site/cpp
 
       - name: Upload C++ docs artifact
-        uses: actions/upload-artifact@v5
+        uses: actions/upload-artifact@v6
         with:
           name: docs-cpp
           path: site/cpp
@@ -115,7 +115,7 @@ jobs:
           fetch-depth: 0
 
       - name: Set up Python
-        uses: actions/setup-python@v5
+        uses: actions/setup-python@v6
         with:
           python-version: '3.11'
 
@@ -141,7 +141,7 @@ jobs:
             scikit-build-core build numpy matplotlib pandas sympy networkx
 
       - name: Download built wheel
-        uses: actions/download-artifact@v5
+        uses: actions/download-artifact@v7
         with:
           name: wheels-ubuntu-latest-3.11
           path: dist/
@@ -152,7 +152,7 @@ jobs:
       # The Doxygen C++ reference was built in parallel by the cpp_docs job; drop it
       # into site/cpp so the assembled site/ has cpp + python + landing.
       - name: Download C++ docs
-        uses: actions/download-artifact@v5
+        uses: actions/download-artifact@v7
         with:
           name: docs-cpp
           path: site/cpp

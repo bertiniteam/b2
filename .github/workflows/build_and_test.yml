@@ -68,10 +68,6 @@ concurrency:
 # Boost/Eigen/eigenpy versions are single-sourced in .github/ci-deps-versions.env and surfaced by
 # the `set_versions` job; the two jobs that build them from source consume it as job-level env.
 # That same file is in build-ci-image.yml's path filter, so a version bump rebuilds the Linux image.
-env:
-  # Opt JavaScript actions into Node 24 (Node 20 is being removed from the runners).
-  # Silences the conda-incubator/setup-miniconda@v3 (and other node20 action) deprecation.
-  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: "true"
 
 jobs:
   # Cheap, Doxygen-only gate (no compilation).  Every job that actually builds
@@ -304,7 +300,7 @@ jobs:
             windows-conda-cpp-
             windows-conda-
 
-      - uses: conda-incubator/setup-miniconda@v3
+      - uses: conda-incubator/setup-miniconda@v4
         with:
           activate-environment: b2-windows
           environment-file: environment-win.yml
@@ -585,7 +581,7 @@ jobs:
           du -sh .ccache 2>/dev/null || echo "no .ccache directory was produced"
           if command -v ccache >/dev/null; then CCACHE_DIR=$PWD/.ccache ccache -s || true; fi
 
-      - uses: actions/upload-artifact@v5
+      - uses: actions/upload-artifact@v6
         with:
           name: wheels-${{ matrix.os }}-${{ matrix.python-version }}
           path: ./wheelhouse/*.whl
@@ -623,7 +619,7 @@ jobs:
           restore-keys: |
             windows-conda-${{ matrix.python-version }}-
             windows-conda-
-      - uses: conda-incubator/setup-miniconda@v3
+      - uses: conda-incubator/setup-miniconda@v4
         with:
           activate-environment: b2-windows
           environment-file: environment-win.yml
@@ -683,7 +679,7 @@ jobs:
           Remove-Item dist/*.whl
           Move-Item repaired/*.whl dist/
 
-      - uses: actions/upload-artifact@v5
+      - uses: actions/upload-artifact@v6
         with:
           name: wheels-windows-${{ matrix.python-version }}
           path: ./dist/*.whl
@@ -714,12 +710,12 @@ jobs:
     steps:
       - uses: actions/checkout@v5
 
-      - uses: actions/setup-python@v5
+      - uses: actions/setup-python@v6
         with:
           python-version: ${{ matrix.python-version }}
 
       - name: Download wheels artifact
-        uses: actions/download-artifact@v5
+        uses: actions/download-artifact@v7
         with:
           name: wheels-${{ matrix.os }}-${{ matrix.python-version }}
           path: dist/
@@ -754,7 +750,7 @@ jobs:
     steps:
       - uses: actions/checkout@v5
 
-      - uses: conda-incubator/setup-miniconda@v3
+      - uses: conda-incubator/setup-miniconda@v4
         with:
           activate-environment: b2-windows
           environment-file: environment-win.yml
@@ -763,7 +759,7 @@ jobs:
           channel-priority: strict
 
       - name: Download wheels artifact
-        uses: actions/download-artifact@v5
+        uses: actions/download-artifact@v7
         with:
           name: wheels-windows-${{ matrix.python-version }}
           path: dist/
@@ -798,7 +794,7 @@ jobs:
         with:
           fetch-depth: 0   # gitpython in conf.py derives the version from the git history
 
-      - uses: actions/setup-python@v5
+      - uses: actions/setup-python@v6
         with:
           python-version: '3.11'
 
@@ -809,7 +805,7 @@ jobs:
             scikit-build-core build numpy tqdm matplotlib pandas sympy networkx
 
       - name: Download built wheel
-        uses: actions/download-artifact@v5
+        uses: actions/download-artifact@v7
         with:
           name: wheels-ubuntu-latest-3.11
           path: dist/

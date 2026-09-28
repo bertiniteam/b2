@@ -60,7 +60,7 @@ jobs:
             echo "EIGEN_VERSION=$EIGEN_VERSION"
             echo "EIGENPY_VERSION=$EIGENPY_VERSION"
           } >> "$GITHUB_ENV"
-      - uses: actions/setup-python@v5
+      - uses: actions/setup-python@v6
         with:
           python-version: ${{ matrix.python-version }}
 
