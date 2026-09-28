@@ -7,7 +7,7 @@ name: Build CI deps image 🐳
 # dispatch.
 #
 # One image per ARCHITECTURE, x86_64 and aarch64, each built on a runner of that architecture
-# (ubuntu-24.04-arm for aarch64) so nothing runs under emulation.  The x86_64 image keeps the
+# (ubuntu-26.04-arm for aarch64) so nothing runs under emulation.  The x86_64 image keeps the
 # plain toolchain-key tag; the aarch64 image's tag carries an -aarch64 suffix.
 #
 # OWNER: the package lands under whichever org runs this; it MUST run in bertiniteam/b2 (its token
@@ -45,9 +45,9 @@ jobs:
         pytag: [cp310-cp310, cp311-cp311, cp312-cp312, cp313-cp313, cp314-cp314]
         include:
           - arch: x86_64
-            runner: ubuntu-24.04
+            runner: ubuntu-26.04
           - arch: aarch64
-            runner: ubuntu-24.04-arm
+            runner: ubuntu-26.04-arm
     steps:
       - uses: actions/checkout@v5
       # SOURCE the file, then write the three values out by name.  Do NOT cat it into
@@ -88,10 +88,10 @@ jobs:
       matrix:
         include:
           - arch: x86_64
-            runner: ubuntu-24.04
+            runner: ubuntu-26.04
             suffix: ""
           - arch: aarch64
-            runner: ubuntu-24.04-arm
+            runner: ubuntu-26.04-arm
             suffix: "-aarch64"
     steps:
       - uses: actions/checkout@v5

@@ -33,7 +33,7 @@ on:
   workflow_call:
     inputs:
       minimal:
-        description: 'Build only the ubuntu-24.04 / python-3.11 wheel; skip C++ tests, Windows, macOS, and wheel tests.'
+        description: 'Build only the ubuntu-26.04 / python-3.11 wheel; skip C++ tests, Windows, macOS, and wheel tests.'
         required: false
         type: boolean
         default: false
@@ -50,7 +50,7 @@ on:
         type: boolean
         default: false
       minimal:
-        description: 'Build only the ubuntu-24.04 / python-3.11 wheel; skip C++ tests, Windows, macOS, and wheel tests.'
+        description: 'Build only the ubuntu-26.04 / python-3.11 wheel; skip C++ tests, Windows, macOS, and wheel tests.'
         required: false
         type: boolean
         default: false
@@ -80,7 +80,7 @@ jobs:
 
   set_versions:
     name: Resolve dependency versions
-    runs-on: ubuntu-24.04
+    runs-on: ubuntu-26.04
     outputs:
       boost: ${{ steps.v.outputs.boost }}
       eigen: ${{ steps.v.outputs.eigen }}
@@ -99,7 +99,7 @@ jobs:
 
   set_matrix:
     name: Set OS matrix
-    runs-on: ubuntu-24.04
+    runs-on: ubuntu-26.04
     outputs:
       os: ${{ steps.matrix.outputs.os }}
       python_versions: ${{ steps.matrix.outputs.python_versions }}
@@ -115,22 +115,22 @@ jobs:
           # If it SIGABRTs again, take it back out of this line and keep `-f os=macos-intel`,
           # which runs intel alone at one python version, for asking again later.
           if [[ "${{ inputs.minimal }}" == "true" ]]; then
-            OS='["ubuntu-24.04"]'; PY='["3.11"]'
+            OS='["ubuntu-26.04"]'; PY='["3.11"]'
           elif [[ "${{ github.ref }}" == "refs/heads/main" || "${{ github.ref }}" == "refs/heads/develop" || "${{ github.ref }}" == refs/tags/* || "${{ inputs.full_matrix }}" == "true" || "${{ github.event.pull_request.base.ref }}" == "develop" || "${{ github.event.pull_request.base.ref }}" == "main" ]]; then
-            # ubuntu-24.04-arm is linux-aarch64 (#474): a full member, C++ tests and every wheel,
-            # on a native arm runner rather than under emulation.  Linux is pinned to 24.04 on
-            # both architectures, here and in every workflow, not ubuntu-latest: that label
-            # became Ubuntu 26 in October 2026, and the C++ test job's apt packages (Eigen,
-            # OpenMPI, ...) would have changed under the 4.0 release.  Moving to 26 is for 4.1.
-            OS='["ubuntu-24.04","ubuntu-24.04-arm","macos-14","macos-15-intel"]'; PY='["3.10","3.11","3.12","3.13","3.14"]'
+            # ubuntu-26.04-arm is linux-aarch64 (#474): a full member, C++ tests and every wheel,
+            # on a native arm runner rather than under emulation.  Linux names its Ubuntu
+            # version on both architectures, here and in every workflow, instead of
+            # ubuntu-latest, so an image change is a deliberate edit rather than a surprise:
+            # the C++ test job compiles with the runner's own GCC and apt packages.
+            OS='["ubuntu-26.04","ubuntu-26.04-arm","macos-14","macos-15-intel"]'; PY='["3.10","3.11","3.12","3.13","3.14"]'
           else
-            OS='["ubuntu-24.04"]'; PY='["3.11"]'
+            OS='["ubuntu-26.04"]'; PY='["3.11"]'
           fi
           # Manual OS targeting (the workflow_dispatch `os` input) narrows the unix matrix; the
           # separate Windows jobs gate on the same input.  Empty/`all` => leave as computed above.
           case "${{ inputs.os }}" in
-            linux)        OS='["ubuntu-24.04","ubuntu-24.04-arm"]' ;;
-            linux-arm)    OS='["ubuntu-24.04-arm"]' ;;
+            linux)        OS='["ubuntu-26.04","ubuntu-26.04-arm"]' ;;
+            linux-arm)    OS='["ubuntu-26.04-arm"]' ;;
             macos)        OS='["macos-14"]' ;;
             macos-intel)  OS='["macos-15-intel"]'; PY='["3.11"]' ;;   # the #215 experiment
             windows)      OS='[]' ;;   # no unix jobs; only the standalone Windows jobs run
@@ -707,8 +707,8 @@ jobs:
         os: ${{ fromJson(needs.set_matrix.outputs.os) }}
         python-version: ${{ fromJson(needs.set_matrix.outputs.python_versions) }}
         exclude:
-          - os: ubuntu-24.04
-          - os: ubuntu-24.04-arm
+          - os: ubuntu-26.04
+          - os: ubuntu-26.04-arm
 
     steps:
       - uses: actions/checkout@v5
@@ -790,7 +790,7 @@ jobs:
     name: Docs build (doctest + html -W)
     if: ${{ inputs.minimal != true }}
     needs: [build_macos_ubuntu_wheels]
-    runs-on: ubuntu-24.04
+    runs-on: ubuntu-26.04
     timeout-minutes: 20
     steps:
       - uses: actions/checkout@v5
@@ -810,7 +810,7 @@ jobs:
       - name: Download built wheel
         uses: actions/download-artifact@v7
         with:
-          name: wheels-ubuntu-24.04-3.11
+          name: wheels-ubuntu-26.04-3.11
           path: dist/
 
       - name: Install bertini from built wheel

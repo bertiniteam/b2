@@ -16,7 +16,7 @@ concurrency:
 jobs:
   check_version:
     name: Check VERSION file matches tag
-    runs-on: ubuntu-24.04
+    runs-on: ubuntu-26.04
     outputs:
       is_prerelease: ${{ steps.check.outputs.is_prerelease }}
     steps:
@@ -55,7 +55,7 @@ jobs:
   check_timing_freshness:
     name: Check tutorial timings are fresh
     needs: check_version
-    runs-on: ubuntu-24.04
+    runs-on: ubuntu-26.04
     steps:
       - uses: actions/checkout@v5
       # Gate ONLY real releases.  We keep this as a step-level `if` (not a job-level one) so the
@@ -79,7 +79,7 @@ jobs:
     name: Publish to TestPyPI
     if: needs.check_version.outputs.is_prerelease == 'true'
     needs: [check_version, build_and_test]
-    runs-on: ubuntu-24.04
+    runs-on: ubuntu-26.04
 
     environment:
       name: testpypi
@@ -111,7 +111,7 @@ jobs:
     name: Publish to PyPI
     if: needs.check_version.outputs.is_prerelease == 'false'
     needs: [check_version, build_and_test]
-    runs-on: ubuntu-24.04
+    runs-on: ubuntu-26.04
 
     environment:
       name: pypi
@@ -146,7 +146,7 @@ jobs:
     needs:
       - check_version
       - publish-to-pypi
-    runs-on: ubuntu-24.04
+    runs-on: ubuntu-26.04
 
     permissions:
       contents: write  # IMPORTANT: mandatory for making GitHub Releases

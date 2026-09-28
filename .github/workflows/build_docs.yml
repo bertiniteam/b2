@@ -37,7 +37,7 @@ jobs:
     if: github.event_name == 'workflow_dispatch'
     uses: ./.github/workflows/build_and_test.yml
     with:
-      # Docs only need the ubuntu-24.04 / python-3.11 wheel; skip the full
+      # Docs only need the ubuntu-26.04 / python-3.11 wheel; skip the full
       # OS/Python matrix and the wheel/C++ test jobs.
       minimal: true
       ref: ${{ inputs.ref }}
@@ -48,7 +48,7 @@ jobs:
   # python_docs as the `docs-cpp` artifact for final assembly.
   cpp_docs:
     name: Build C++ docs (Doxygen)
-    runs-on: ubuntu-24.04
+    runs-on: ubuntu-26.04
     steps:
       - uses: actions/checkout@v5
         with:
@@ -102,7 +102,7 @@ jobs:
       always() &&
       (needs.build_and_test.result == 'success' || needs.build_and_test.result == 'skipped') &&
       needs.cpp_docs.result == 'success'
-    runs-on: ubuntu-24.04
+    runs-on: ubuntu-26.04
     permissions:
       contents: write  # push the persistent docs-store branch (the durable versioned-docs store)
     steps:
@@ -143,7 +143,7 @@ jobs:
       - name: Download built wheel
         uses: actions/download-artifact@v7
         with:
-          name: wheels-ubuntu-24.04-3.11
+          name: wheels-ubuntu-26.04-3.11
           path: dist/
 
       - name: Install bertini from built wheel
