@@ -114,8 +114,7 @@ Two habits help a solve be successul:
 #. Use adaptive precision.  It's the default.  Sadly, ``mptype='adaptive'`` costs more
    arithmetic than ``'double'``, but it spends that cost pretty much only where the geometry demands it, and
    it often turn "sometimes 69" into "always 70".
-#.  Pinning a random seed only makes a flaky run
-   *reproducible*; it is never the fix.
+#. Pinning a random seed only makes a flaky run reproducible; it is never the fix.
 #. Check ``report().num_failed``. The solve report classifies every
    path; if any *failed to track*, ``num_failed`` is nonzero and ``failures_by_reason`` names the
    reason.  A count alone can hide a root the tracker silently lost.
