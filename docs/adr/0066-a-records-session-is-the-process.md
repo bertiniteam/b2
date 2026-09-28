@@ -37,11 +37,16 @@ a different process than the one that created it (a forked child must not write 
 parent's session file).  An instance whose session file is deleted while it lives claims a
 new one rather than writing into the unlinked file.
 
-Holding an instance must not mean holding its files.  A process may record into thousands of
-directories -- the python test suite gives every test its own -- so on each `Shared()` call,
-every instance only the table still holds closes its session file and results files, keeping
-the session file's name and reopening that same file (append mode) on its next record; an
-idle instance whose directory is gone is dropped from the table.  While in use, an instance
+Holding an instance must not mean holding its files.  `Shared()` hands callers a lease on the
+instance -- one shared handle for everyone using the directory at the same time -- and when
+the last holder lets go, the instance closes its session file and results files at once,
+keeping the session file's name and reopening that same file (append mode) on its next
+record.  A process may record into thousands of directories (the python test suite gives
+every test its own), and Windows cannot delete an open file, so a directory nobody is writing
+to must hold none: not until the next solve attaches, which may never come, but immediately.
+An earlier version closed idle instances' files only on the next `Shared()` call, and on
+Windows a finished solve's directory could not be deleted while the process lived.  An
+instance nobody is using whose directory is gone is dropped from the table.  While in use, an instance
 keeps at most `kMaxOpenResultsFiles` (16) per-run results files open, closing them all and
 reopening on demand when the cap is reached.  Every stream is append-mode and flushed per
 record, so closing one loses nothing.
@@ -53,12 +58,17 @@ record, so closing one loses nothing.
   shreds the history across a file per solve, and crashes a fast sweep after 25 solves in a
   second.  `a_sweep_that_releases_between_solves_keeps_one_session` fails with the original
   error if the weak hold comes back.
-- **Do not let a held instance keep its files open while idle, and do not let
-  `results_streams_` grow without bound.**  Either runs a process out of file descriptors (256
-  by default on macOS): one through many directories, the other through many runs in one.
-  `many_directories_hold_no_idle_file_handles` counts the open handles on Linux (600 without
-  the release, 0 with it), and `results_files_stay_correct_past_the_open_file_cap` covers the
-  cap.
+- **Do not let a held instance keep its files open while nobody is using it, not even until
+  the next attach, and do not let `results_streams_` grow without bound.**  The first keeps a
+  finished directory undeletable on Windows and, across many directories, runs a process out of
+  file descriptors (256 by default on macOS); the second does the same through many runs in one
+  directory.  `many_directories_hold_no_idle_file_handles` and
+  `a_finished_directory_can_be_deleted_while_the_process_lives` count the open handles on Linux
+  and both fail without the release on the last lease (the first counts 600 open where it
+  expects 0); the second also deletes the directory, which is what fails on Windows.
+  `results_files_stay_correct_past_the_open_file_cap` covers the cap.
+- `a_deleted_session_file_is_claimed_afresh` runs on POSIX only: Windows refuses to delete an
+  open file, so there the situation it covers cannot arise.
 - **Do not key the table by `weakly_canonical(root)` alone.**  The default records path is
   relative and does not exist before the first solve.
   `a_relative_directory_is_one_session_from_its_first_solve` fails without `absolute`.

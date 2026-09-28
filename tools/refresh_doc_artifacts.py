@@ -33,15 +33,24 @@ the reason plots stay opt-in.
 import argparse
 import os
 import re
+import shutil
 import subprocess
 import sys
 import tempfile
+import time
 from pathlib import Path
 
 REPO = Path(__file__).resolve().parent.parent
 TUT = REPO / "python" / "docs" / "source" / "tutorials"
 SHOWPIECES = REPO / "python" / "docs" / "source" / "showpieces"
 EXAMPLES = REPO / "python" / "examples"
+
+# Where each plot's solves record (BERTINI_RECORDS_DIR), one folder per plot under the docs'
+# gitignored build output, so records never land in the docs source.  Each folder is emptied
+# before its plot runs: persistent records would RECALL identical solves instead of computing
+# them, which draws a figure from an older library and leaves path observers with nothing to
+# see.  Kept after the run, for looking at what a figure's solves did.
+RECORDS_SCRATCH = REPO / "python" / "docs" / "build" / "refresh_records"
 
 # A fixed salt makes matplotlib's SVG element ids deterministic run-to-run (same matplotlib
 # version).  Any stable string works; keep it constant so ids don't move.
@@ -52,28 +61,28 @@ SVG_HASHSALT = "bertini2-docs"
 # Each entry: the regenerator script, the argv it needs, the image files it is expected to write
 # (relative to `outdir`, which is the script's own directory unless noted), and an optional
 # `needs` predicate for artifacts that require something extra (e.g. the built CLI binary).
+# The script runs with `outdir` as its working directory, so a plain `savefig("name.svg")`
+# lands where the docs expect it; the script needs no path handling of its own.
 class Plot:
-    def __init__(self, key, script, outputs, argv=None, outdir=None, needs=None, note=None,
-                 env=None):
+    def __init__(self, key, script, outputs, argv=None, outdir=None, needs=None, note=None):
         self.key = key
         self.script = script                      # Path
         self.outputs = outputs                    # list[str] basenames
         self.outdir = outdir or script.parent     # where the images land
-        self.argv = argv or []                    # extra argv (may reference {outdir})
-        self.env = env or {}                      # extra env (values may reference {tmpdir})
+        self.argv = argv or []                    # extra argv
         self.needs = needs                        # optional (label, Path) that must exist
         self.note = note
 
-    def resolved_argv(self):
-        return [a.format(outdir=str(self.outdir)) for a in self.argv]
-
 
 def _plots():
-    B1 = REPO / "build" / "core" / "bertini2"     # optional CLI binary for the b1-vs-b2 benchmark
+    B2 = REPO / "build" / "core" / "bertini2"   # optional CLI binary for the b1-vs-b2 benchmark
     return [
         Plot("real_points",
              TUT / "formulating_and_solving" / "real_points" / "real_points.py",
              ["real_points.png"]),
+        Plot("parameter_homotopy",
+             TUT / "formulating_and_solving" / "parameter_homotopy" / "parameter_homotopy.py",
+             ["parameter_homotopy_circle.svg", "parameter_homotopy_circle.png"]),
         Plot("solution_dataframe",
              TUT / "formulating_and_solving" / "solution_dataframe" / "solution_dataframe.py",
              ["solution_dataframe_real_plane.svg", "solution_dataframe_real_plane.png",
@@ -89,22 +98,20 @@ def _plots():
               "griewank_osborn_endgame.svg", "griewank_osborn_endgame.png"]),
         Plot("classic_continuation_cartoon",
              TUT / "observing_metadata_more" / "classic_continuation_cartoon" / "classic_continuation_cartoon.py",
-             ["classic_continuation_cartoon.svg", "classic_continuation_cartoon.png"],
-             argv=["{outdir}"]),
-        Plot("homotopy_cartoon_from_real_data",
-             TUT / "observing_metadata_more" / "homotopy_cartoon_from_real_data" / "amp_precision_cartoon.py",
-             ["amp_precision_cartoon_cyclic5.svg", "amp_precision_cartoon_cyclic5.png"],
-             argv=["{outdir}"]),
+             ["classic_continuation_cartoon.svg", "classic_continuation_cartoon.png"]),
+        Plot("seeing_precision_change",
+             TUT / "observing_metadata_more" / "seeing_precision_change" / "amp_precision_plot.py",
+             ["amp_precision_cyclic5.svg", "amp_precision_cyclic5.png"]),
         Plot("parallel_parameter_homotopy",
              EXAMPLES / "parallel_parameter_homotopy.py",
              ["parallel_parameter_homotopy.svg"],
              outdir=TUT / "parallelism" / "parallel_parameter_homotopy",
-             argv=["--save", "{outdir}/parallel_parameter_homotopy.svg"]),
+             argv=["--save", "parallel_parameter_homotopy.svg"]),
         Plot("bertini1_vs_bertini2_timing",
              TUT / "performance_benchmarking" / "bertini1_vs_bertini2_timing" / "b1_vs_b2_timing.py",
              ["b1_vs_b2_timing.svg", "b1_vs_b2_timing.png"],
-             argv=["--out", "{outdir}", "--bertini2", str(B1)],
-             needs=("bertini2 CLI binary", B1),
+             argv=["--bertini2", str(B2)],
+             needs=("bertini2 CLI binary", B2),
              note="benchmark vs Bertini 1; needs the built CLI and (optionally) a `bertini` on PATH"),
         Plot("tracking_analytic",
              TUT / "doing_things_manually" / "tracking_analytic" / "tracking_analytic.py",
@@ -115,10 +122,8 @@ def _plots():
         Plot("chained_homotopies",
              EXAMPLES / "chained_homotopies.py",
              ["chain_progression.svg", "chain_progression.png"],
-             outdir=TUT / "chained_homotopies",
-             argv=["--plot", "{outdir}/chain_progression"],
-             env={"BERTINI_RECORDS_DIR": "{tmpdir}"},
-             note="records go to a scratch dir; only the drawn chain is the artifact"),
+             outdir=TUT / "record_keeping" / "chained_homotopies",
+             argv=["--plot", "chain_progression"]),
         Plot("monodromy_loom",
              SHOWPIECES / "monodromy_loom" / "monodromy_loom.py",
              ["monodromy_loom.png", "monodromy_loom_teaching.png"],
@@ -175,23 +180,34 @@ def run_plot(plot: Plot, dry_run):
         if not Path(path).exists():
             print(f"[plots] SKIP {plot.key}: missing {label} ({path})", flush=True)
             return 0  # not a failure -- this artifact just can't be built here
-    cmd = [sys.executable, str(plot.script), *plot.resolved_argv()]
+    if not plot.outdir.is_dir():
+        print(f"[plots] FAIL {plot.key}: its image directory does not exist ({plot.outdir})", flush=True)
+        return 1
+    cmd = [sys.executable, str(plot.script), *plot.argv]
     print(f"[plots] $ {' '.join(cmd)}", flush=True)
     if dry_run:
         return 0
+    started = time.time()
+    records = RECORDS_SCRATCH / plot.key
+    shutil.rmtree(records, ignore_errors=True)
     env, rc_path = _env_with_determinism()
-    scratch = tempfile.TemporaryDirectory(prefix="refresh_doc_artifacts_")
-    env.update({k: v.format(tmpdir=scratch.name) for k, v in plot.env.items()})
+    env["BERTINI_RECORDS_DIR"] = str(records)
     try:
-        proc = subprocess.run(cmd, cwd=REPO, env=env)
+        proc = subprocess.run(cmd, cwd=plot.outdir, env=env)
     finally:
         os.unlink(rc_path)
-        scratch.cleanup()
-    if proc.returncode == 0:
-        for name in plot.outputs:
-            _strip_svg_date(plot.outdir / name)
-        print(f"[plots] wrote: {', '.join(plot.outputs)}", flush=True)
-    return proc.returncode
+    if proc.returncode != 0:
+        return proc.returncode
+    # a clean exit is not proof: the script may have saved somewhere else, or not at all
+    stale = [name for name in plot.outputs
+             if not (plot.outdir / name).exists() or (plot.outdir / name).stat().st_mtime < started]
+    if stale:
+        print(f"[plots] FAIL {plot.key}: not written to {plot.outdir}: {', '.join(stale)}", flush=True)
+        return 1
+    for name in plot.outputs:
+        _strip_svg_date(plot.outdir / name)
+    print(f"[plots] wrote: {', '.join(plot.outputs)}", flush=True)
+    return 0
 
 
 def main():

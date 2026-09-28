@@ -34,7 +34,7 @@ def build_start(x, y):
         [[0, 1, '-1'], [0, 1, '-2']],    # s1 = (y - 1)(y - 2)
     ])
 
-    assert list(start.degrees()) == [2, 2]   # a product's degree is its number of factors
+    assert start.degrees() == [2, 2]   # a product's degree is its number of factors
     return start
 
 
@@ -76,7 +76,7 @@ def classify_endpoints(solver):
     """Ask the solver's metadata which endpoints are finite, nonsingular, real."""
     assert len(solver.finite_solutions()) == 4       # all four endpoints are finite
     assert len(solver.nonsingular_solutions()) == 4  # ... and all nonsingular
-    assert len(solver.real_solutions()) == 2         # two real, two with purely imaginary x
+    assert len(solver.real_solutions()) == 2         # two real, two complex
 
 
 def main():

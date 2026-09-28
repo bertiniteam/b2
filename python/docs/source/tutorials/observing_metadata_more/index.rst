@@ -7,5 +7,5 @@ Observing, metadata, and more
    :maxdepth: 1
 
    observers_and_path_data/index
-   homotopy_cartoon_from_real_data/index
+   seeing_precision_change/index
    classic_continuation_cartoon/index

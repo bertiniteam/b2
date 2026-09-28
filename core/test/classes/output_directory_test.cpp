@@ -313,8 +313,8 @@ BOOST_AUTO_TEST_CASE(a_relative_directory_is_one_session_from_its_first_solve)
 BOOST_AUTO_TEST_CASE(many_directories_hold_no_idle_file_handles)
 {
     // instances live as long as the process, and a process may record into thousands of
-    // directories (the python suite gives every test its own); an idle instance must not
-    // keep its session and results files open
+    // directories (the python suite gives every test its own); once nobody is using an
+    // instance, it must not keep its session and results files open
     auto const run = std::string("abcdef");
     int const dirs = 300;   // past macOS's default limit of 256 open files
     for (int i = 0; i < dirs; ++i)
@@ -323,9 +323,7 @@ BOOST_AUTO_TEST_CASE(many_directories_hold_no_idle_file_handles)
         out->Append({{"kind", "probe"}, {"i", i}});
         out->EnsureResultsFile(run, {{"kind", "results_header"}, {"run", run}});
         out->AppendResult(run, {{"kind", "path"}, {"run", run}, {"index", 0}});
-    }
-    // one more attach releases the last directory's files too
-    auto const again = OutputDirectory::Shared(FreshDir("many_dirs_probe"));
+    }   // each lease ends here, closing that directory's files
 
 #ifdef __linux__
     std::size_t open = 0;
@@ -340,23 +338,55 @@ BOOST_AUTO_TEST_CASE(many_directories_hold_no_idle_file_handles)
 #endif
 
     // and each directory still got exactly its own records
-    auto const out = OutputDirectory::Shared(fs::temp_directory_path() / "b2_outdir_test_many_dirs_7");
-    BOOST_CHECK_EQUAL(out->Scan().size(), 1u);
-    BOOST_CHECK_EQUAL(out->ResultsOf(run).size(), 2u);
+    {
+        auto const out = OutputDirectory::Shared(fs::temp_directory_path() / "b2_outdir_test_many_dirs_7");
+        BOOST_CHECK_EQUAL(out->Scan().size(), 1u);
+        BOOST_CHECK_EQUAL(out->ResultsOf(run).size(), 2u);
+    }
     for (int i = 0; i < dirs; ++i)
         fs::remove_all(fs::temp_directory_path() / ("b2_outdir_test_many_dirs_" + std::to_string(i)));
-    fs::remove_all(fs::temp_directory_path() / "b2_outdir_test_many_dirs_probe");
+}
+
+BOOST_AUTO_TEST_CASE(a_finished_directory_can_be_deleted_while_the_process_lives)
+{
+    // Windows refuses to delete an open file.  Once the last solver using a directory lets
+    // go, its files must be closed -- not at the next attach, which may never come -- or a
+    // user cannot delete bertini_output until the process exits
+    auto const dir = FreshDir("finished");
+    auto const run = std::string("abc123");
+    {
+        auto const out = OutputDirectory::Shared(dir);
+        out->Append({{"kind", "probe"}, {"n", 1}});
+        out->EnsureResultsFile(run, {{"kind", "results_header"}, {"run", run}});
+        out->AppendResult(run, {{"kind", "path"}, {"run", run}, {"index", 0}});
+    }
+#ifdef __linux__
+    // POSIX would delete open files anyway, so here the proof is that none are open
+    std::size_t open = 0;
+    for (auto const& fd : fs::directory_iterator("/proc/self/fd"))
+    {
+        std::error_code link_ec;
+        auto const target = fs::read_symlink(fd.path(), link_ec);
+        if (!link_ec && target.string().find("b2_outdir_test_finished") != std::string::npos)
+            ++open;
+    }
+    BOOST_CHECK_EQUAL(open, 0u);
+#endif
+    std::error_code ec;
+    fs::remove_all(dir, ec);
+    BOOST_CHECK_MESSAGE(!ec, "could not delete a finished records directory: " << ec.message());
+    BOOST_CHECK(!fs::exists(dir));
 }
 
 BOOST_AUTO_TEST_CASE(shared_replaces_an_instance_whose_directory_was_deleted)
 {
+    // the directory is deleted between solves (as FreshDir does, and as a user clearing
+    // bertini_output does): the next attach must start over in a fresh skeleton
     auto const dir = FreshDir("deleted_dir");
-    auto const first = OutputDirectory::Shared(dir);
-    first->Append({{"kind", "probe"}, {"n", 1}});
+    OutputDirectory::Shared(dir)->Append({{"kind", "probe"}, {"n", 1}});
 
     fs::remove_all(dir);
     auto const second = OutputDirectory::Shared(dir);
-    BOOST_CHECK(second.get() != first.get());
     BOOST_CHECK(fs::exists(dir / "README.txt"));
     second->Append({{"kind", "probe"}, {"n", 2}});
 
@@ -368,7 +398,9 @@ BOOST_AUTO_TEST_CASE(shared_replaces_an_instance_whose_directory_was_deleted)
 BOOST_AUTO_TEST_CASE(a_deleted_session_file_is_claimed_afresh)
 {
     // a live instance must not keep writing into a file somebody deleted: every line
-    // after the deletion would be lost
+    // after the deletion would be lost.  Only POSIX lets anyone delete a file that is open;
+    // on Windows the situation cannot arise, and the deletion below would fail
+#ifndef _WIN32
     auto const dir = FreshDir("deleted_session");
     auto const out = OutputDirectory::Shared(dir);
     out->Append({{"kind", "probe"}, {"n", 1}});
@@ -379,6 +411,9 @@ BOOST_AUTO_TEST_CASE(a_deleted_session_file_is_claimed_afresh)
     auto const records = out->Scan();
     BOOST_REQUIRE_EQUAL(records.size(), 1u);
     BOOST_CHECK_EQUAL(records[0].at("n").as_int64(), 2);
+#else
+    BOOST_TEST_MESSAGE("not applicable on Windows: an open file cannot be deleted there");
+#endif
 }
 
 BOOST_AUTO_TEST_CASE(results_files_stay_correct_past_the_open_file_cap)

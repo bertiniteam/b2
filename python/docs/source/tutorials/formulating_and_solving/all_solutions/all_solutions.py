@@ -28,16 +28,16 @@ def solve_and_collect(sys):
     solver = ZeroDimSolver(sys, mptype='adaptive')
     solver.solve()
 
-    good = solver.finite_solutions()      # successful, finite endpoints -- the actual points
+    solns = solver.finite_solutions()      # successful, finite endpoints -- the actual points
 
-    assert len(good) == 4                 # all four complex solutions
+    assert len(solns) == 4                 # all four complex solutions
 
-    return solver, good
+    return solver, solns
 
 
-def check_all_complex(good):
+def check_all_complex(solns):
     """Every one of them is genuinely complex, and each really is a solution."""
-    for s in good:
+    for s in solns:
         xv, yv = complex(s[0]), complex(s[1])
         assert abs(xv.imag) > 1e-6 or abs(yv.imag) > 1e-6   # none are real
         # and each really is a solution
@@ -54,8 +54,8 @@ def accessor_views(solver):
 
 def main():
     sys = build_system()
-    solver, good = solve_and_collect(sys)
-    check_all_complex(good)
+    solver, solns = solve_and_collect(sys)
+    check_all_complex(solns)
     accessor_views(solver)
 
 

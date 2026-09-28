@@ -5,9 +5,9 @@
 
    import bertini
 
-Most numerical solvers find *a* solution near where you start them.  Bertini can compute **all
+Many numerical solvers find *a* solution near where you start them.  Numerical algebraic geometry can compute **all
 isolated complex solutions** of a polynomial system -- including the complex ones a
-real-valued solver can never see -- and it knows in advance an upper bound on how many to expect.
+real-valued solver can never see.
 
 A system with no real solutions
 ===============================
@@ -43,15 +43,15 @@ start system, and you pick the rest with strings -- ``endgame=`` (``'cauchy'`` /
     solver = ZeroDimSolver(sys, mptype='adaptive')
     solver.solve()
 
-    good = solver.finite_solutions()      # successful, finite endpoints -- the actual points
+    solns = solver.finite_solutions()      # successful, finite endpoints -- the actual points
 
-    assert len(good) == 4                 # all four complex solutions
+    assert len(solns) == 4                 # all four complex solutions
 
 Every one of them is genuinely complex:
 
 .. testcode::
 
-    for s in good:
+    for s in solns:
         xv, yv = complex(s[0]), complex(s[1])
         assert abs(xv.imag) > 1e-6 or abs(yv.imag) > 1e-6   # none are real
         # and each really is a solution
@@ -87,11 +87,12 @@ tracked exactly four paths, none diverged, so the finite set *is* the whole set 
 
 ``infinite_solutions()`` is the complement of ``finite_solutions()`` within ``all_solutions()`` --
 the endpoints the endgame resolved as diverging to infinity.  The other filtered views are
-``real_solutions()``, ``nonsingular_solutions()``, and ``singular_solutions()``; every accessor
-takes ``user_coords=False`` to hand back the solver's internal homogenized coordinates instead of
-your variables'.
+``real_solutions()``, ``nonsingular_solutions()``, and ``singular_solutions()``.  If you're curious
+about some behind the scenes stuff, these accessors
+take ``user_coords=False`` to hand back the solver's internal homogenized coordinates instead of
+your variables.
 
-The database of solutions
+Pandas dataframes
 =========================
 
 For bookkeeping across a whole solve -- or many solves -- ``to_dataframe()`` returns the solve as a
@@ -123,13 +124,11 @@ multiprecision interface rather than rounded to ``float``.
 
 When a system has structure -- several groups of variables that each appear with low
 degree -- the total-degree count above is wasteful.  The
-:doc:`/tutorials/formulating_and_solving/eigenvalues_by_homotopy/index` tutorial shows the multihomogeneous start system, which
-tracks one path per *actual* solution instead.
+:doc:`/tutorials/formulating_and_solving/eigenvalues_by_homotopy/index` tutorial shows the multihomogeneous start system, which for an eigenvalue computation tracks one path per solution, so the path count is sharp.
 
 Complete example
 ================
 
-The whole tutorial as one runnable script -- assemble nothing, just run it:
 
 .. literalinclude:: all_solutions.py
    :language: python

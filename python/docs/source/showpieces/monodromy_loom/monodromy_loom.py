@@ -35,7 +35,6 @@ Run standalone:  python monodromy_loom.py
 """
 
 import math
-import os
 from fractions import Fraction
 
 import numpy as np
@@ -49,8 +48,6 @@ import bertini
 import bertini.tracking as tracking
 from bertini.multiprec import complex_mp
 from bertini.tracking.observers import amp as amp_observers
-
-_OUT = os.path.dirname(os.path.abspath(__file__))
 
 # a vivid strand palette on near-black
 _HUES = ['#3fe0ff', '#ff4fa3', '#ffd24a', '#8aff5a', '#c07bff', '#ff8a3f']
@@ -237,8 +234,8 @@ def showpiece_frame(out):
 
 def main():
     bertini.recording(False)          # we are here to WATCH tracking, not recall it
-    teaching_frame(os.path.join(_OUT, 'monodromy_loom_teaching.png'))
-    showpiece_frame(os.path.join(_OUT, 'monodromy_loom.png'))
+    teaching_frame('monodromy_loom_teaching.png')
+    showpiece_frame('monodromy_loom.png')
 
 
 if __name__ == '__main__':

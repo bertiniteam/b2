@@ -1,5 +1,5 @@
-⏱️ Stopping a solve, and giving paths a budget
-**********************************************
+⏱️ Stopping a solve, and using a wall-clock budget
+**********************************************************
 
 Path costs vary widely.  In a sweep of tens of thousands of paths a few may cost a thousand
 times the median, and those few set the wall-clock time of the whole sweep.  This page covers
@@ -32,8 +32,8 @@ tracks nothing and so has no progress to show::
 
     recalled 64 of 64 paths from the records
 
-At very large path counts the display redraws every so many paths rather than on each one --
-by default often enough for a couple of hundred updates across the whole solve.  To set the
+At very large path counts, the display redraws every-so-many paths rather than on each one.
+By default, it's often enough for a couple of hundred updates across the whole solve.  To set the
 interval yourself, or to watch a solver you are driving directly, attach a
 :class:`bertini.ProgressReport`:
 
@@ -133,8 +133,14 @@ to completion:
 
    stopped early: False   never started: 0
 
-What an abandoned path leaves behind
-====================================
+.. note::
+
+   Silviana says: I 100% used Claude to implement the control-c behaviour, and I'm
+   pretty happy with the result.  I want to do math, not mess with signals.  AI coding
+   agents are solid with this kind of thing.
+
+An interrupted or truncated path leaves a useful record
+=========================================================
 
 A path that did not succeed -- whatever the reason -- says where it got to.  Its metadata
 carries ``final_time_used``, the time it reached; ``latest_path_point``, the point it was at, in the
@@ -177,8 +183,8 @@ are dehomogenized for you; a last point is left as the tracker had it.
 The stamp is recorded with the path.  The time reached, the steps taken and the precision
 describe how far a path got and what it cost in terms that do not depend on the machine.
 
-A budget per path
-=================
+A wall-clock budget per-path
+==================================
 
 ``max_path_wall_clock_duration``, in seconds, gives every path a wall-clock budget.  A path
 that has not finished when its budget runs out is abandoned between steps with
@@ -187,7 +193,7 @@ The budget spans the whole path, pre-endgame tracking and endgame together.
 
 A tutorial has to be the same on every machine, so the budgets below are either a nanosecond,
 which is gone before the first step anywhere, or an hour, which is never reached.  In real
-use you would pick something like ten times your median path time.
+use you would pick something like "ten times your median path time".
 
 .. testcode::
 
@@ -226,8 +232,8 @@ A bare tracker can be limited on its own, with no solver anywhere:
 than a duration because an endgame issues hundreds of tracking calls for one path, and a
 budget that restarted with each call would never bite.
 
-A budget for the whole solve
-============================
+A wall-clock budget for the whole solve
+============================================
 
 ``max_solve_wall_clock_duration`` budgets the whole ``solve()`` call instead.  Once it runs out
 no further path is started and any path in flight is abandoned, and the solve reads exactly as

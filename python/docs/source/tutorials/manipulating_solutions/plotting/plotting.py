@@ -8,7 +8,6 @@ Solves the circle meeting the parabola, then draws two figures:
 Run:  python plotting.py
 """
 
-import os
 
 import numpy as np
 
@@ -22,8 +21,6 @@ from bertini import ZeroDimSolver, SolutionPathCollector
 # with ambient recording on, a repeated identical solve recalls its answers and tracks
 # nothing, so the path collector would see no paths at all
 bertini.recording(False)
-
-_OUT = os.path.dirname(os.path.abspath(__file__))
 
 
 def build():
@@ -93,8 +90,8 @@ def plot_solutions(solver):
     right.legend(loc='upper left', fontsize=8)
 
     figure.tight_layout()
-    figure.savefig(os.path.join(_OUT, 'plotting_solutions.svg'))
-    figure.savefig(os.path.join(_OUT, 'plotting_solutions.png'), dpi=150)
+    figure.savefig('plotting_solutions.svg')
+    figure.savefig('plotting_solutions.png', dpi=150)
     plt.close(figure)
 
 
@@ -123,8 +120,8 @@ def plot_paths(solver, paths):
     axis.legend(loc='upper right', fontsize=8)
 
     figure.tight_layout()
-    figure.savefig(os.path.join(_OUT, 'plotting_paths.svg'))
-    figure.savefig(os.path.join(_OUT, 'plotting_paths.png'), dpi=150)
+    figure.savefig('plotting_paths.svg')
+    figure.savefig('plotting_paths.png', dpi=150)
     plt.close(figure)
 
 

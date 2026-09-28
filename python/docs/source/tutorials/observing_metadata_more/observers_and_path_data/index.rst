@@ -1,4 +1,4 @@
-👀 Watching the paths: observers and path data
+👀 Watching paths: observers and path data
 *************************************************
 
 .. testsetup:: *
@@ -9,17 +9,33 @@
 
    bertini.recording(True)   # this document runs bare (see the note); restore for the rest
 
-Bertini tracks solution paths, but by default you only see where they *end*.  An **observer**
-lets you watch what happens *along* the way: it is a small object you attach to a tracker (or to
+Bertini 2 tracks solution paths, but by default you only see where they *end*.  An **observer**
+lets you watch what happens *along* the way: it is a small object you can attach to a tracker (or to
 any observable), whose ``Observe`` method is called with an **event** every time something
 happens -- a step succeeds, the precision changes, a path starts or ends.  This tutorial builds
 up from a one-line observer to a *meta-observer* that records every path of a whole solve into
 numpy arrays, and plots them.
 
+
 Writing an observer in Python
 =============================
 
-Subclass the precision-appropriate ``CustomObserver`` base (``amp`` for adaptive precision,
+.. note::
+
+    Using fully-written-in-Python observers can add significant time cost
+    to path tracking.  There are some specific observers written in C++, and their functionality
+    is tied at C++ compile time to the events they watch for, so they're rather
+    performance-neutral to path tracking.  In contrast, a Python-only observer
+    triggers the event dispatch and filtration with every event emission, which is expensive.
+    If this is a challenge for you, Silviana welcomes collaboration!!!  She thinks the
+    observation system in Bertini 2 was one of the better design decisions she made,
+    and it has paid off time and time again in debugging and plotting tools.
+
+Observers observe specific observable types --so this can get into the nitty gritty
+of Bertini 2 internals pretty quickly...
+
+To make your own observer, subclass the precision-appropriate
+``CustomObserver`` base (``amp`` for adaptive precision,
 ``double`` or ``multiple`` for fixed) and override ``Observe``.  Events arrive as objects you
 discriminate with :func:`isinstance`; every tracking event can hand you the live tracker via
 ``event.tracker()``, from which you can read the current state of the path:
@@ -29,8 +45,9 @@ discriminate with :func:`isinstance`; every tracking event can hand you the live
     import bertini
     import bertini.tracking as tracking
 
-    class StepPrinter(tracking.observers.amp.CustomObserver):
-        def Observe(self, event):
+    class StepPrinter(tracking.observers.amp.CustomObserver): # will observe an AMP tracker
+
+        def Observe(self, event): # define the observve callback function
             if isinstance(event, tracking.observers.amp.SuccessfulStep):
                 trk = event.tracker()
                 print("t =", complex(trk.current_time()),
@@ -93,7 +110,13 @@ For the common "call this function when that event happens" case there is a read
     obs = tracking.observers.amp.CallbackObserver()
     obs.on(tracking.observers.amp.PrecisionChanged,
            lambda e: print(e.previous(), "->", e.next()))
+           # Silviana thinks this is freaking amazing.  I hope you agree.
+
     tracker.add_observer(obs)
+
+    # do stuff with the tracker
+
+    # you can also detach or remove them
     tracker.remove_observer(obs)
 
 .. note::
@@ -107,7 +130,8 @@ For the common "call this function when that event happens" case there is a read
 Collecting one path into numpy
 ==============================
 
-To *plot* a path we need its data as arrays.  ``PathDataCollector`` is an observer that, on every
+To *plot* a path we need its data as arrays.  ``PathDataCollector`` is a
+library-provided observer that, on every
 successful step, records the time, the space point, and a few diagnostics.  Adaptive precision
 hands back arbitrary-precision (mpfr) numbers, which do not all fit in one numpy array, so each
 value is cast to a plain python ``complex``/``float`` as it is collected (double precision is
@@ -133,7 +157,8 @@ DataFrame (a ``t`` column, one ``z0``, ``z1``, ... per variable, then the diagno
 The meta-observer: every path of a whole solve
 ==============================================
 
-A zero-dimensional solve tracks *many* paths, reusing **one** tracker for all of them.  We want
+A zero-dimensional solve tracks *many* paths, reusing **one** tracker for all of them if using
+onely one thread for tracking.  We want
 one ``PathDataCollector`` per solution path -- but a collector watches a tracker, while "which
 path are we on" is known only to the *solver*.  The elegant fix is an observer that, in response
 to the solver's events, attaches and detaches *other* observers: a meta-observer.
@@ -231,8 +256,9 @@ Build it yourself: one observer that attaches another
 
 ``SolutionPathCollector`` is handy to have ready-made, but the pattern behind it -- a parent
 observer **A** that, in response to events, attaches a worker observer **B** and has **B report
-its findings back to A** -- is worth being able to build yourself.  It is the whole point of the
-refactor: observers composing observers at run time.  Let's reconstruct it from scratch.
+its findings back to A** -- is worth being able to build yourself.  It is one of
+the main points of the dynamic observer system in Bertini 2:
+observers composing observers at run time.  Let's reconstruct it from scratch.
 
 The division of labour matches the two observables in play.  **B watches the tracker**: it knows
 nothing about "paths", it just records every successful step.  **A watches the solver**: it knows
@@ -334,7 +360,7 @@ exactly what makes it safe to hand to another thread.)  So:
 
 .. note::
 
-   Attaching a per-path observer to ``solver.get_tracker()`` collects **nothing** during a threaded
+   ⚠️ Attaching a per-path observer to ``solver.get_tracker()`` collects **nothing** during a threaded
    solve: the member tracker runs no paths.  Always attach to **event.tracker()** -- the tracker
    that actually runs *this* path -- as the meta-observers above do.  ``event.tracker()`` is the
    member tracker in a serial solve and the running clone in a threaded one, so the same code is
@@ -344,7 +370,9 @@ Everything else the framework handles for you.  Your Python ``Observe`` is calle
 worker threads: notifications are serialized and the GIL is re-acquired around each call, so you
 never see two ``Observe`` calls at once and never corrupt your own Python state.  The flip side is
 that a *heavy* ``Observe`` serializes the threads against each other -- keep it to copying values
-out (as ``PathRecorder`` does); do the plotting and analysis afterwards.
+out (as ``PathRecorder`` does); do the plotting and analysis afterwards.  Silviana is really
+curious about ways other people might use this system, so if you find yourself using observers
+as part of a workflow, please let her know!!!
 
 Two more things to expect under threads:
 
@@ -374,7 +402,7 @@ Two more things to expect under threads:
     solver.solve()
     assert len(A.series) == 6
 
-Under **MPI** the picture is different again, and observers do **not** span ranks.  In a distributed
+Under **MPI** the picture is different yet again, and observers do **not** span ranks.  In a distributed
 solve the manager rank coordinates while the *worker* ranks track the paths, so the per-path events
 (``PathStarted``/``PathComplete`` and every tracker step) fire **inside the worker processes** --
 not on the manager where you launched the solve.  An observer is a per-process object: it only sees
@@ -387,7 +415,7 @@ needs help under MPI.
 A 3-D system, coloured by condition number
 ==========================================
 
-Nothing about this is special to one variable.  Let's solve the **cyclic-3** system in three
+Let's solve the **cyclic-3** system in three
 variables and plot the paths in :math:`(\operatorname{Re} x, \operatorname{Re} y,
 \operatorname{Re} z)` space -- and this time colour each path by its **condition number**, the
 diagnostic ``PathDataCollector`` records at every step.  The condition number climbs as a path
@@ -491,13 +519,15 @@ whose only solution is a triple point at the origin:
     sys.add_function(bertini.coefficient(Fraction(29, 16)) * x**3 - 2*x*y)  # exact rational coeff
     sys.add_function(y - x**2)
 
-    solver = ZeroDimSolver(sys, mptype='adaptive')
+    solver = ZeroDimSolver(sys, mptype='adaptive', endgame='cauchy')
     A = SolutionPathCollector()
     solver.add_observer(A)
     solver.solve()
 
-    # let the solver classify which paths ended at a singular solution
-    singular_idx = {int(m.path_index) for m in solver.solution_metadata() if m.is_singular}
+    # let the solver classify which paths ended at the finite singular solution; paths that
+    # diverge to infinity are singular too, and would draw no loop around the origin
+    singular_idx = {int(m.path_index) for m in solver.solution_metadata()
+                    if m.is_singular and m.is_finite}
     singular = [p for p in A.series if p.path_index in singular_idx]
 
 The catch the plot has to deal with: each Cauchy loop is **geometrically smaller** than the last
@@ -545,8 +575,6 @@ to see where tracking got hard, colour by precision to watch adaptive precision 
 
 Complete example
 ================
-
-The whole tutorial as one runnable script -- it saves the three figures shown above:
 
 .. literalinclude:: observers_and_path_data.py
    :language: python

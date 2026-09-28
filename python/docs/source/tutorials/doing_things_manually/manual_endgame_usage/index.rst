@@ -4,7 +4,7 @@
 
 .. note::
 
-    This tutorial is useful to those who want very detailed control of running pieces of various algorithms in Bertini 2.  If you just want to be able to solve a system, this tutorial is probably not for you.
+    This tutorial is useful to those who want very detailed control of running pieces of various tracking and solving algorithms in Bertini 2.  If you just want to be able to solve a system, this tutorial is probably not for you.
 
 Background
 ==============
@@ -23,9 +23,9 @@ An endgame is a computational tool that one does in the final stage of a path tr
 #. Power series -- uses `Hermite interpolation <https://en.wikipedia.org/wiki/Hermite_interpolation>`_ across a sequence of geometrically-spaced points (in time) to extrapolate to a target time :cite:`morgan1992power`.
 #. Cauchy -- uses `Cauchy's integral formula <https://en.wikipedia.org/wiki/Cauchy's_integral_formula>`_ in a sequence of circles about the root you are computing.
 
-Both try to compute the cycle number :math:`c` for the root.  In the power series endgame, :math:`c` is used as the degree of a Hermite interpolant used to extrapolate to 0.  In the Cauchy endgame,  it is used for the number of cycles to walk before returning to the same point, computing a trapezoid-rule integral along the way.
+Both try to compute the cycle number :math:`c` for the root.  In the power series endgame, :math:`c` is used as the degree of a Hermite interpolant used to extrapolate to 0, and it's estimated by extrapolating on the path itself, to the last-computed path point.  In the Cauchy endgame,  it is used for the number of cycles to walk before returning to the same point, computing a trapezoid-rule integral along the way.
 
-Each is provided in the three precision modes, double, fixed multiple, and adaptive.  Since we are using the :class:`~bertini.AMPTracker` in this tutorial, we will of course use the adaptive endgame.  I really like the Cauchy endgame, so we're in the land of the :class:`~bertini.endgame.AMPCauchyEndgame`.
+Each is provided in the three precision modes: double, fixed multiple, and adaptive.  Since we are using the :class:`~bertini.AMPTracker` in this tutorial, we will of course use the adaptive endgame.  I really like the Cauchy endgame, so we're in the land of the :class:`~bertini.endgame.AMPCauchyEndgame`.
 
 
 Example
@@ -118,7 +118,7 @@ yet, things are empty and default:
     assert eg.cycle_number() == 0
     assert len(eg.final_approximation()) == 0    # nothing computed yet
 
-The endgame is used by invoking ``run``, feeding it just the boundary point to refine: the
+The endgame is used by invoking ``run``, feeding it just the boundary point: the
 endgame-boundary time and the target time (:math:`t=0`) were both fixed when we constructed the
 endgame, so all ``run`` needs is where to start.
 
@@ -135,8 +135,8 @@ three of the six homotopy paths converge there (the other three run off to infin
 
 .. testcode::
 
-    origin_hits = sum(1 for fa in final_points
-                      if len(fa) and max(abs(complex(v)) for v in fa) < 1e-6)
+    origin_hits = sum(1 for pt in final_points
+                      if len(pt) and max(abs(complex(v)) for v in pt) < 1e-6)
     print('paths landing on the triple point:', origin_hits)
 
 .. testoutput::

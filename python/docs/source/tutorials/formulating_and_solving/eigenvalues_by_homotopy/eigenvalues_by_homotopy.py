@@ -24,7 +24,7 @@ def setup_matrix():
 
 def build_affine(A, n):
     x = np.array(bertini.variables('x', n), dtype=object)
-    lam = bertini.Variable('lam')
+    lam = bertini.Variable('𝛌')
     c = np.array([5, 8, 3])                          # any generic integer vector
     sys = bertini.System()
     sys.add_functions(A @ x - lam * x)               # the rows of (A - lam I) x
@@ -36,7 +36,7 @@ def build_affine(A, n):
 
 def build_projective(A, n):
     x = np.array(bertini.variables('x', n), dtype=object)
-    lam = bertini.Variable('lam')
+    lam = bertini.Variable('𝛌')
     sys = bertini.System()
     sys.add_functions(A @ x - lam * x)               # nothing else!
     sys.add_hom_variable_group(bertini.VariableGroup(list(x)))   # x in P^{n-1}
@@ -47,9 +47,9 @@ def build_projective(A, n):
 def eigenvalues_of(system, n):
     solver = ZeroDimSolver(system, mptype='adaptive', startsystem='mhom')
     solver.solve()
-    good = solver.finite_solutions()                 # the n eigenpairs (lam is the last coord)
-    assert len(good) == n                            # one path per eigenvalue
-    return sorted(complex(s[len(s) - 1]).real for s in good)
+    solns = solver.finite_solutions()                 # the n eigenpairs (lam is the last coord)
+    assert len(solns) == n                            # one path per eigenvalue
+    return sorted(complex(s[len(s) - 1]).real for s in solns)
 
 
 def check_both(A, n):

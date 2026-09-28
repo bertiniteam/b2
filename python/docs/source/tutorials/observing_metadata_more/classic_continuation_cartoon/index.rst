@@ -1,21 +1,21 @@
 🖼️ The classic continuation cartoon, from real data
 *****************************************************
 
-Every introduction to homotopy continuation draws the same picture: smooth start points at
+Many introductions to homotopy continuation draws the same picture: smooth start points at
 :math:`t=1` on the right, paths flowing left to the target's solutions at :math:`t=0`, past an
 *endgame boundary*; the endpoints come in three flavors — **nonsingular**, **singular**, and "at
-**infinity**" (paths that diverge).  Here is the hand-drawn version:
+**infinity**" (paths that diverge).  Here is silviana's now-retired hand-drawn cartoon version:
 
 .. image:: /../../../doc_resources/images/homotopycontinuation_generic.png
-   :width: 90%
-   :alt: the classic (hand-drawn) homotopy-continuation cartoon
+   :width: 60%
+   :alt: silviana's classic (hand-drawn in Inkscape) homotopy continuation cartoon
 
-This tutorial reproduces that drawing from a **real solve** — every curve is genuine tracked data —
+This tutorial reproduces that drawing from a real solve.  Every path is genuine tracked data,
 with each path styled by the kind of endpoint it reaches.  It builds on the observer machinery from
 :doc:`/tutorials/observing_metadata_more/observers_and_path_data/index`.
 
-A small system with one of each flavor
-======================================
+A small system with solutions of each flavor
+===============================================
 
 We want only a handful of paths, with a singular endpoint, a few nonsingular ones, and some that
 diverge.  This system delivers exactly that:
@@ -24,10 +24,11 @@ diverge.  This system delivers exactly that:
 
    f_1 = (x y - 3x + 2)(x - 4), \qquad f_2 = y - x^2 .
 
-Substituting :math:`y = x^2` gives :math:`(x-1)^2 (x+2)(x-4) = 0`: a **double** root at
-:math:`x=1` — a *singular* endpoint reached by two paths — and simple roots at :math:`x=-2, 4`
-(*nonsingular*).  The total-degree start system has 6 paths, so the remaining two **diverge to
-infinity** (the homogenizing coordinate goes to zero).
+Substituting :math:`y = x^2` gives :math:`(x-1)^2 (x+2)(x-4) = 0`:
+
+* a double root at :math:`x=1` — a *singular* endpoint reached by two paths
+* simple roots at :math:`x=-2, 4` (*nonsingular*).
+* The total-degree start system has 6 paths, so the remaining two diverge to infinity (the homogenizing coordinate goes to zero).
 
 Collecting the paths, classified by endpoint
 ============================================
@@ -55,8 +56,8 @@ A few choices turn the data into the cartoon:
 * the vertical axis **auto-fits the finite paths** — robustly (the central bulk of every finite path,
   so a path momentarily grazing infinity does not blow up the window), so swapping the system needs no
   manual axis tweaking.  The two paths that diverge to infinity run off the top; each is drawn up to
-  where it leaves the window and cut there, with an :math:`\infty` just **outside** the axis at that
-  exit point (no endpoint marker) — the cartoon's "burst".
+  where it leaves the window and cut there, with an :math:`\infty` at that
+  exit point (no endpoint marker).
 * each flavor gets a distinct **line style and color and endpoint marker** (so it survives grayscale
   / color-blind viewing): nonsingular solid ``▽``, singular dashed ``★``, infinite dash-dot.
 * a bullseye marks the **target** :math:`f(z)=0` at :math:`t=0`, the start points (gold) sit on the
@@ -73,10 +74,3 @@ Run it (needs ``matplotlib``)::
 The same shape as the hand drawing — start points on the right, three flavors of endpoint on the
 left, two paths funnelling into the single singular point, two diverging to infinity — but now every
 wiggle is a real tracked path of an actual homotopy.
-
-.. note::
-
-   The total-degree start points being *scaled roots of unity* (a structured set, not generic) is
-   exactly why a naive single-coordinate height collapses them.  That structure is a known wart in
-   the current ``TotalDegreeLinearProduct`` start system; a genuinely randomized (linear-product) total-degree
-   start would put them in general position.

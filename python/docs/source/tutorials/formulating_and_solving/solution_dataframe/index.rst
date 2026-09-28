@@ -43,9 +43,9 @@ multiplicity two.  Away from the node they meet transversally, in a mix of real 
 One row per solution
 ====================
 
-:meth:`to_dataframe` lays the solve out as a table.  By default it keeps only the finite
-solutions (``omit_infinite=True``); each row is a solution -- the whole point in a single
-``solution`` column, followed by every metadata field.
+:meth:`to_dataframe` lays the solve out as a table.  By default, it keeps only the finite
+solutions (``omit_infinite=True``). Each row is a solution -- the point in the
+``solution`` column, followed by the metadata fields.
 
 .. testcode::
 
@@ -56,15 +56,15 @@ solutions (``omit_infinite=True``); each row is a solution -- the whole point in
    assert {'solution', 'is_real', 'is_singular', 'multiplicity'} <= set(df.columns)
    assert len(df['solution'].iloc[0]) == 2     # each cell is the whole (x, y) point
 
-The ``solution`` cell is the whole point (a copied vector), **not** exploded into ``x0``, ``x1``,
-... columns -- if you want per-coordinate columns, you split it yourself (we do exactly that for
+The ``solution`` cell is the whole point (a copied vector), not exploded into ``x0``, ``x1``,
+... columns.  If you want per-coordinate columns, split it yourself (we do exactly that for
 plotting, below).
 
 **One row per distinct solution.**  A multiplicity-:math:`m` solution arrives from the solver as
 :math:`m` coincident endpoints -- the node here is the end of *two* paths.  Carrying :math:`m`
 identical rows around is a nuisance, so :meth:`to_dataframe` **merges each cluster to one
-representative row by default** (``merge_multiplicities=True``); the ``multiplicity`` column still
-records the :math:`m`.  The clustering is the solver's own (the same C++ test that computes
+representative row by default** (``merge_multiplicities=True``); the ``multiplicity`` column
+records :math:`m`.  The clustering is the solver's own (the same C++ test that computes
 multiplicity), not a re-derivation here.  Pass ``merge_multiplicities=False`` to get every endpoint:
 
 .. testcode::
@@ -92,20 +92,20 @@ never have to line up two parallel lists by index:
    assert len(complex_simple) == 2
    assert len(singular) == 1 and (singular.multiplicity == 2).all()
 
-(The three paths that diverged are not in the frame; ``solver.to_dataframe(omit_infinite=False)``
+(Again, the three paths that diverged are not in the frame; ``solver.to_dataframe(omit_infinite=False)``
 keeps them, and ``solver.infinite_solutions()`` returns just those at-infinity endpoints.)
 
-The catch: a complex root does not live in the plane
+Complex roots
 ====================================================
 
-Here is the honest difficulty in *drawing* these solutions.  A solution is a pair :math:`(x, y)`
-of **complex** numbers -- four real numbers -- but the page has only two axes.  Only the **real**
+Here is a difficulty in drawing these solutions.  A solution is a pair :math:`(x, y)`
+of **complex** numbers -- so four real numbers -- but the page has only two axes.  Only the **real**
 solutions are genuine points of the real :math:`(x, y)` plane; the complex ones are not there at
 all.  So we draw two different kinds of picture.
 
-To plot, pull the two coordinates out of the ``solution`` cell -- each is a
-:class:`bertini.complex_mp` -- and lift them to Python ``complex`` so we can take real and
-imaginary parts.  This is the "split it yourself" step: one column per coordinate, made on demand.
+To plot, let's pull the individual coordinates out of the ``solution`` cell -- each is a
+:class:`bertini.complex_mp` -- and lift them to Python ``complex``.
+This is the "split it yourself" step: one column per coordinate.
 
 .. testcode::
 
@@ -120,7 +120,7 @@ The real plane
 ==============
 
 The two curves and the **real** roots live here.  Draw the curves as zero-contours and drop the
-real solutions on top -- circles for the transverse crossings, a star for the singular node:
+real solutions on top.  We use circles for the transverse crossings, a star for the singular node:
 
 .. testcode::
 
@@ -138,10 +138,10 @@ real solutions on top -- circles for the transverse crossings, a star for the si
 .. figure:: solution_dataframe_real_plane.svg
    :align: center
 
-   The two curves and the real roots.  The complex roots are simply absent -- they are not points
+   The two curves and the real roots.  The complex roots are absent from the plot -- they are not points
    of this plane.
 
-The complex planes
+The complex roots
 ==================
 
 To see *every* root -- complex ones included -- give **each coordinate its own complex plane**.
@@ -172,8 +172,8 @@ the points by category:
    Each coordinate in its own complex plane.  The two real roots lie on the real axis; the complex
    pair is mirrored across it; the node (a real point) sits on the axis with multiplicity two.
 
-Why this scales
-===============
+Concluding note
+=================
 
 Nothing above touched a path index or a parallel metadata list -- the DataFrame carries the points
 and their classification together, so a category is a filter and a plot is the filtered columns.
@@ -183,8 +183,6 @@ solutions to query, group, and plot with the whole of pandas at hand.
 
 Complete example
 ================
-
-The whole tutorial as one runnable script -- it saves the figure(s) shown above:
 
 .. literalinclude:: solution_dataframe.py
    :language: python
