@@ -277,7 +277,7 @@ def plot_cyclic3(solver, A, COND):
 # --- Watching the Cauchy endgame at a singular solution -----------------------------------------
 
 def solve_griewank_osborn():
-    """Solve Griewank-Osborn and pick out the singular paths.  Returns the singular path list."""
+    """Solve Griewank-Osborn and pick out the paths ending at its finite singular solution."""
     bertini.random.set_random_seed(1)
 
     x, y = bertini.Variable('x'), bertini.Variable('y')
@@ -291,8 +291,10 @@ def solve_griewank_osborn():
     solver.add_observer(A)
     solver.solve()
 
-    # let the solver classify which paths ended at a singular solution
-    singular_idx = {int(m.path_index) for m in solver.solution_metadata() if m.is_singular}
+    # let the solver classify which paths ended at the finite singular solution; paths that
+    # diverge to infinity are singular too, and would draw no loop around the origin
+    singular_idx = {int(m.path_index) for m in solver.solution_metadata()
+                    if m.is_singular and m.is_finite}
     singular = [p for p in A.series if p.path_index in singular_idx]
     return singular
 

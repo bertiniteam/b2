@@ -524,8 +524,10 @@ whose only solution is a triple point at the origin:
     solver.add_observer(A)
     solver.solve()
 
-    # let the solver classify which paths ended at a singular solution
-    singular_idx = {int(m.path_index) for m in solver.solution_metadata() if m.is_singular}
+    # let the solver classify which paths ended at the finite singular solution; paths that
+    # diverge to infinity are singular too, and would draw no loop around the origin
+    singular_idx = {int(m.path_index) for m in solver.solution_metadata()
+                    if m.is_singular and m.is_finite}
     singular = [p for p in A.series if p.path_index in singular_idx]
 
 The catch the plot has to deal with: each Cauchy loop is **geometrically smaller** than the last
