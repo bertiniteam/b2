@@ -664,4 +664,34 @@ BOOST_AUTO_TEST_CASE(a_very_wide_draw_is_orthonormal)
     BOOST_CHECK_SMALL((M * M.adjoint() - Mat<complex_mp>::Identity(4, 4)).norm(), real_mp("1e-25"));
 }
 
+BOOST_AUTO_TEST_CASE(a_wide_real_draw_has_distinct_columns)
+{
+    // A real unit is a sign, and a tall seed matrix of signs has only 2^thin distinct rows, so
+    // the Q factored from it had that many distinct rows and the wide real result repeated
+    // its columns (3 x 5: three distinct; 8 x 4908: 256).  Randomizing a deflated system with
+    // such a matrix gave a singular square at a point of full rank.  The real seed is a
+    // continuous draw now, so no two columns coincide, or are opposite, and the rows are still
+    // orthonormal.
+    using namespace bertini;
+    DefaultPrecision(30);
+
+    auto check = [](unsigned rows, unsigned cols)
+    {
+        Mat<real_mp> const M = RandomConjugateOrthonormalMatrix<real_mp>(rows, cols);
+        BOOST_REQUIRE_EQUAL(M.rows(), static_cast<Eigen::Index>(rows));
+        BOOST_REQUIRE_EQUAL(M.cols(), static_cast<Eigen::Index>(cols));
+        BOOST_CHECK_SMALL((M * M.transpose() - Mat<real_mp>::Identity(rows, rows)).norm(),
+                          real_mp("1e-25"));
+        for (Eigen::Index j = 0; j < M.cols(); ++j)
+            for (Eigen::Index k = j + 1; k < M.cols(); ++k)
+            {
+                BOOST_CHECK_GT((M.col(j) - M.col(k)).norm(), real_mp("1e-6"));
+                BOOST_CHECK_GT((M.col(j) + M.col(k)).norm(), real_mp("1e-6"));
+            }
+    };
+    check(3, 5);
+    check(2, 6);
+    check(8, 300);
+}
+
 BOOST_AUTO_TEST_SUITE_END()

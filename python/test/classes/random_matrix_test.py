@@ -51,6 +51,37 @@ def test_orthonormal_real_is_real_orthogonal():
     assert np.allclose(M @ M.T, np.eye(4), atol=1e-10)
 
 
+def _distinct_columns(M):
+    return len({tuple(np.round(M[:, j], 10)) for j in range(M.shape[1])})
+
+
+def test_wide_real_orthonormal_matrix_has_distinct_columns():
+    """A real orthonormal matrix used to be QR-factored from a seed of signs (+-1), and a tall
+    matrix of signs has only 2^thin distinct rows: a 3 x 5 real draw had 3 distinct columns, an
+    8 x 4908 one had 256, and randomizing a deflated system down to square with such a matrix
+    produced a SINGULAR square system at a point where the deflated Jacobian had full rank."""
+    pb.random.set_random_seed(11)
+    M = _as_complex(pb.random_matrix(3, 5, real=True))
+    assert np.allclose(M.imag, 0)
+    assert np.allclose(M @ M.T, np.eye(3), atol=1e-10)
+    assert _distinct_columns(M.real) == 5
+    # the deflation-sized case, and a check that no column is another's negative either
+    R = _as_complex(pb.random_matrix(8, 4908, real=True)).real
+    assert _distinct_columns(R) == 4908
+    assert _distinct_columns(np.hstack([R, -R])) == 2 * 4908
+
+
+def test_wide_real_orthonormal_matrix_randomizes_a_full_rank_jacobian_to_full_rank():
+    """The consumer that found it: R @ J must stay rank 3 for a 5 x 3 J of full rank."""
+    pb.random.set_random_seed(42)
+    J = np.array([[0.0, 0.0, 0.0], [4 / 3, 0.0, 0.0], [0.0, -2.0, 0.0], [0.0, 0.0, 0.0],
+                  [0.31, -0.57, 1.0]])
+    for _ in range(20):
+        R = _as_complex(pb.random_matrix(3, 5, real=True)).real
+        s = np.linalg.svd(R @ J, compute_uv=False)
+        assert s[-1] > 1e-6 * s[0], s
+
+
 def test_bounded_modulus_entries():
     pb.random.set_random_seed(3)
     M = pb.random_matrix(2, 3, orthonormal=False)          # complex, bounded modulus
