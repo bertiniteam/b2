@@ -118,7 +118,7 @@ struct FullPathResult
     Vec<double>   singular_values;  ///< Singular values of the target Jacobian at the final solution, largest first (the spectrum behind condition_number).
     double        newton_residual                = 0;  ///< Final Newton residual.
     ComplexT      final_time_used;  ///< The time value the endgame finished at.
-    double        accuracy_estimate              = 0;  ///< Estimated accuracy of the final solution.
+    double        accuracy_estimate_internal_coords = 0;  ///< Estimated accuracy in the solver's internal coordinates (homogenized, on the patch).
     double        accuracy_estimate_user_coords  = 0;  ///< Estimated accuracy in the user's coordinates.
     unsigned      cycle_num                      = 0;  ///< The estimated cycle number at the endpoint.
     unsigned      precision_digits             = 0;   ///< Digits the endgame finished in (= solution point's precision).
@@ -159,7 +159,7 @@ struct FullPathResult
         ar & singular_values;
         ar & newton_residual;
         ar & final_time_used;
-        ar & accuracy_estimate;
+        ar & accuracy_estimate_internal_coords;
         ar & accuracy_estimate_user_coords;
         ar & cycle_num;
         ar & precision_digits;

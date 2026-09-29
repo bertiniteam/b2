@@ -339,6 +339,17 @@ the identity of the algorithm that answered it (#420).
 
 ### Changed
 
+- **An accuracy estimate names its coordinates** (ADR-0069).  A solution's metadata has two
+  accuracy estimates, both the distance between the endgame's last two approximations of the
+  root.  `accuracy_estimate` is renamed **`accuracy_estimate_internal_coords`**: it is in the
+  solver's internal coordinates (homogenized, on the patch), it is what `final_tolerance` is
+  compared with, and it reads as a number of correct digits.
+  `accuracy_estimate_user_coords` keeps its name: it is the absolute error in the units of
+  your variables, so a solution of order 1000 with six correct digits has about `1e-3`
+  there.  The plain name read as the second and held the first.  It is **retired**, not
+  reassigned: reading `accuracy_estimate` raises an error that names both, so no code goes on
+  running with a number that changed meaning.  The dataframe column and the records key are
+  renamed with it; records written under the earlier key still load.
 - **Combining systems compares the variables** (ADR-0068).  `concatenate`, the homotopy
   builders (`straight_line_homotopy`, and `MakeHomotopy` / `MakeMovingHomotopy` beneath it) and
   `+` on systems now all make one check: the two systems must be over the same variables, in

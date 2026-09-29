@@ -213,14 +213,20 @@ struct SolutionMetaData
     Vec<NumErrorT> singular_values;
     NumErrorT newton_residual;              ///< The latest Newton residual.
     ComplexT final_time_used;               ///< The last time value the path reached: the endgame's latest time for a successful path, the tracker's time when it stopped for one that did not succeed in either stage.
-    NumErrorT accuracy_estimate;            ///< Accuracy estimate between extrapolations.
-    NumErrorT accuracy_estimate_user_coords;    ///< Accuracy estimate between extrapolations, in natural coordinates.
+    // Two accuracy estimates, and each says in its NAME which coordinates it is in (ADR-0069).
+    // Both are the distance between the endgame's last two approximations of the root.  The
+    // internal one is what the endgame's convergence test compares against final_tolerance;
+    // it reads as a number of digits.  The user one is the absolute error in the units of
+    // the caller's own variables.  There is deliberately no field named plain
+    // `accuracy_estimate`: a reader takes that to be in their own coordinates, and it was not.
+    NumErrorT accuracy_estimate_internal_coords;    ///< Distance between the endgame's last two approximations, in the solver's internal coordinates (homogenized, on the patch).  The quantity the convergence test compares with final_tolerance; it does not grow with the scale of the solution.
+    NumErrorT accuracy_estimate_user_coords;    ///< Distance between the endgame's last two approximations after each is dehomogenized: the absolute error in the units of the user's variables.
     unsigned cycle_num;                         ///< Cycle number used in extrapolations.
     // Honest precision/accuracy of the computed solution, as DIGIT COUNTS.  precision_digits is the
     // working precision the endgame actually finished in (DoublePrecision() ~16 for a path that stayed in
     // the adaptive-numeric-type endgame's hardware-double fast lane; the mpfr precision for one that
     // escalated).  accuracy_digits is how many of those digits are trustworthy, from the convergence
-    // agreement: floor(-log10(accuracy_estimate)), clamped to [0, precision_digits].  Read together:
+    // agreement: floor(-log10(accuracy_estimate_internal_coords)), clamped to [0, precision_digits].  Read together:
     // "computed in precision_digits digits, good to accuracy_digits of them."
     unsigned precision_digits = 0;  ///< Working precision (digits) the endgame finished this solution in.
     unsigned accuracy_digits = 0;   ///< Trustworthy digit count, from the convergence agreement.
@@ -260,7 +266,7 @@ struct SolutionMetaData
              && this->condition_number == other.condition_number
              && this->newton_residual == other.newton_residual
              && this->final_time_used == other.final_time_used
-             && this->accuracy_estimate == other.accuracy_estimate
+             && this->accuracy_estimate_internal_coords == other.accuracy_estimate_internal_coords
              && this->accuracy_estimate_user_coords == other.accuracy_estimate_user_coords
              && this->cycle_num == other.cycle_num
              && this->precision_digits == other.precision_digits
@@ -310,7 +316,7 @@ std::ostream& operator<<(std::ostream & out, const SolutionMetaData<NumT> & meta
     out << "singular_values = " << meta.singular_values.transpose() << std::endl;
     out << "newton_residual = " << meta.newton_residual << std::endl;
     out << "final_time_used = " << meta.final_time_used << std::endl;
-    out << "accuracy_estimate = " << meta.accuracy_estimate << std::endl;
+    out << "accuracy_estimate_internal_coords = " << meta.accuracy_estimate_internal_coords << std::endl;
     out << "accuracy_estimate_user_coords = " << meta.accuracy_estimate_user_coords << std::endl;
     out << "precision_digits = " << meta.precision_digits << std::endl;
     out << "accuracy_digits = " << meta.accuracy_digits << std::endl;
@@ -2188,7 +2194,7 @@ run the endgame, classify the endpoints, report.  See the forward-declare doc ab
                 smd.condition_number = SpectralConditionNumberOf(smd.singular_values);
                 smd.newton_residual = ctx.tracker.LatestNormOfStep();
 
-                smd.accuracy_estimate = ctx.endgame.ApproximateError();
+                smd.accuracy_estimate_internal_coords = ctx.endgame.ApproximateError();
                 smd.accuracy_estimate_user_coords =
                     static_cast<NumErrorT>( (ctx.target_sys.DehomogenizePoint(solutions_post_endgame_[soln_ind]) -
                     ctx.target_sys.DehomogenizePoint(ctx.endgame.template PreviousApproximation<BaseComplexT>())).template lpNorm<Eigen::Infinity>() );
@@ -2198,11 +2204,11 @@ run the endgame, classify the endpoints, report.  See the forward-declare doc ab
                 // precision the endgame actually finished in -- which is exactly the precision of the
                 // stored solution point (DoublePrecision() for a fast-lane path, the mpfr precision for an
                 // escalated one).  accuracy_digits is how many of those digits the convergence agreement
-                // supports: floor(-log10(accuracy_estimate)), clamped to [0, precision_digits].
+                // supports: floor(-log10(accuracy_estimate_internal_coords)), clamped to [0, precision_digits].
                 smd.precision_digits = static_cast<unsigned>(Precision(solutions_post_endgame_[soln_ind]));
                 {
                     using std::log10; using std::floor; using std::min; using std::max;
-                    double err = static_cast<double>(smd.accuracy_estimate);
+                    double err = static_cast<double>(smd.accuracy_estimate_internal_coords);
                     unsigned acc = (err > 0.0)
                         ? static_cast<unsigned>(max(0.0, floor(-log10(err))))
                         : smd.precision_digits;
@@ -2442,7 +2448,7 @@ run the endgame, classify the endpoints, report.  See the forward-declare doc ab
                 r.singular_values   = smd.singular_values;
                 r.newton_residual   = smd.newton_residual;
                 r.final_time_used   = smd.final_time_used;
-                r.accuracy_estimate = smd.accuracy_estimate;
+                r.accuracy_estimate_internal_coords = smd.accuracy_estimate_internal_coords;
                 r.accuracy_estimate_user_coords = smd.accuracy_estimate_user_coords;
                 r.cycle_num         = smd.cycle_num;
                 r.precision_digits = smd.precision_digits;
@@ -2484,7 +2490,7 @@ run the endgame, classify the endpoints, report.  See the forward-declare doc ab
                 smd.singular_values     = r.singular_values;
                 smd.newton_residual     = r.newton_residual;
                 smd.final_time_used     = r.final_time_used;
-                smd.accuracy_estimate   = r.accuracy_estimate;
+                smd.accuracy_estimate_internal_coords = r.accuracy_estimate_internal_coords;
                 smd.accuracy_estimate_user_coords = r.accuracy_estimate_user_coords;
                 smd.cycle_num           = r.cycle_num;
                 smd.precision_digits  = r.precision_digits;
