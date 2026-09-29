@@ -1304,14 +1304,14 @@ public:
                 static_cast<NumErrorT>(abs(this->LatestTime() - target_time))
                     < GetCauchySettings().cycle_cutoff_time;
 
-            if (in_operating_zone
-                && approx_error < this->FinalTolerance()
-                && same_cycle_count >= GetCauchySettings().num_consecutive_same_cycle_number)
-            {
-                NotifyObservers(Converged<EmitterType>(*this));
-                return SuccessCode::Success;
-            }
-
+            // SECURITY BEFORE ACCEPTANCE, the order the power series endgame uses.  At
+            // security level 0, two consecutive endpoint approximations whose dehomogenized
+            // infinity norm is above max_norm truncate the path, whether or not the second
+            // would also have been accepted.  Asked the other way round, a path that
+            // converged to a finite point above the ceiling came back Success here and
+            // SecurityMaxNormReached from the power series endgame -- the two endgames must
+            // differ in how they estimate the root and in nothing else.
+            //
             // Security truncation happens ONLY in the operating zone.  Outside it the
             // loop may encircle a pole or branch point and the Cauchy mean is garbage --
             // its norm means nothing, and truncating on it killed clean convergent paths
@@ -1343,6 +1343,23 @@ public:
                 }
                 else
                     norm_of_dehom_prev = RealT(0);   // out of zone: restart the count
+            }
+
+            // An approximation above the ceiling is never ACCEPTED at security level 0: it is
+            // the first of the two that truncate, or the second.  Without this the count above
+            // (armed rounds only) could still be at one when acceptance, which needs a single
+            // in-zone round, let the path through as a Success above max_norm.
+            bool const above_ceiling = this->SecuritySettings().level <= 0
+                && this->BeyondSecurityMaxNorm(
+                        this->GetSystem().InfinityNormOfDehomogenized(latest_approx));
+
+            if (in_operating_zone
+                && !above_ceiling
+                && approx_error < this->FinalTolerance()
+                && same_cycle_count >= GetCauchySettings().num_consecutive_same_cycle_number)
+            {
+                NotifyObservers(Converged<EmitterType>(*this));
+                return SuccessCode::Success;
             }
 
             prev_approx = latest_approx;
@@ -1477,16 +1494,9 @@ public:
                 static_cast<NumErrorT>(abs(this->LatestTime() - this->AtActivePrecisionScalar(target_time)))
                     < GetCauchySettings().cycle_cutoff_time;
 
-            if (in_operating_zone
-                && this->approximate_error_ < this->FinalTolerance()
-                && same_cycle_count >= GetCauchySettings().num_consecutive_same_cycle_number)
-            {
-                NotifyObservers(Converged<EmitterType>(*this));
-                return SuccessCode::Success;
-            }
-
-            // security truncation ONLY in the operating zone (a trustworthy mean); an
-            // out-of-zone round restarts the two-consecutive count.  See RunImpl.
+            // security BEFORE acceptance, as in the power series endgame; truncation ONLY in
+            // the operating zone (a trustworthy mean); an out-of-zone round restarts the
+            // two-consecutive count.  See RunImpl.
             if (this->SecuritySettings().level <= 0)
             {
                 if (in_operating_zone || below_cycle_cutoff)
@@ -1510,6 +1520,20 @@ public:
                 }
                 else
                     norm_of_dehom_prev = RealT(0);   // out of zone: restart the count
+            }
+
+            // never accept an approximation above the ceiling at security level 0 (see RunImpl)
+            bool const above_ceiling = this->SecuritySettings().level <= 0
+                && this->BeyondSecurityMaxNorm(
+                        this->GetSystem().InfinityNormOfDehomogenized(this->final_approximation_));
+
+            if (in_operating_zone
+                && !above_ceiling
+                && this->approximate_error_ < this->FinalTolerance()
+                && same_cycle_count >= GetCauchySettings().num_consecutive_same_cycle_number)
+            {
+                NotifyObservers(Converged<EmitterType>(*this));
+                return SuccessCode::Success;
             }
 
             this->previous_approximation_ = this->final_approximation_;

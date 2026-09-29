@@ -429,6 +429,19 @@ the identity of the algorithm that answered it (#420).
 
 ### Fixed
 
+- **The Cauchy endgame honours the security ceiling as the power series endgame does.**  At
+  security level 0, two consecutive endpoint approximations whose largest coordinate is above
+  `max_norm` truncate a path with `SecurityMaxNormReached`.  The power series endgame asks
+  that after every approximation; the Cauchy endgame tested acceptance first, so a path that
+  converged to a finite point above the ceiling came back `Success` from Cauchy and truncated
+  from power series -- for `x^2 = 1e8, y = 2x` at the default ceiling of 1e4, two solutions
+  under one endgame and none under the other.  Cauchy now asks security first, and never
+  accepts an approximation above the ceiling.  Its count still runs over rounds in the
+  operating zone only, where the Cauchy mean can be trusted.  The two endgames differ in how
+  they estimate the root and in nothing else (ADR-0067).  A solve whose solutions lie above
+  `max_norm` needs the ceiling raised (`solver.update(max_norm=...)`) or security level 1,
+  under either endgame.  The `SecurityConfig.level` docstring said the opposite of what the
+  level does, and is corrected.
 - **A wide real random orthonormal matrix has distinct columns again.**  The faster
   factorization from #401 (below) QR-factors a tall seed matrix, and for a *real* request that
   seed was a matrix of units, which for real numbers means signs.  A tall matrix of signs has

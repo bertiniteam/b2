@@ -35,7 +35,7 @@ namespace bertini{
                 ;
 
             class_<endgame::SecurityConfig>("SecurityConfig","Security settings for endgames.  Control things like truncation because estimated root is near infinity",init<>())
-                .def_readwrite("level", &endgame::SecurityConfig::level,"Turns on or off truncation of paths going to infinity during the endgame.  0 is off, 1 is on.")
+                .def_readwrite("level", &endgame::SecurityConfig::level,"Whether the endgame truncates a path that appears to be going to infinity.  0 (the default) truncates: two consecutive endpoint approximations whose largest coordinate is above max_norm end the path with SuccessCode.SecurityMaxNormReached, in either endgame.  1 does not truncate, and tracks every path to its end.")
                 .def_readwrite("max_norm", &endgame::SecurityConfig::max_norm,"If on, the norm at which to truncate a path.")
                 ;
 
