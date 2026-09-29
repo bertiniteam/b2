@@ -94,6 +94,8 @@ ask and is recomputed rather than reused.  Nothing is lost and nothing is silent
 simply not reused.  That remains the honest outcome for as long as a record's ask does not carry
 the identity of the algorithm that answered it (#420).
 
+**A System archived or pickled by 3.x does not load in 4.0.**  What a System writes to a Boost archive changed: its precision is no longer written, and its auxiliary variable groups and auxiliary coordinates now are.  A pickle holds such an archive, so a pickled System, or anything pickled that contains one, is affected in the same way.  Rebuild the system from the code or the input file that made it.  A records directory stores its systems as JSON and is not affected.
+
 ### Removed
 
 - **The windows DLL plumbing is no longer part of the interface** (#99).
