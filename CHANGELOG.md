@@ -429,6 +429,22 @@ the identity of the algorithm that answered it (#420).
 
 ### Fixed
 
+- **A wide real random orthonormal matrix has distinct columns again.**  The faster
+  factorization from #401 (below) QR-factors a tall seed matrix, and for a *real* request that
+  seed was a matrix of units, which for real numbers means signs.  A tall matrix of signs has
+  only `2^thin` distinct rows, so the resulting `rows x cols` matrix had at most `2^rows`
+  distinct columns: a `3 x 5` real draw had 3, an `8 x 4908` one had 256, and randomizing an
+  overdetermined deflated system down to square with `random_matrix(n, m, real=True)` produced
+  a singular square system at a point where the deflated Jacobian had full rank, so Newton
+  could not converge there.  The real seed is now a continuous draw on `[-1, 1]`; the QR still
+  launders it into an orthonormal matrix, now a generic one.  Complex draws are unchanged.
+  Real orthonormal draws -- `random_matrix(..., real=True)` and `Slice.random_real` -- differ
+  from before for the same seed, so a record of a solve that used one is a new ask.
+- **`solutions(group=...)` and its siblings no longer fail on a path without an endpoint.**
+  `all_solutions()` holds an empty placeholder for a path that went to infinity or failed, and
+  projecting one onto a variable group raised `CoordinatesOfGroup: point is shorter than the
+  system's variable structure implies`.  The placeholder is passed through empty, so the list
+  keeps one entry per path, aligned with `solution_metadata()`.
 - **A fast parameter sweep no longer dies after 25 recorded solves** (ADR-0066).  Every
   recorded solve that found no other solver attached to its records directory started a new
   session, and a session claims a history file named for the current second, the process id,
