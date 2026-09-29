@@ -151,6 +151,29 @@ def test_group_projection_of_solutions():
     assert xs == [-1, 1]
 
 
+def test_group_projection_keeps_placeholders_for_paths_without_an_endpoint():
+    # x^2 - 1, x*y - 1 over one group [x, y]: total degree 4, two finite roots (+-1, +-1) and
+    # two paths to infinity.  all_solutions() has one entry per path, with an EMPTY
+    # placeholder for a path that reached no endpoint; group= must leave those alone rather
+    # than fail on them.  (A second group -- x and y two-homogeneous -- would draw an mhom
+    # start with only two paths and nothing at infinity.)
+    x, y = pb.variables(['x', 'y'])
+    sys, solver = _solve([x * x - 1, x * y - 1], [[x, y]])
+    full = solver.all_solutions()
+    md = solver.solution_metadata()
+    assert len(full) == 4
+    assert sum(1 for m in md if m.is_finite) == 2
+    g0 = solver.all_solutions(group=0)
+    assert len(g0) == 4                                                # still one per path
+    for p, q, m in zip(full, g0, md):
+        if m.is_finite:
+            assert len(p) == 2 and len(q) == 2                         # the one group is everything
+        else:
+            assert len(p) == 0 and len(q) == 0                         # the placeholder, untouched
+    xs = sorted({round(float(q[0].real)) for q, m in zip(g0, md) if m.is_finite})
+    assert xs == [-1, 1]
+
+
 def test_group_projection_in_to_dataframe():
     pd = pytest.importorskip('pandas')
     x, y = pb.variables(['x', 'y'])

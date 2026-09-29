@@ -369,7 +369,10 @@ def _make_group_getter(native):
         if group is None:
             return points
         sysm = self.target_system()
-        return [sysm.coordinates_of(p, group) for p in points]
+        # all_solutions() holds an empty placeholder for a path that reached no endpoint (at
+        # infinity, or failed); there is nothing to project, and it stays empty so the list
+        # keeps one entry per path, aligned with solution_metadata()
+        return [sysm.coordinates_of(p, group) if len(p) else p for p in points]
     getter.__name__ = getattr(native, '__name__', 'solutions')
     getter.__doc__ = (getattr(native, '__doc__', '') or '') + (
         "\n\ngroup=<VariableGroup or 0-based FIFO index>: project each returned point onto that "
