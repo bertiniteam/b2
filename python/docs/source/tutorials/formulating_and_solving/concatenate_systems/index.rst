@@ -124,10 +124,38 @@ block, concatenate, solve** -- scales to as many blocks as your problem comes in
 
 .. note::
 
-   ``clone`` is the right tool here precisely because it shares the variables: the clone's
-   :math:`x_1` *is* the base's :math:`x_1`, so the blocks line up. If you instead need a fully
-   independent serialized copy (for example to send a system to another process), use
-   ``copy.deepcopy`` or :mod:`pickle`.
+   What makes the blocks line up is that they are over the same variables, and a variable is its
+   name: the clone's :math:`x_1` *is* the base's :math:`x_1`. The same holds for a system copied with
+   ``copy.deepcopy`` or sent through :mod:`pickle` (to another process, say), so those combine with
+   the original too. ``clone`` is the direct way, since it has no archive to go through.
+
+Two systems are combined only when they are over the same variables, in the same groups and the same
+order. A point is a list of numbers, and the order of the variables is what says which number is
+which, so systems over :math:`(x, y)` and :math:`(y, x)` are refused, not quietly matched up by
+position:
+
+.. testcode::
+
+   u, v = bertini.Variable('u'), bertini.Variable('v')
+
+   one_way = bertini.System()
+   one_way.add_variable_group(bertini.VariableGroup([u, v]))
+   one_way.add_function(u - 2)
+
+   other_way = bertini.System()
+   other_way.add_variable_group(bertini.VariableGroup([v, u]))
+   other_way.add_function(v - 3)
+
+   try:
+       bertini.system.concatenate(one_way, other_way)
+   except RuntimeError as refusal:
+       print('same variables in a different order' in str(refusal))
+
+.. testoutput::
+
+   True
+
+A system that declares no variables at all takes the variables of the one it is combined with.
 
 Complete example
 ================

@@ -131,6 +131,15 @@ the identity of the algorithm that answered it (#420).
 
 ### Added
 
+- **A node compares by what it is** (ADR-0068).  `Variable('x') == Variable('x')` is true, and
+  so is `x*y + 1 == 1 + y*x`: nodes are interned, so equal expressions are one node, and `==`,
+  `!=` and `hash` now compare the node.  They used to compare the Python wrapper, which is a
+  new object on every call, so two handles on the same variable said they differed.  Nodes
+  work as dictionary keys and in sets, and a `VariableGroup` compares equal to a list of the
+  same variables.  Comparing a node with something that is not a node is false.
+- **A system that declares no variables takes the variables of the one it is combined with**
+  (ADR-0068): functions with nothing said about variables can be concatenated onto, or
+  blended with, a system that has them.  `AdoptVariableStructure` in C++.
 - **bertini's list containers compare by value.**  `sys.degrees() == [2, 2]` is now true when
   the degrees are 2 and 2; before, every container's `==` was object identity, so it was false
   -- as was comparing two calls of `sys.degrees()` -- and a check had to be written
@@ -330,6 +339,15 @@ the identity of the algorithm that answered it (#420).
 
 ### Changed
 
+- **Combining systems compares the variables** (ADR-0068).  `concatenate`, the homotopy
+  builders (`straight_line_homotopy`, and `MakeHomotopy` / `MakeMovingHomotopy` beneath it) and
+  `+` on systems now all make one check: the two systems must be over the same variables, in
+  the same groups, in the same order.  The homotopy builders and `+` used to compare counts
+  only, and evaluate their operands by position, so moving rows over `(y, x)` blended with a
+  system over `(x, y)` were accepted and evaluated with the coordinates exchanged: `y - 3` at
+  `(x, y) = (7, 11)` came out as 4.  Such a combination is now refused, and the message names
+  both structures and says whether the order, the grouping or the variables differ.  Code
+  that relied on matching by position has to put its variables in one order.
 - **The tracker's own settings are a config** (#457).  The predictor, the tracking tolerance and
   the path truncation threshold were bare members of the tracker, each with its own setter and
   getter and no config struct.  They were therefore absent from `get_settings`/`set_settings`, from
@@ -431,6 +449,19 @@ the identity of the algorithm that answered it (#420).
 
 ### Fixed
 
+- **A copied or unpickled system combines with its original** (ADR-0068).  `copy.deepcopy`,
+  `copy.copy` and `pickle` go through an archive, and loading from one built variables
+  outside the variable factory: a copy was over fresh variables with the same names, and
+  `concatenate(system, copy.deepcopy(other))` was refused for "differing variable
+  orderings".  A `System` and a `Slice` now re-intern what they hold as the last step of
+  loading, so a loaded system is over the same variables as every other system that names
+  them.  `straight_line_homotopy(..., fixed=...)` accepts deep-copied operands as a result;
+  it had refused what the builder beneath it accepted.
+- **A moved or assigned system keeps its auxiliary coordinates.**  `System`'s `swap`, which
+  move construction and assignment go through, left out the auxiliary declarations, so a
+  system that was moved or assigned was judged on every coordinate again.  It did not show
+  while every function returning a `System` had a single return statement, because the
+  compiler elided the move.
 - **The Cauchy endgame honours the security ceiling as the power series endgame does.**  At
   security level 0, two consecutive endpoint approximations whose largest coordinate is above
   `max_norm` truncate a path with `SecurityMaxNormReached`.  The power series endgame asks

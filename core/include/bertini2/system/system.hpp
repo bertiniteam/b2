@@ -819,6 +819,12 @@ namespace bertini {
         VariableGroup const& HomogenizingVariables() const { return homogenizing_variables_; }
 
         /**
+         Get the ungrouped variables: those declared to the system but placed in no affine and
+         no projective group.
+         */
+        VariableGroup const& UngroupedVariables() const { return ungrouped_variables_; }
+
+        /**
         Get the total number of variable groups in the system, including both affine and homogenous.  Ignores the ungrouped variables, because they are not in any group.
         */
         size_t NumTotalVariableGroups() const;
@@ -1224,7 +1230,8 @@ namespace bertini {
         (derivatives, SLPs, the ordering cache) are dropped and recompute on demand.
 
         Content is unchanged (the digest is invariant), so this is allowed on a sealed
-        system.  Prefer LoadSystemUnified, which packages load -> reintern -> intern.
+        system.  Loading a System from an archive calls this itself (ADR-0068), so a caller
+        rarely needs to; LoadSystemUnified goes one step further and interns the System.
 
         \param memo The pass's memo; share it when re-interning several loaded objects.
         */
@@ -2470,6 +2477,17 @@ namespace bertini {
             // ar & std::get<Vec<complex_dbl>>(current_variable_values_);
             // ar & std::get<Vec<complex_mp>>(current_variable_values_);
 
+            // A loaded system joins the live node universe (ADR-0068).  An archive builds nodes
+            // through their default constructors, never through Make, so what comes out is
+            // content-equal to the original and shares none of its nodes: its x is not THE x,
+            // and it could not be combined with the system it was copied from.  Every load
+            // goes through here -- pickle, copy, deepcopy, the MPI broadcast, the records
+            // loader -- so the repair is made here rather than asked of each of them.
+            if (Archive::is_loading::value)
+            {
+                node::ReinternMemo memo;
+                ReinternNodes(memo);
+            }
         }
 
 
@@ -2537,13 +2555,21 @@ namespace bertini {
     /**
     \brief Throw unless two systems describe points the same way, so that combining them is meaningful.
 
-    Checks the variable structure -- variable count, homogenizing-variable count, variable-group
-    count -- and, when both are patched, that they carry the same patch.  An unpatched system is
-    free to adopt the other's, which is what `System+=System` does.
+    Checks that the two are over THE SAME VARIABLES: the same variable objects, in the same
+    groups, in the same order -- and, when both are patched, that they carry the same patch.
+    An unpatched system is free to adopt the other's, which is what `System+=System` does.
+    Variables are canonical by name, so "the same object" and "the same name" are one
+    statement, and a system that came out of an archive satisfies it (ADR-0068).
 
-    Combining a projective system with an affine one, or two projective systems on different
-    patches, produces something whose ends do not correspond; the shapes still agree and the
-    tracking still runs, so nothing downstream notices.  This is the check that notices.
+    It compares the variables, not how many there are.  Two systems over `(x, y)` and
+    `(y, x)` agree in every count and mean different things by a point; a blend of them
+    evaluates one of them with its coordinates exchanged, and nothing downstream notices.
+    The same goes for combining a projective system with an affine one, or two projective
+    systems on different patches.  This is the check that notices, and every operation that
+    combines systems makes it: `Concatenate`, `MakeHomotopy`, `MakeMovingHomotopy`, `+=`.
+
+    A system that declares no variables at all is not checked by those operations: it takes
+    the other's variable structure (see AdoptVariableStructure).
 
     \param a The first system.
     \param b The second system.
@@ -2555,6 +2581,19 @@ namespace bertini {
     void CheckVariableStructuresMatch(System const& a, System const& b,
                                       std::string const& operation,
                                       std::string const& a_name, std::string const& b_name);
+
+    /**
+    \brief Give a system that declares no variables the variable structure of another.
+
+    The groups, their order, and the homogenizing variables are taken from `from`.  A path
+    variable `into` already has is kept.  This is what the combining operations do with an
+    operand that says nothing about variables: it is taken to be over the other operand's.
+
+    \param into The system to receive the structure; it must declare no variables.
+    \param from The system whose variable structure is taken.
+    \throws std::runtime_error If `into` already declares variables.
+    */
+    void AdoptVariableStructure(System& into, System const& from);
 
     /**
     \brief Form a homotopy that moves ONLY some rows, leaving the rest fixed and evaluated once.

@@ -40,6 +40,7 @@ regenerate the fixture in the same commit, never silently.
 #include <boost/archive/text_oarchive.hpp>
 
 #include "bertini2/system/system.hpp"
+#include "bertini2/system/slice.hpp"
 #include "bertini2/system/start_systems.hpp"
 #include "bertini2/io/parsing/system_parsers.hpp"
 #include "bertini2/function_tree/canonical.hpp"
@@ -415,18 +416,20 @@ BOOST_AUTO_TEST_CASE(reintern_nodes_preserves_digest_and_unifies_node_pointers)
         ia >> loaded;
     }
 
-    // before: content-equal but node-forked
+    // the load itself re-interns (ADR-0068): content-equal AND node-shared, with nothing asked
+    // of the caller
     BOOST_REQUIRE(loaded.IsSame(original));
     auto const digest_before = loaded.ContentDigest();
-    BOOST_CHECK(loaded.GetNaturalFunctions().front() != original.GetNaturalFunctions().front());
+    BOOST_CHECK(loaded.GetNaturalFunctions().front() == original.GetNaturalFunctions().front());
+    BOOST_CHECK(loaded.VariableOrdering() == original.VariableOrdering());   // shared_ptr equality per entry
 
+    // doing it again by hand changes nothing
     bertini::node::ReinternMemo memo;
     loaded.ReinternNodes(memo);
 
-    // after: digest invariant, node pointers unified with the live universe
     BOOST_CHECK(digest_before == loaded.ContentDigest());
     BOOST_CHECK(loaded.GetNaturalFunctions().front() == original.GetNaturalFunctions().front());
-    BOOST_CHECK(loaded.VariableOrdering() == original.VariableOrdering());   // shared_ptr equality per entry
+    BOOST_CHECK(loaded.VariableOrdering() == original.VariableOrdering());
 }
 
 BOOST_AUTO_TEST_CASE(two_archives_of_one_system_load_to_one_object)
@@ -484,6 +487,229 @@ BOOST_AUTO_TEST_CASE(loaded_blend_homotopy_unifies_recursively)
         point(ii) = bertini::complex_dbl(0.5, 0.25);
     loaded.EvalInPlace(values, point, bertini::complex_dbl(0.7, 0.0));
     BOOST_CHECK(values.allFinite());
+}
+
+// ---- combining systems compares the VARIABLES (ADR-0068) ----
+//
+// Every operation that combines systems -- Concatenate, MakeHomotopy, MakeMovingHomotopy, += --
+// asks one question: are these over the same variables, in the same groups, in the same order?
+// The homotopy builders used to count instead, and blended (x, y) with (y, x) by position.
+
+namespace {
+
+/// A system over the given variables, in the given groups, with the given functions.
+System Over(std::vector<bertini::VariableGroup> const& groups,
+            std::vector<std::shared_ptr<bertini::node::Node>> const& functions)
+{
+    System s;
+    for (auto const& g : groups)
+        s.AddVariableGroup(g);
+    for (auto const& f : functions)
+        s.AddFunction(f);
+    return s;
+}
+
+/// The system after a round trip through a text archive.
+System ThroughAnArchive(System const& original)
+{
+    std::stringstream archive_stream;
+    {
+        boost::archive::text_oarchive oa(archive_stream);
+        oa << original;
+    }
+    System loaded;
+    {
+        boost::archive::text_iarchive ia(archive_stream);
+        ia >> loaded;
+    }
+    return loaded;
+}
+
+/// The message a callable throws, or the empty string if it does not throw.
+template <typename F>
+std::string Refusal(F&& f)
+{
+    try { f(); }
+    catch (std::runtime_error const& e) { return e.what(); }
+    return "";
+}
+
+} // namespace
+
+BOOST_AUTO_TEST_CASE(a_loaded_system_recombines_with_its_original)
+{
+    using bertini::node::Variable;
+    auto x = Variable::Make("x"), y = Variable::Make("y");
+    auto circle = Over({{x, y}}, {x*x + y*y - 1});
+    auto line = Over({{x, y}}, {x - y});
+
+    auto loaded = ThroughAnArchive(line);
+    BOOST_CHECK(loaded.VariableOrdering() == line.VariableOrdering());   // THE x, THE y
+
+    auto both = bertini::Concatenate(circle, loaded);
+    BOOST_CHECK_EQUAL(both.NumTotalFunctions(), 2u);
+
+    bertini::Vec<bertini::complex_dbl> point(2), values(2);
+    point << bertini::complex_dbl(2.0, 0.0), bertini::complex_dbl(5.0, 0.0);
+    both.EvalInPlace(values, point);
+    BOOST_CHECK_SMALL(abs(values(0) - bertini::complex_dbl(28.0, 0.0)), 1e-12);   // 4 + 25 - 1
+    BOOST_CHECK_SMALL(abs(values(1) - bertini::complex_dbl(-3.0, 0.0)), 1e-12);   // 2 - 5
+}
+
+BOOST_AUTO_TEST_CASE(a_loaded_homogenized_system_recombines_with_its_original)
+{
+    // the cellular port's case: three copies homogenized one by one, the fixed one patched
+    using bertini::node::Variable;
+    auto x = Variable::Make("x"), y = Variable::Make("y");
+    auto fixed = ThroughAnArchive(Over({{x, y}}, {x*x + y*y - 1}));
+    auto start = ThroughAnArchive(Over({{x, y}}, {x - 2}));
+    auto end   = ThroughAnArchive(Over({{x, y}}, {y - 3}));
+    fixed.Homogenize();
+    fixed.AutoPatch();
+    start.Homogenize();
+    end.Homogenize();
+
+    BOOST_CHECK(fixed.VariableOrdering() == start.VariableOrdering());
+    BOOST_CHECK_NO_THROW(bertini::MakeMovingHomotopy(fixed, start, end, "t", bertini::node::Integer::Make(1)));
+    BOOST_CHECK_NO_THROW(bertini::Concatenate(fixed, end));
+}
+
+BOOST_AUTO_TEST_CASE(a_different_order_is_refused_by_every_combining_operation)
+{
+    using bertini::node::Variable;
+    auto x = Variable::Make("x"), y = Variable::Make("y");
+    auto xy = Over({{x, y}}, {x - 2});
+    auto yx = Over({{y, x}}, {y - 3});
+    auto fixed = Over({{x, y}}, {x + y - 5});
+
+    auto const gamma = bertini::node::Integer::Make(1);
+    for (auto const& said : {
+            Refusal([&]{ bertini::Concatenate(xy, yx); }),
+            Refusal([&]{ bertini::MakeHomotopy(xy, yx, "t", gamma); }),
+            Refusal([&]{ bertini::MakeMovingHomotopy(fixed, xy, yx, "t", gamma); }),
+            Refusal([&]{ auto sum = xy; sum += yx; }) })
+    {
+        BOOST_CHECK_MESSAGE(said.find("same variables in a different order") != std::string::npos,
+                            "expected a refusal naming the order, got: '" << said << "'");
+        BOOST_CHECK(said.find("(x, y)") != std::string::npos);
+        BOOST_CHECK(said.find("(y, x)") != std::string::npos);
+    }
+}
+
+BOOST_AUTO_TEST_CASE(the_same_order_blends_the_rows_it_was_given)
+{
+    // the measured defect: end rows over (y, x), blended by position, evaluated y - 3 at
+    // (x, y) = (7, 11) as 7 - 3.  Over (x, y) the row is what it says.
+    using bertini::node::Variable;
+    auto x = Variable::Make("x"), y = Variable::Make("y");
+    auto fixed = Over({{x, y}}, {x + y - 5});
+    auto start = Over({{x, y}}, {x - 2});
+    auto end   = Over({{x, y}}, {y - 3});
+    auto homotopy = bertini::MakeMovingHomotopy(fixed, start, end, "t", bertini::node::Integer::Make(1));
+
+    bertini::Vec<bertini::complex_dbl> point(2), values(2);
+    point << bertini::complex_dbl(7.0, 0.0), bertini::complex_dbl(11.0, 0.0);
+    homotopy.EvalInPlace(values, point, bertini::complex_dbl(0.0, 0.0));
+    BOOST_CHECK_SMALL(abs(values(0) - bertini::complex_dbl(13.0, 0.0)), 1e-12);   // 7 + 11 - 5
+    BOOST_CHECK_SMALL(abs(values(1) - bertini::complex_dbl(8.0, 0.0)), 1e-12);    // 11 - 3
+}
+
+BOOST_AUTO_TEST_CASE(a_different_grouping_is_refused)
+{
+    using bertini::node::Variable;
+    auto x = Variable::Make("x"), y = Variable::Make("y"), z = Variable::Make("z");
+    auto one_group = Over({{x, y, z}}, {x - 1});
+    auto two_groups = Over({{x, y}, {z}}, {z - 1});
+
+    BOOST_CHECK(one_group.VariableOrdering() == two_groups.VariableOrdering());   // same order...
+    auto const said = Refusal([&]{ bertini::Concatenate(one_group, two_groups); });
+    BOOST_CHECK_MESSAGE(said.find("the grouping does not") != std::string::npos, said);   // ...but
+    BOOST_CHECK(!Refusal([&]{ bertini::MakeHomotopy(one_group, two_groups, "t",
+                                                    bertini::node::Integer::Make(1)); }).empty());
+}
+
+BOOST_AUTO_TEST_CASE(different_variables_are_refused)
+{
+    using bertini::node::Variable;
+    auto x = Variable::Make("x"), y = Variable::Make("y"), z = Variable::Make("z");
+    auto xy = Over({{x, y}}, {x - 1});
+    auto xz = Over({{x, z}}, {z - 1});       // overlapping
+    auto just_z = Over({{z}}, {z - 1});      // disjoint, and a different count
+
+    BOOST_CHECK(Refusal([&]{ bertini::Concatenate(xy, xz); }).find("different variables") != std::string::npos);
+    BOOST_CHECK(Refusal([&]{ bertini::Concatenate(xy, just_z); }).find("different variables") != std::string::npos);
+    BOOST_CHECK(!Refusal([&]{ bertini::MakeHomotopy(xy, xz, "t", bertini::node::Integer::Make(1)); }).empty());
+}
+
+BOOST_AUTO_TEST_CASE(a_projective_system_and_an_affine_one_are_refused_with_the_useful_diagnosis)
+{
+    using bertini::node::Variable;
+    auto x = Variable::Make("x"), y = Variable::Make("y");
+    auto affine = Over({{x, y}}, {x - 1});
+    auto projective = Over({{x, y}}, {y - 1});
+    projective.Homogenize();
+
+    auto const said = Refusal([&]{ bertini::Concatenate(affine, projective); });
+    BOOST_CHECK_MESSAGE(said.find("One of them is projective and the other is affine") != std::string::npos, said);
+}
+
+BOOST_AUTO_TEST_CASE(a_system_that_declares_no_variables_takes_the_others)
+{
+    using bertini::node::Variable;
+    auto x = Variable::Make("x"), y = Variable::Make("y");
+    auto declared = Over({{x, y}}, {x*x + y*y - 1});
+    auto bare = Over({}, {x - y});                       // functions, and nothing said of variables
+    BOOST_REQUIRE_EQUAL(bare.NumVariables(), 0u);
+
+    // either way round
+    auto first = bertini::Concatenate(declared, bare);
+    auto second = bertini::Concatenate(bare, declared);
+    BOOST_CHECK(first.VariableOrdering() == declared.VariableOrdering());
+    BOOST_CHECK(second.VariableOrdering() == declared.VariableOrdering());
+    BOOST_CHECK_EQUAL(first.NumTotalFunctions(), 2u);
+    BOOST_CHECK_EQUAL(second.NumTotalFunctions(), 2u);
+
+    bertini::Vec<bertini::complex_dbl> point(2), values(2);
+    point << bertini::complex_dbl(2.0, 0.0), bertini::complex_dbl(5.0, 0.0);
+    second.EvalInPlace(values, point);
+    BOOST_CHECK_SMALL(abs(values(0) - bertini::complex_dbl(-3.0, 0.0)), 1e-12);   // bare came first
+    BOOST_CHECK_SMALL(abs(values(1) - bertini::complex_dbl(28.0, 0.0)), 1e-12);
+
+    // the homotopy builders too: moving rows given as bare functions are over the fixed system's
+    auto start = Over({}, {x - 2});
+    auto end = Over({}, {y - 3});
+    auto homotopy = bertini::MakeMovingHomotopy(declared, start, end, "t", bertini::node::Integer::Make(1));
+    BOOST_CHECK(homotopy.VariableOrdering() == declared.VariableOrdering());
+    homotopy.EvalInPlace(values, point, bertini::complex_dbl(0.0, 0.0));
+    BOOST_CHECK_SMALL(abs(values(1) - bertini::complex_dbl(2.0, 0.0)), 1e-12);    // 5 - 3
+}
+
+BOOST_AUTO_TEST_CASE(adopting_is_refused_when_there_is_a_structure_to_compare)
+{
+    using bertini::node::Variable;
+    auto x = Variable::Make("x"), y = Variable::Make("y");
+    auto xy = Over({{x, y}}, {x - 1});
+    auto yx = Over({{y, x}}, {y - 1});
+    BOOST_CHECK_THROW(bertini::AdoptVariableStructure(xy, yx), std::runtime_error);
+}
+
+BOOST_AUTO_TEST_CASE(a_loaded_slice_is_over_the_same_variables)
+{
+    using bertini::node::Variable;
+    bertini::VariableGroup vars{Variable::Make("x"), Variable::Make("y")};
+    auto slice = bertini::Slice::RandomComplex(vars, 1);
+
+    std::stringstream archive_stream;
+    {
+        boost::archive::text_oarchive oa(archive_stream);
+        oa << slice;
+    }
+    bertini::Slice loaded;
+    {
+        boost::archive::text_iarchive ia(archive_stream);
+        ia >> loaded;
+    }
+    BOOST_CHECK(loaded.Variables() == vars);      // shared_ptr equality per entry
 }
 
 // ---- the golden fixture: cross-session digest stability ----

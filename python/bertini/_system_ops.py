@@ -277,8 +277,9 @@ def clone(self):
     Shares the immutable node DAG (variables, functions, subexpressions) with the original but gets its
     own evaluation memory, so its variables line up with the original's (clone a set-up system, give the
     clone different functions, concatenate the two).  The copy is unsealed and independently mutable;
-    adding/removing functions on one does not affect the other.  For a fully serialized deep copy use
-    ``copy.deepcopy``.
+    adding/removing functions on one does not affect the other.  ``copy.deepcopy`` and ``pickle`` give
+    a copy that combines with the original just as well; they go through an archive, which a clone
+    does not need to.
     """
     from bertini.system import clone as _clone
     return _clone(self)

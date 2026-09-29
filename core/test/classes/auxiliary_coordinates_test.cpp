@@ -183,6 +183,31 @@ BOOST_AUTO_TEST_CASE(a_copy_is_judged_the_way_its_original_is)
 }
 
 
+BOOST_AUTO_TEST_CASE(a_moved_or_assigned_system_is_judged_the_way_its_original_is)
+{
+    // swap is a hand-written mirror too, and it forgot the auxiliary declarations, so a System
+    // that was moved or assigned lost them.  Nothing showed while every function returning a
+    // System had one return statement, because the compiler elided the move; MakeHomotopy gained
+    // a second one and handed back a homotopy with no auxiliary coordinates.
+    auto sys = TwoGroups();
+    sys.SetAuxiliaryVariableGroups({1});
+    auto const groups = sys.AuxiliaryVariableGroups();
+
+    System assigned;
+    assigned = sys;
+    BOOST_CHECK(assigned.AuxiliaryVariableGroups() == groups);
+
+    System moved(std::move(assigned));
+    BOOST_CHECK(moved.AuxiliaryVariableGroups() == groups);
+
+    auto other = TwoGroups();
+    other.SetAuxiliaryCoordinates({0});
+    swap(moved, other);
+    BOOST_CHECK(other.AuxiliaryVariableGroups() == groups);
+    BOOST_CHECK(moved.AuxiliaryCoordinates() == std::vector<unsigned>{0});
+}
+
+
 BOOST_AUTO_TEST_CASE(a_homotopy_is_judged_the_way_its_target_is)
 {
     // the tracker measures the HOMOTOPY, not the system the author wrote, so auxiliary

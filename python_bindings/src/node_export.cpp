@@ -73,6 +73,24 @@ namespace bertini{
         static std::string NodeRepr(std::shared_ptr<Node> const& self) { return PrintPython(*self, true); }
         static std::string NodeClassic(std::shared_ptr<Node> const& self) { return PrintClassic(*self); }
 
+        // Equality is NODE IDENTITY.  Nodes are interned, so two handles on equal expressions
+        // are handles on one node, and comparing the nodes is comparing the expressions:
+        // Variable('x') made twice is one x.  Each call across the binding makes a new Python
+        // wrapper, though, and Python's default == compares the wrappers, which said two
+        // handles on the same node were different.  Anything that is not a node is left to
+        // the other operand (NotImplemented), so `x == 1` is False rather than an error.
+        static boost::python::object NodeSameAs(std::shared_ptr<Node> const& self, boost::python::object const& other, bool want_equal)
+        {
+            boost::python::extract<std::shared_ptr<Node>> as_node(other);
+            if (other.is_none() || !as_node.check())
+                return boost::python::object(boost::python::handle<>(boost::python::borrowed(Py_NotImplemented)));
+            bool const same = self.get() == as_node().get();
+            return boost::python::object(same == want_equal);
+        }
+        static boost::python::object NodeEq(std::shared_ptr<Node> const& self, boost::python::object const& other) { return NodeSameAs(self, other, true); }
+        static boost::python::object NodeNe(std::shared_ptr<Node> const& self, boost::python::object const& other) { return NodeSameAs(self, other, false); }
+        static long NodeHash(std::shared_ptr<Node> const& self) { return static_cast<long>(std::hash<Node const*>{}(self.get())); }
+
         template<typename NodeBaseT>
         template<class PyClass>
         void NodeVisitor<NodeBaseT>::visit(PyClass& cl) const
@@ -100,6 +118,13 @@ namespace bertini{
                 "The exact Python spelling: eval of it in the bertini namespace (with the variables bound) rebuilds an equal node at full precision -- real_mp('digits', precision) for a multiprecision real, Complex('re', 'im', precision) for a multiprecision complex constant, Rational('p/q') for a non-integer rational; integers and values a Python literal holds exactly stay bare.")
             .def("to_classic", &NodeClassic, (arg("self")),
                 "The Bertini 1 spelling: powers as ^, a complex constant as (re+im*I), every constant with all its digits.  What the classic parser reads back, and what System.to_classic_input() writes for each function.")
+
+            .def("__eq__", &NodeEq, (arg("self"), arg("other")),
+                "True if `other` is the same node.  Nodes are interned, so equal expressions are one node: Variable('x') == Variable('x'), and x*y + 1 == 1 + y*x.  Comparing with something that is not a node is False.")
+            .def("__ne__", &NodeNe, (arg("self"), arg("other")),
+                "True unless `other` is the same node.  See __eq__.")
+            .def("__hash__", &NodeHash, (arg("self")),
+                "A hash of the node's identity, consistent with ==, so nodes work as dictionary keys and in sets.")
 
             .def("__add__",addNodeNode)
             .def("__add__",addNodeMpfr)
