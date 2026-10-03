@@ -17,7 +17,7 @@ namespace bertini{
                 .def_readwrite("min_track_time", &endgame::EndgameConfig::min_track_time,"The minimum distance from the target time to track to.  Decreasing this may help failing runs succeed, or maybe not, because you are, after all, tracking toward a singularity.")
                 .def_readwrite("sample_factor", &endgame::EndgameConfig::sample_factor,"The factor by which to space the geometrically spaced 'distance' between sample points, or sample circles for Cauchy.")
                 .def_readwrite("max_num_refinements", &endgame::EndgameConfig::max_num_refinements,"the maximum number of Newton refinements to be taken during sample point sharpening.  Increasing this can help speed convergence, at the risk of path jumping.")
-                .def_readwrite("final_tolerance", &endgame::EndgameConfig::final_tolerance, "The tolerance to which to track the path, using the endgame.  Endgames require two consecutive estimates to be this close to each other under the relative infinity norm.  Default value is 1e-11.")
+                .def_readwrite("final_tolerance", &endgame::EndgameConfig::final_tolerance, "The tolerance to which to track the path, using the endgame: in effect, how many digits to get right.  An endgame stops when two consecutive approximations of the root are this close to each other in the infinity norm, measured in the solver's INTERNAL coordinates (homogenized, on the patch), where a point has size about one.  In your own variables that is an absolute error of about this tolerance times the size of the solution: a solution of order 1000 found to 1e-6 is known to about 1e-3.  The distance reached is reported per solution as accuracy_estimate_internal_coords, and in your variables as accuracy_estimate_user_coords.  Default value is 1e-11.")
                 .def_readwrite("refine_when_increasing_precision", &endgame::EndgameConfig::refine_when_increasing_precision,
                     "Whether to re-refine the samples the endgame is keeping when it moves to a higher "
                     "working precision (default False).  Off, the retained samples carry the accuracy they "
@@ -35,7 +35,7 @@ namespace bertini{
                 ;
 
             class_<endgame::SecurityConfig>("SecurityConfig","Security settings for endgames.  Control things like truncation because estimated root is near infinity",init<>())
-                .def_readwrite("level", &endgame::SecurityConfig::level,"Turns on or off truncation of paths going to infinity during the endgame.  0 is off, 1 is on.")
+                .def_readwrite("level", &endgame::SecurityConfig::level,"Whether the endgame truncates a path that appears to be going to infinity.  0 (the default) truncates: two consecutive endpoint approximations whose largest coordinate is above max_norm end the path with SuccessCode.SecurityMaxNormReached, in either endgame.  1 does not truncate, and tracks every path to its end.")
                 .def_readwrite("max_norm", &endgame::SecurityConfig::max_norm,"If on, the norm at which to truncate a path.")
                 ;
 

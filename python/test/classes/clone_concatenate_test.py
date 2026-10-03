@@ -242,6 +242,141 @@ def test_pickle_copy_deepcopy_preserve_eval_and_jacobian(roundtrip):
     _assert_close(_jac(c, sp, tm), _jac(s, sp, tm))
 
 
+@pytest.mark.parametrize("roundtrip", [
+    lambda s: pickle.loads(pickle.dumps(s)),
+    copy.copy,
+    copy.deepcopy,
+    pb.system.clone,
+])
+def test_a_copy_combines_with_its_original(roundtrip):
+    # Loading from an archive re-interns (ADR-0068), so a pickled, copied or deep-copied System is
+    # over THE SAME variables as its original and concatenates with it.  It used to come back over
+    # fresh variables of the same names, and was refused: "differing variable orderings".
+    a, b = _two_systems()
+    u = pb.system.concatenate(a, roundtrip(b))
+    assert u.num_functions() == 3
+
+    pt = np.array([complex(2.0, 0.3), complex(-1.0, 0.5)])
+    _assert_close(_eval(u, pt), _eval(a, pt) + _eval(b, pt))
+    assert [str(v) for v in u.variable_ordering()] == ['x', 'y']
+
+
+def test_separately_homogenized_deep_copies_build_a_homotopy():
+    # The cellular port's projective move: three deep copies, homogenized one by one, the fixed one
+    # patched.  straight_line_homotopy assembles .target and .start by concatenation, and refused.
+    x, y = pb.Variable('x'), pb.Variable('y')
+
+    def over_xy(f):
+        s = pb.System()
+        s.add_variable_group(pb.VariableGroup([x, y]))
+        s.add_function(f)
+        return s
+
+    fixed = copy.deepcopy(over_xy(x * x + y * y - 1))
+    start = copy.deepcopy(over_xy(x - 2))
+    end = copy.deepcopy(over_xy(y - 3))
+    fixed.homogenize()
+    fixed.auto_patch()
+    start.homogenize()
+    end.homogenize()
+
+    built = pb.nag_algorithm.straight_line_homotopy(end, start, fixed=fixed, gamma=1)
+    assert built.homotopy.num_functions() == built.target.num_functions()
+    assert [str(v) for v in built.target.variable_ordering()] == \
+           [str(v) for v in fixed.variable_ordering()]
+
+
+def _over(variables, function):
+    s = pb.System()
+    s.add_variable_group(pb.VariableGroup(list(variables)))
+    s.add_function(function)
+    return s
+
+
+def test_a_different_order_is_refused_everywhere():
+    # The homotopy builders used to count variables, and blended (x, y) with (y, x) by position:
+    # y - 3 at (x, y) = (7, 11) evaluated to 4.
+    x, y = pb.Variable('x'), pb.Variable('y')
+    xy = _over([x, y], x - 2)
+    yx = _over([y, x], y - 3)
+    fixed = _over([x, y], x + y - 5)
+
+    for combine in (lambda: pb.system.concatenate(xy, yx),
+                    lambda: pb.nag_algorithm.straight_line_homotopy(yx, xy, projectivize=False),
+                    lambda: pb.nag_algorithm.straight_line_homotopy(yx, xy, fixed=fixed,
+                                                                    projectivize=False)):
+        with pytest.raises(RuntimeError, match='same variables in a different order'):
+            combine()
+
+
+def test_the_same_order_blends_the_rows_it_was_given():
+    x, y = pb.Variable('x'), pb.Variable('y')
+    fixed = _over([x, y], x + y - 5)
+    built = pb.nag_algorithm.straight_line_homotopy(_over([x, y], y - 3), _over([x, y], x - 2),
+                                                    fixed=fixed, gamma=1, projectivize=False)
+    at_the_end = _eval(built.homotopy, np.array([complex(7.0), complex(11.0)]), complex(0.0))
+    _assert_close(at_the_end, [complex(13.0), complex(8.0)])       # x + y - 5, and y - 3
+
+
+def test_a_different_grouping_and_different_variables_are_refused():
+    x, y, z = pb.Variable('x'), pb.Variable('y'), pb.Variable('z')
+    one_group = _over([x, y, z], x - 1)
+    two_groups = pb.System()
+    two_groups.add_variable_group(pb.VariableGroup([x, y]))
+    two_groups.add_variable_group(pb.VariableGroup([z]))
+    two_groups.add_function(z - 1)
+    with pytest.raises(RuntimeError, match='the grouping does not'):
+        pb.system.concatenate(one_group, two_groups)
+    with pytest.raises(RuntimeError, match='different variables'):
+        pb.system.concatenate(_over([x, y], x - 1), _over([x, z], z - 1))
+
+
+def test_a_system_that_declares_no_variables_takes_the_others():
+    x, y = pb.Variable('x'), pb.Variable('y')
+    declared = _over([x, y], x * x + y * y - 1)
+    bare = pb.System()
+    bare.add_function(x - y)
+    assert bare.num_variables() == 0
+
+    pt = np.array([complex(2.0), complex(5.0)])
+    _assert_close(_eval(pb.system.concatenate(declared, bare), pt), [complex(28.0), complex(-3.0)])
+    _assert_close(_eval(pb.system.concatenate(bare, declared), pt), [complex(-3.0), complex(28.0)])
+
+
+# ----------------------------- nodes compare by identity -----------------------------
+
+def test_a_variable_made_twice_is_one_variable():
+    # Variables are canonical by name, so both handles are on one node; Python's default ==
+    # compared the two wrapper objects and said they differed.
+    assert pb.Variable('x') == pb.Variable('x')
+    assert not (pb.Variable('x') != pb.Variable('x'))
+    assert pb.Variable('x') != pb.Variable('y')
+    assert hash(pb.Variable('x')) == hash(pb.Variable('x'))
+
+
+def test_equal_expressions_are_one_node():
+    x, y = pb.Variable('x'), pb.Variable('y')
+    assert x * y + 1 == 1 + y * x
+    assert x * y != x + y
+    assert len({x, pb.Variable('x'), y}) == 2
+    assert {x: 'first'}[pb.Variable('x')] == 'first'
+
+
+def test_a_node_is_not_equal_to_something_that_is_not_a_node():
+    x = pb.Variable('x')
+    assert not (x == 1)
+    assert x != 1
+    assert not (x == 'x')
+    assert not (x == None)      # noqa: E711 -- the comparison is the thing under test
+
+
+def test_a_variable_group_compares_by_its_variables():
+    x, y = pb.Variable('x'), pb.Variable('y')
+    assert pb.VariableGroup([x, y]) == [pb.Variable('x'), pb.Variable('y')]
+    assert pb.VariableGroup([x, y]) != [y, x]
+    assert _over([x, y], x - 1).variable_ordering() == [x, y]
+
+
 def test_pickle_roundtrip_is_independent_of_the_original():
     # A pickled-and-restored System must be a genuine deep copy, not an alias.
     x, y = pb.Variable('x'), pb.Variable('y')

@@ -129,7 +129,7 @@ tracker, applied one level up.
 
 **Does not address**
 - **Accuracy** (how many digits are *correct*) remains orthogonal: it is carried separately in
-  `SolutionMetaData` (`accuracy_estimate`, `condition_number`, `newton_residual`; computed in
+  `SolutionMetaData` (`accuracy_estimate_internal_coords`, `condition_number`, `newton_residual`; computed in
   cauchy.hpp). This internal-double change neither solves nor worsens it. A unified
   precision-and-accuracy-aware solution type is a separate, larger decision.
 

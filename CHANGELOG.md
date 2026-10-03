@@ -94,6 +94,8 @@ ask and is recomputed rather than reused.  Nothing is lost and nothing is silent
 simply not reused.  That remains the honest outcome for as long as a record's ask does not carry
 the identity of the algorithm that answered it (#420).
 
+**A System archived or pickled by 3.x does not load in 4.0.**  What a System writes to a Boost archive changed: its precision is no longer written, and its auxiliary variable groups and auxiliary coordinates now are.  A pickle holds such an archive, so a pickled System, or anything pickled that contains one, is affected in the same way.  Rebuild the system from the code or the input file that made it.  A records directory stores its systems as JSON and is not affected.
+
 ### Removed
 
 - **The windows DLL plumbing is no longer part of the interface** (#99).
@@ -129,6 +131,15 @@ the identity of the algorithm that answered it (#420).
 
 ### Added
 
+- **A node compares by what it is** (ADR-0068).  `Variable('x') == Variable('x')` is true, and
+  so is `x*y + 1 == 1 + y*x`: nodes are interned, so equal expressions are one node, and `==`,
+  `!=` and `hash` now compare the node.  They used to compare the Python wrapper, which is a
+  new object on every call, so two handles on the same variable said they differed.  Nodes
+  work as dictionary keys and in sets, and a `VariableGroup` compares equal to a list of the
+  same variables.  Comparing a node with something that is not a node is false.
+- **A system that declares no variables takes the variables of the one it is combined with**
+  (ADR-0068): functions with nothing said about variables can be concatenated onto, or
+  blended with, a system that has them.  `AdoptVariableStructure` in C++.
 - **bertini's list containers compare by value.**  `sys.degrees() == [2, 2]` is now true when
   the degrees are 2 and 2; before, every container's `==` was object identity, so it was false
   -- as was comparing two calls of `sys.degrees()` -- and a check had to be written
@@ -328,6 +339,26 @@ the identity of the algorithm that answered it (#420).
 
 ### Changed
 
+- **An accuracy estimate names its coordinates** (ADR-0069).  A solution's metadata has two
+  accuracy estimates, both the distance between the endgame's last two approximations of the
+  root.  `accuracy_estimate` is renamed **`accuracy_estimate_internal_coords`**: it is in the
+  solver's internal coordinates (homogenized, on the patch), it is what `final_tolerance` is
+  compared with, and it reads as a number of correct digits.
+  `accuracy_estimate_user_coords` keeps its name: it is the absolute error in the units of
+  your variables, so a solution of order 1000 with six correct digits has about `1e-3`
+  there.  The plain name read as the second and held the first.  It is **retired**, not
+  reassigned: reading `accuracy_estimate` raises an error that names both, so no code goes on
+  running with a number that changed meaning.  The dataframe column and the records key are
+  renamed with it; records written under the earlier key still load.
+- **Combining systems compares the variables** (ADR-0068).  `concatenate`, the homotopy
+  builders (`straight_line_homotopy`, and `MakeHomotopy` / `MakeMovingHomotopy` beneath it) and
+  `+` on systems now all make one check: the two systems must be over the same variables, in
+  the same groups, in the same order.  The homotopy builders and `+` used to compare counts
+  only, and evaluate their operands by position, so moving rows over `(y, x)` blended with a
+  system over `(x, y)` were accepted and evaluated with the coordinates exchanged: `y - 3` at
+  `(x, y) = (7, 11)` came out as 4.  Such a combination is now refused, and the message names
+  both structures and says whether the order, the grouping or the variables differ.  Code
+  that relied on matching by position has to put its variables in one order.
 - **The tracker's own settings are a config** (#457).  The predictor, the tracking tolerance and
   the path truncation threshold were bare members of the tracker, each with its own setter and
   getter and no config struct.  They were therefore absent from `get_settings`/`set_settings`, from
@@ -429,6 +460,48 @@ the identity of the algorithm that answered it (#420).
 
 ### Fixed
 
+- **A copied or unpickled system combines with its original** (ADR-0068).  `copy.deepcopy`,
+  `copy.copy` and `pickle` go through an archive, and loading from one built variables
+  outside the variable factory: a copy was over fresh variables with the same names, and
+  `concatenate(system, copy.deepcopy(other))` was refused for "differing variable
+  orderings".  A `System` and a `Slice` now re-intern what they hold as the last step of
+  loading, so a loaded system is over the same variables as every other system that names
+  them.  `straight_line_homotopy(..., fixed=...)` accepts deep-copied operands as a result;
+  it had refused what the builder beneath it accepted.
+- **A moved or assigned system keeps its auxiliary coordinates.**  `System`'s `swap`, which
+  move construction and assignment go through, left out the auxiliary declarations, so a
+  system that was moved or assigned was judged on every coordinate again.  It did not show
+  while every function returning a `System` had a single return statement, because the
+  compiler elided the move.
+- **The Cauchy endgame honours the security ceiling as the power series endgame does.**  At
+  security level 0, two consecutive endpoint approximations whose largest coordinate is above
+  `max_norm` truncate a path with `SecurityMaxNormReached`.  The power series endgame asks
+  that after every approximation; the Cauchy endgame tested acceptance first, so a path that
+  converged to a finite point above the ceiling came back `Success` from Cauchy and truncated
+  from power series -- for `x^2 = 1e8, y = 2x` at the default ceiling of 1e4, two solutions
+  under one endgame and none under the other.  Cauchy now asks security first, and never
+  accepts an approximation above the ceiling.  Its count still runs over rounds in the
+  operating zone only, where the Cauchy mean can be trusted.  The two endgames differ in how
+  they estimate the root and in nothing else (ADR-0067).  A solve whose solutions lie above
+  `max_norm` needs the ceiling raised (`solver.update(max_norm=...)`) or security level 1,
+  under either endgame.  The `SecurityConfig.level` docstring said the opposite of what the
+  level does, and is corrected.
+- **A wide real random orthonormal matrix has distinct columns again.**  The faster
+  factorization from #401 (below) QR-factors a tall seed matrix, and for a *real* request that
+  seed was a matrix of units, which for real numbers means signs.  A tall matrix of signs has
+  only `2^thin` distinct rows, so the resulting `rows x cols` matrix had at most `2^rows`
+  distinct columns: a `3 x 5` real draw had 3, an `8 x 4908` one had 256, and randomizing an
+  overdetermined deflated system down to square with `random_matrix(n, m, real=True)` produced
+  a singular square system at a point where the deflated Jacobian had full rank, so Newton
+  could not converge there.  The real seed is now a continuous draw on `[-1, 1]`; the QR still
+  launders it into an orthonormal matrix, now a generic one.  Complex draws are unchanged.
+  Real orthonormal draws -- `random_matrix(..., real=True)` and `Slice.random_real` -- differ
+  from before for the same seed, so a record of a solve that used one is a new ask.
+- **`solutions(group=...)` and its siblings no longer fail on a path without an endpoint.**
+  `all_solutions()` holds an empty placeholder for a path that went to infinity or failed, and
+  projecting one onto a variable group raised `CoordinatesOfGroup: point is shorter than the
+  system's variable structure implies`.  The placeholder is passed through empty, so the list
+  keeps one entry per path, aligned with `solution_metadata()`.
 - **A fast parameter sweep no longer dies after 25 recorded solves** (ADR-0066).  Every
   recorded solve that found no other solver attached to its records directory started a new
   session, and a session claims a history file named for the current second, the process id,

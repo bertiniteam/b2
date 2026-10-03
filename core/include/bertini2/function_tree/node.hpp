@@ -461,9 +461,10 @@ private:
     the just-built candidate is discarded.  Nodes whose IsSame() is identity (e.g. Variable,
     Function, Pi, E) never match, so they pass through unchanged -- no special-casing.
 
-    Thread note: guarded by a mutex, contended only during single-threaded authoring;
-    deserialization (Clone) constructs nodes WITHOUT going through Make/Intern, so per-thread
-    tracking clones stay private and un-interned.
+    Thread note: guarded by a mutex, contended only during single-threaded authoring.
+    Deserialization constructs nodes WITHOUT going through Make/Intern; whatever holds the
+    loaded nodes re-interns them as the last step of its load (System and Slice do, ADR-0068),
+    so nothing a caller receives is outside this table.
     */
     std::shared_ptr<Node> Intern(std::shared_ptr<Node> const& candidate);
 

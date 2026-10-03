@@ -53,6 +53,13 @@ namespace bertini
         swap(a.homogenizing_variables_,b.homogenizing_variables_);
         swap(a.pre_homogenization_functions_,b.pre_homogenization_functions_);
 
+        // swap is a hand-maintained mirror of the members, as the copy constructor is: these two
+        // were missing, so a System that was MOVED or assigned lost its auxiliary declarations.
+        // A function returning a System by value moves it whenever the copy cannot be elided,
+        // which is how MakeHomotopy came to hand back a homotopy judged on every coordinate.
+        swap(a.auxiliary_variable_groups_,b.auxiliary_variable_groups_);
+        swap(a.auxiliary_coordinates_,b.auxiliary_coordinates_);
+
         swap(a.time_order_of_variable_groups_,b.time_order_of_variable_groups_);
 
         swap(a.have_path_variable_,b.have_path_variable_);
@@ -1799,14 +1806,79 @@ namespace bertini
             throw std::runtime_error(ss.str());
         };
 
-        // homogenizing variables FIRST: a projective/affine mix also shows up as a variable-count
-        // difference, and "one is projective and the other is affine" is the useful diagnosis
+        // homogenizing variables FIRST: a projective/affine mix also shows up as a difference in
+        // the variables, and "one is projective and the other is affine" is the useful diagnosis
         if (a.NumHomVariables() != b.NumHomVariables())
             complain("homogenizing variables", a.NumHomVariables(), b.NumHomVariables());
-        if (a.NumVariables() != b.NumVariables())
-            complain("variables", a.NumVariables(), b.NumVariables());
-        if (a.NumTotalVariableGroups() != b.NumTotalVariableGroups())
-            complain("variable groups", a.NumTotalVariableGroups(), b.NumTotalVariableGroups());
+
+        // THE VARIABLES, not how many of them there are.  Counts agree for (x, y) against
+        // (y, x), and a blend of two such systems evaluates one of them with its coordinates
+        // exchanged.  Variables are canonical by name and a loaded system re-interns its own
+        // (ADR-0068), so comparing the objects is comparing the names.
+        auto names = [](VariableGroup const& group)
+        {
+            std::string out;
+            for (auto const& v : group)
+            {
+                if (!out.empty())
+                    out += ", ";
+                out += v ? v->name() : std::string("<no variable>");
+            }
+            return out;
+        };
+        auto describe = [&names](System const& s)
+        {
+            std::ostringstream ss;
+            ss << "(" << names(s.VariableOrdering()) << ")";
+            auto const affine = s.VariableGroups();
+            auto const projective = s.HomVariableGroups();
+            if (affine.size() + projective.size() > 1 || s.NumUngroupedVariables() > 0)
+            {
+                ss << ", grouped as";
+                for (auto const& g : affine)
+                    ss << " [" << names(g) << "]";
+                for (auto const& g : projective)
+                    ss << " projective [" << names(g) << "]";
+                if (s.NumUngroupedVariables() > 0)
+                    ss << " ungrouped [" << names(s.UngroupedVariables()) << "]";
+            }
+            return ss.str();
+        };
+
+        auto const order_a = a.VariableOrdering();
+        auto const order_b = b.VariableOrdering();
+        bool const same_order = order_a == order_b;
+        bool const same_groups = a.VariableGroups() == b.VariableGroups()
+                              && a.HomVariableGroups() == b.HomVariableGroups()
+                              && a.UngroupedVariables() == b.UngroupedVariables()
+                              && a.HomogenizingVariables() == b.HomogenizingVariables();
+        if (!same_order || !same_groups)
+        {
+            std::stringstream ss;
+            ss << operation << " needs systems over the same variables, in the same groups and"
+                  " the same order, but " << a_name << " is over " << describe(a) << " and "
+               << b_name << " is over " << describe(b) << ".";
+
+            std::vector<std::string> sorted_a, sorted_b;
+            for (auto const& v : order_a) sorted_a.push_back(v ? v->name() : std::string());
+            for (auto const& v : order_b) sorted_b.push_back(v ? v->name() : std::string());
+            bool const same_names_in_order = sorted_a == sorted_b;
+            std::sort(sorted_a.begin(), sorted_a.end());
+            std::sort(sorted_b.begin(), sorted_b.end());
+
+            if (same_order)
+                ss << "  The variables and their order agree; the grouping does not, and the"
+                      " grouping decides how a system is homogenized and what its degrees are.";
+            else if (same_names_in_order)
+                ss << "  The names agree, but the variables are different objects: one of the"
+                      " systems holds variables that were not made by the variable factory.";
+            else if (sorted_a == sorted_b)
+                ss << "  They are the same variables in a different order, so a point means"
+                      " different things to the two systems.";
+            else
+                ss << "  They are over different variables.";
+            throw std::runtime_error(ss.str());
+        }
 
         // A patch chooses which representative of a projective point is meant, so two patched
         // systems carrying different patches are not describing the same points.  An unpatched
@@ -1819,13 +1891,48 @@ namespace bertini
     }
 
 
+    void AdoptVariableStructure(System& into, System const& from)
+    {
+        if (into.NumVariables() != 0)
+            throw std::runtime_error("AdoptVariableStructure: the receiving system already declares"
+                " variables, so there is a structure to compare and nothing to adopt.");
+
+        // CopyVariableStructure brings the other's path variable along; a path variable the
+        // receiver already has is its own and stays
+        bool const had_path_variable = into.HavePathVariable();
+        auto const own_path_variable = had_path_variable ? into.GetPathVariable() : nullptr;
+        into.CopyVariableStructure(from);
+        if (had_path_variable)
+            into.AddPathVariable(own_path_variable);
+    }
+
+    namespace {
+        /// A system that says nothing about variables takes the word of the one it is combined with.
+        bool DeclaresNoVariables(System const& s)
+        {
+            return s.NumVariables() == 0;
+        }
+
+        /// A copy of `s` over the variable structure of `from`.
+        System OverTheVariablesOf(System s, System const& from)
+        {
+            AdoptVariableStructure(s, from);
+            return s;
+        }
+    }
+
+
     System& System::operator+=(System const& rhs)
     {
         ThrowIfSealed("operator+= (append functions)");
         if (this->NumTotalFunctions()!=rhs.NumTotalFunctions())
             throw std::runtime_error("cannot add two Systems with differing numbers of functions");
 
-        CheckVariableStructuresMatch(*this, rhs, "System+=System", "the left system", "the right system");
+        // a side that declares no variables takes the other's; two that do must agree
+        if (DeclaresNoVariables(*this) && !DeclaresNoVariables(rhs))
+            AdoptVariableStructure(*this, rhs);
+        else if (!DeclaresNoVariables(rhs))
+            CheckVariableStructuresMatch(*this, rhs, "System+=System", "the left system", "the right system");
 
 
         //
@@ -1920,16 +2027,13 @@ namespace bertini
 
     System Concatenate(System sys1, System const& sys2)
     {
-        // first we will deal with the variable structure
-        if (sys1.NumVariables()!=sys2.NumVariables())
-            throw std::runtime_error("concatenating systems with differing numbers of variables");
-
-        if (sys1.VariableOrdering() != sys2.VariableOrdering())
-            throw std::runtime_error("concatenating systems with differing variable orderings");
-
-        if (sys1.IsPatched() && sys2.IsPatched())
-            if (sys1.GetPatch()!=sys2.GetPatch())
-                throw std::runtime_error("concatenating systems with incompatible patches");
+        // First the variable structure: the same check every combining operation makes, on the
+        // variables themselves.  A side that declares no variables takes the other's.
+        if (DeclaresNoVariables(sys1) && !DeclaresNoVariables(sys2))
+            AdoptVariableStructure(sys1, sys2);
+        else if (!DeclaresNoVariables(sys2))
+            CheckVariableStructuresMatch(sys1, sys2, "Concatenate",
+                                         "the first system", "the second system");
 
         if (sys2.IsPatched() && !sys1.IsPatched())
             sys1.CopyPatches(sys2); // give the unpatched result sys2's patch
@@ -1980,6 +2084,12 @@ namespace bertini
                         std::string const& path_variable_name,
                         std::shared_ptr<node::Node> const& gamma)
     {
+        // an end that declares no variables is over the other end's
+        if (DeclaresNoVariables(target) != DeclaresNoVariables(start))
+            return DeclaresNoVariables(target)
+                ? MakeHomotopy(OverTheVariablesOf(target, start), start, path_variable_name, gamma)
+                : MakeHomotopy(target, OverTheVariablesOf(start, target), path_variable_name, gamma);
+
         // The two ends of a homotopy must describe points the same way, or the deformation runs
         // between things that do not correspond -- and nothing downstream notices, because the
         // shapes still agree and the tracking still runs.  Same check System+=System makes.
@@ -2037,6 +2147,27 @@ namespace bertini
     {
         if (start_moving.NumNaturalFunctions() != end_moving.NumNaturalFunctions())
             throw std::runtime_error("MakeMovingHomotopy: start_moving and end_moving must have the same number of functions (they are the two endpoints of the moving rows).");
+
+        // an operand that declares no variables is over the variables of the first one that does
+        {
+            System const* declared = nullptr;
+            for (System const* s : {&fixed, &start_moving, &end_moving})
+                if (!declared && !DeclaresNoVariables(*s))
+                    declared = s;
+            bool const some_undeclared = DeclaresNoVariables(fixed)
+                                      || DeclaresNoVariables(start_moving)
+                                      || DeclaresNoVariables(end_moving);
+            if (declared && some_undeclared)
+            {
+                auto over = [declared](System const& s)
+                {
+                    return DeclaresNoVariables(s) ? OverTheVariablesOf(s, *declared) : System(s);
+                };
+                return MakeMovingHomotopy(over(fixed), over(start_moving), over(end_moving),
+                                          path_variable_name, gamma);
+            }
+        }
+
         // Same variable structure across all three, including whether they are projective and
         // which patch they carry: a homotopy whose ends describe points differently deforms
         // between things that do not correspond, and nothing downstream notices.

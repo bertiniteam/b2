@@ -210,7 +210,7 @@ boost::json::object EncodeFullPathResult(parallel::FullPathResult<ComplexT> cons
     }
     out["newton_residual"] = ExactDoubleText(r.newton_residual);
     out["final_time_used"] = EncodeComplexScalar(r.final_time_used);
-    out["accuracy_estimate"] = ExactDoubleText(r.accuracy_estimate);
+    out["accuracy_estimate_internal_coords"] = ExactDoubleText(r.accuracy_estimate_internal_coords);
     out["accuracy_estimate_user_coords"] = ExactDoubleText(r.accuracy_estimate_user_coords);
     out["cycle_num"] = static_cast<std::int64_t>(r.cycle_num);
     out["precision_digits"] = static_cast<std::int64_t>(r.precision_digits);
@@ -267,7 +267,13 @@ parallel::FullPathResult<ComplexT> DecodeFullPathResult(boost::json::object cons
     }
     r.newton_residual = DoubleFromText(std::string(rec.at("newton_residual").as_string()));
     r.final_time_used = DecodeComplexScalar<ComplexT>(rec.at("final_time_used").as_array());
-    r.accuracy_estimate = DoubleFromText(std::string(rec.at("accuracy_estimate").as_string()));
+    // the internal estimate was recorded under the bare key `accuracy_estimate` until the
+    // field was named for its coordinates (ADR-0069); a record written before that reads the
+    // same, under the key it was written with
+    r.accuracy_estimate_internal_coords = DoubleFromText(std::string(
+        (rec.if_contains("accuracy_estimate_internal_coords")
+            ? rec.at("accuracy_estimate_internal_coords")
+            : rec.at("accuracy_estimate")).as_string()));
     r.accuracy_estimate_user_coords =
         DoubleFromText(std::string(rec.at("accuracy_estimate_user_coords").as_string()));
     r.cycle_num = static_cast<unsigned>(rec.at("cycle_num").as_int64());

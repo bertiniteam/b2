@@ -37,7 +37,7 @@ jobs:
     if: github.event_name == 'workflow_dispatch'
     uses: ./.github/workflows/build_and_test.yml
     with:
-      # Docs only need the ubuntu-latest / python-3.11 wheel; skip the full
+      # Docs only need the ubuntu-26.04 / python-3.11 wheel; skip the full
       # OS/Python matrix and the wheel/C++ test jobs.
       minimal: true
       ref: ${{ inputs.ref }}
@@ -48,7 +48,7 @@ jobs:
   # python_docs as the `docs-cpp` artifact for final assembly.
   cpp_docs:
     name: Build C++ docs (Doxygen)
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-26.04
     steps:
       - uses: actions/checkout@v5
         with:
@@ -86,7 +86,7 @@ jobs:
           mv build/docs/cpp site/cpp
 
       - name: Upload C++ docs artifact
-        uses: actions/upload-artifact@v5
+        uses: actions/upload-artifact@v6
         with:
           name: docs-cpp
           path: site/cpp
@@ -102,7 +102,7 @@ jobs:
       always() &&
       (needs.build_and_test.result == 'success' || needs.build_and_test.result == 'skipped') &&
       needs.cpp_docs.result == 'success'
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-26.04
     permissions:
       contents: write  # push the persistent docs-store branch (the durable versioned-docs store)
     steps:
@@ -115,7 +115,7 @@ jobs:
           fetch-depth: 0
 
       - name: Set up Python
-        uses: actions/setup-python@v5
+        uses: actions/setup-python@v6
         with:
           python-version: '3.11'
 
@@ -141,9 +141,9 @@ jobs:
             scikit-build-core build numpy matplotlib pandas sympy networkx
 
       - name: Download built wheel
-        uses: actions/download-artifact@v5
+        uses: actions/download-artifact@v7
         with:
-          name: wheels-ubuntu-latest-3.11
+          name: wheels-ubuntu-26.04-3.11
           path: dist/
 
       - name: Install bertini from built wheel
@@ -152,7 +152,7 @@ jobs:
       # The Doxygen C++ reference was built in parallel by the cpp_docs job; drop it
       # into site/cpp so the assembled site/ has cpp + python + landing.
       - name: Download C++ docs
-        uses: actions/download-artifact@v5
+        uses: actions/download-artifact@v7
         with:
           name: docs-cpp
           path: site/cpp

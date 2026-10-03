@@ -130,10 +130,36 @@ void ExposeSolutionMetaData(std::string const& class_name){
         "The last time value this path reached.  For a successful path, the endgame's latest time "
         "(at or near the target).  For a path that did not succeed, in either stage, the time the "
         "tracker was at when it stopped -- read with latest_path_point, the point it was at.")
-    .def_readwrite("accuracy_estimate",&MDT::accuracy_estimate,
-        "Accuracy estimate from the endgame, the difference between successive extrapolations.")
+    .def_readwrite("accuracy_estimate_internal_coords",&MDT::accuracy_estimate_internal_coords,
+        "The distance between the endgame's last two approximations of the root, in the solver's "
+        "INTERNAL coordinates (homogenized, on the patch).  This is the quantity the endgame "
+        "compares with final_tolerance to decide it has converged.  It does not grow with the "
+        "scale of the solution, so it reads as a number of correct digits: see accuracy_digits.  "
+        "For the error in your own variables, read accuracy_estimate_user_coords.")
     .def_readwrite("accuracy_estimate_user_coords",&MDT::accuracy_estimate_user_coords,
-        "Accuracy estimate in natural (dehomogenized) coordinates.")
+        "The distance between the endgame's last two approximations of the root, in YOUR "
+        "coordinates (dehomogenized): an absolute error, in the units of your variables.  A "
+        "solution of order 1000 with six correct digits has about 1e-3 here.  It is measured "
+        "in the infinity norm, so the largest coordinate sets it and a small coordinate of the "
+        "same point has fewer correct digits of its own.")
+    // RETIRED, loudly.  The bare name read as "the accuracy of my solution", in the reader's own
+    // coordinates, and it held the INTERNAL estimate.  It is not an alias for either successor:
+    // the same name giving a different number is the failure a rename exists to prevent.  The
+    // error is not an AttributeError, because getattr(md, 'accuracy_estimate', None) would
+    // swallow that and carry on with None.  See ADR-0069.
+    .add_property("accuracy_estimate",
+        +[](MDT const&) -> double
+        {
+            PyErr_SetString(PyExc_RuntimeError,
+                "SolutionMetaData.accuracy_estimate was retired in bertini 4.0, because its name "
+                "did not say which coordinates it was in.  For the value it held, read "
+                "accuracy_estimate_internal_coords (the solver's homogenized, patched "
+                "coordinates; what final_tolerance is compared with).  For the absolute error in "
+                "your own variables, read accuracy_estimate_user_coords.");
+            boost::python::throw_error_already_set();
+            return 0.0;
+        },
+        "Retired in 4.0: read accuracy_estimate_internal_coords or accuracy_estimate_user_coords.")
     .def_readwrite("cycle_num",&MDT::cycle_num,
         "The cycle number used by the endgame's extrapolation.")
     .def_readwrite("precision_digits",&MDT::precision_digits,
@@ -142,7 +168,7 @@ void ExposeSolutionMetaData(std::string const& class_name){
         "and the higher mpfr precision for a path that had to escalate.")
     .def_readwrite("accuracy_digits",&MDT::accuracy_digits,
         "How many digits of this solution are trustworthy (a digit count), from the convergence "
-        "agreement: floor(-log10(accuracy_estimate)), clamped to [0, precision_digits].  Read with "
+        "agreement: floor(-log10(accuracy_estimate_internal_coords)), clamped to [0, precision_digits].  Read with "
         "precision_digits as 'computed in N digits, good to M of them'.")
     .def_readwrite("endgame_success_code",&MDT::endgame_success_code,
         "The SuccessCode from the endgame. 0 means Success; anything else means the path did not "

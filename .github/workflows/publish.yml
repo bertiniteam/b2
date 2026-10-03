@@ -16,7 +16,7 @@ concurrency:
 jobs:
   check_version:
     name: Check VERSION file matches tag
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-26.04
     outputs:
       is_prerelease: ${{ steps.check.outputs.is_prerelease }}
     steps:
@@ -44,11 +44,18 @@ jobs:
           # validation regex above -- a naive `\.(dev|a|b|rc)` would misread rc1 as a FINAL release
           # and route it to real PyPI + a GitHub Release instead of TestPyPI.
           echo "$TAG" | grep -Eq '(\.dev[0-9]+|a[0-9]+|b[0-9]+|rc[0-9]+)$' && echo "is_prerelease=true" >> $GITHUB_OUTPUT || echo "is_prerelease=false" >> $GITHUB_OUTPUT
+      # The GitHub release publishes CHANGELOG.md's top block as its notes.  Check it here, in
+      # the release's first job, so a changelog that is not ready (undated, the wrong version,
+      # no separators) fails the release in seconds instead of after every wheel has built.
+      # Final releases only: prereleases go to TestPyPI and make no GitHub release.
+      - name: Check the release notes
+        if: steps.check.outputs.is_prerelease == 'false'
+        run: python tools/release_notes.py --tag "$GITHUB_REF_NAME"
 
   check_timing_freshness:
     name: Check tutorial timings are fresh
     needs: check_version
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-26.04
     steps:
       - uses: actions/checkout@v5
       # Gate ONLY real releases.  We keep this as a step-level `if` (not a job-level one) so the
@@ -72,7 +79,7 @@ jobs:
     name: Publish to TestPyPI
     if: needs.check_version.outputs.is_prerelease == 'true'
     needs: [check_version, build_and_test]
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-26.04
 
     environment:
       name: testpypi
@@ -83,7 +90,7 @@ jobs:
 
     steps:
       - name: Download all the dists
-        uses: actions/download-artifact@v5
+        uses: actions/download-artifact@v7
         with:
           # ONLY the wheel artifacts. build_docs.yml's cpp_docs job also uploads a
           # `docs-cpp` artifact (the whole Doxygen tree); without this pattern,
@@ -104,7 +111,7 @@ jobs:
     name: Publish to PyPI
     if: needs.check_version.outputs.is_prerelease == 'false'
     needs: [check_version, build_and_test]
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-26.04
 
     environment:
       name: pypi
@@ -115,7 +122,7 @@ jobs:
 
     steps:
       - name: Download all the dists
-        uses: actions/download-artifact@v5
+        uses: actions/download-artifact@v7
         with:
           # ONLY the wheel artifacts. build_docs.yml's cpp_docs job also uploads a
           # `docs-cpp` artifact (the whole Doxygen tree); without this pattern,
@@ -139,7 +146,7 @@ jobs:
     needs:
       - check_version
       - publish-to-pypi
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-26.04
 
     permissions:
       contents: write  # IMPORTANT: mandatory for making GitHub Releases
@@ -150,7 +157,7 @@ jobs:
         uses: actions/checkout@v5
 
       - name: Download Artifacts
-        uses: actions/download-artifact@v5
+        uses: actions/download-artifact@v7
         with:
           # ONLY the wheel artifacts. build_docs.yml's cpp_docs job also uploads a
           # `docs-cpp` artifact (the whole Doxygen tree); without this pattern,
@@ -168,12 +175,11 @@ jobs:
             ./dist/*.whl
 
       - name: Get Newest Changelog
-        run: |
-          python -c 'import re; from pathlib import Path; text=re.sub("<!--(.*?)-->", "", (Path.cwd() / "CHANGELOG.md").read_text(), flags=re.DOTALL); print(text); start=text.find("_" * 79); (Path.cwd() / "TEMP_CHANGELOG.md").write_text(text[start:text.find("_" * 79, start+1)])'
+        run: python tools/release_notes.py --tag "$GITHUB_REF_NAME" --output TEMP_CHANGELOG.md
 
       - name: Create GitHub Release
         id: create_release
-        uses: softprops/action-gh-release@v1
+        uses: softprops/action-gh-release@v3
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:

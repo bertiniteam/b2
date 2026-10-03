@@ -264,6 +264,31 @@ namespace bertini
     {
         return real_mp( records::DrawSymmetricDouble() < 0.0 ? -1 : 1 );
     }
+
+    /// \brief The entry a random orthonormal matrix is seeded with before its QR factorization:
+    /// a unit draw for the complex types.
+    ///
+    /// The QR launders the seed away, so any seed whose columns are generic will do -- but the
+    /// seed must BE generic.  The real unit is +1 or -1, and a tall matrix of signs has only
+    /// 2^cols distinct rows, so its Q has that many distinct rows too: an 8 x 4908 real
+    /// randomization matrix built from it had 256 distinct columns, and randomizing a deflated
+    /// system with it produced singular squares.  Real seeds are therefore drawn from the
+    /// symmetric interval instead (see the specialization below); the complex draw, a unit
+    /// modulus at a uniform angle, is already continuous and is unchanged.
+    template <typename NumberType>
+    inline
+    NumberType RandomOrthonormalSeed()
+    {
+        return RandomUnit<NumberType>();
+    }
+
+    /// \brief A real orthonormal seed entry: uniform on [-1, 1], never a bare sign.
+    template <>
+    inline
+    real_mp RandomOrthonormalSeed<real_mp>()
+    {
+        return real_mp( records::DrawSymmetricDouble() );
+    }
 }// re: namespace bertini
 
 

@@ -674,6 +674,83 @@ BOOST_AUTO_TEST_CASE(infinite_solutions_at_infinity)
     BOOST_CHECK_EQUAL(zd.InfiniteSolutions(false).size(), zd.InfiniteSolutions(true).size());
 }
 
+// The security ceiling is ONE rule, and both endgames apply it: at security level 0, two
+// consecutive endpoint approximations whose dehomogenized infinity norm is above max_norm
+// truncate the path.  {x^2 - 100, y - 2x} has two FINITE roots, (+-10, +-20); with the ceiling
+// set to 5 they are above it.  The Cauchy endgame used to test acceptance before security, so
+// it returned Success for exactly the roots the power series endgame truncated; the two endgames
+// differ in how they estimate the root and in nothing else.  (The ceiling is lowered rather than
+// the roots raised because the double precision tracker is not reliable on a badly scaled
+// system: it runs out of steps before the endgame on x^2 = 1e6 always, and on x^2 = 1e4 in
+// some draws.)
+struct CeilingOutcome
+{
+    unsigned truncated = 0;   ///< paths ended by SecurityMaxNormReached
+    unsigned succeeded = 0;   ///< paths ended Success at a finite point
+    std::string codes;        ///< every path's (pre-endgame, endgame) codes, for the failure message
+};
+
+template <typename TrackerType, typename EndgameType>
+CeilingOutcome SolveLargeFiniteRoots(double max_norm, int level)
+{
+    using namespace bertini;
+
+    auto x = node::Variable::Make("x");
+    auto y = node::Variable::Make("y");
+    System sys;
+    sys.AddFunction(pow(x, 2) - 100);
+    sys.AddFunction(y - 2*x);
+    sys.AddVariableGroup(VariableGroup{x, y});
+
+    auto zd = algorithm::ZeroDimSolver<TrackerType, EndgameType, System>(sys);
+    zd.DefaultSetup();
+    endgame::SecurityConfig sec;
+    sec.level = level;
+    sec.max_norm = max_norm;
+    zd.GetEndgame().Set(sec);
+    zd.Solve();
+
+    CeilingOutcome out;
+    for (auto const& m : zd.SolutionMetadata())
+    {
+        if (m.endgame_success_code == SuccessCode::SecurityMaxNormReached)
+            ++out.truncated;
+        else if (m.endgame_success_code == SuccessCode::Success && m.is_finite)
+            ++out.succeeded;
+        out.codes += " (" + std::to_string(static_cast<int>(m.pre_endgame_success_code)) + ", "
+                   + std::to_string(static_cast<int>(m.endgame_success_code))
+                   + (m.is_finite ? ", finite)" : ", not finite)");
+    }
+    return out;
+}
+
+template <typename TrackerType, typename EndgameType>
+void CheckSecurityCeiling(std::string const& which)
+{
+    // above the ceiling: both paths truncated
+    auto const above = SolveLargeFiniteRoots<TrackerType, EndgameType>(5, 0);
+    BOOST_CHECK_MESSAGE(above.truncated == 2u && above.succeeded == 0u,
+        which << ": roots above max_norm must be truncated at security level 0;" << above.codes);
+    // under the default ceiling: both kept
+    auto const under = SolveLargeFiniteRoots<TrackerType, EndgameType>(1e4, 0);
+    BOOST_CHECK_MESSAGE(under.truncated == 0u && under.succeeded == 2u,
+        which << ": roots under max_norm must be kept;" << under.codes);
+    // security level 1 does not truncate, whatever the ceiling
+    auto const level_one = SolveLargeFiniteRoots<TrackerType, EndgameType>(5, 1);
+    BOOST_CHECK_MESSAGE(level_one.truncated == 0u && level_one.succeeded == 2u,
+        which << ": security level 1 must not truncate;" << level_one.codes);
+}
+
+BOOST_AUTO_TEST_CASE(security_ceiling_is_the_same_rule_in_both_endgames)
+{
+    using Dbl = bertini::tracking::DoublePrecisionTracker;
+    using Amp = bertini::tracking::AMPTracker;
+    CheckSecurityCeiling<Dbl, bertini::endgame::EndgameSelector<Dbl>::PSEG>("double, power series");
+    CheckSecurityCeiling<Dbl, bertini::endgame::EndgameSelector<Dbl>::Cauchy>("double, Cauchy");
+    CheckSecurityCeiling<Amp, bertini::endgame::EndgameSelector<Amp>::PSEG>("adaptive, power series");
+    CheckSecurityCeiling<Amp, bertini::endgame::EndgameSelector<Amp>::Cauchy>("adaptive, Cauchy");
+}
+
 // multiplicity_representative: a multiplicity-m solution arrives as m coincident endpoints, and
 // the solver must mark exactly ONE of them the representative (the rest false), so a consumer can
 // collapse the cluster to one row.  {x^2, y^2} has a single solution (0,0) of multiplicity 4.

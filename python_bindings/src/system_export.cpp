@@ -420,8 +420,8 @@ namespace bertini{
         // post-deserialize fixups as Clone: rebuild the SLP's derivatives (the archived SLP's
         // derivative outputs do not round-trip faithfully) and normalize precision across the tree.
         // This makes copy.copy / copy.deepcopy work and lets Systems cross process boundaries
-        // (multiprocessing).  As with clone, the result's variables are distinct node objects from
-        // the original's.
+        // (multiprocessing).  Loading re-interns (System::serialize, ADR-0068), so the result's
+        // variables ARE the original's, and the copy can be combined with what it was copied from.
         struct SystemPickleSuite : boost::python::pickle_suite
         {
             static boost::python::tuple getinitargs(System const&)
@@ -465,8 +465,8 @@ namespace bertini{
             ;
 
             // free functions
-            def("concatenate", &Concatenate,(arg("self"), arg("other")), "concatenate two Systems to produce a new one.  Appends the second's functions onto a copy of the first.  The two must share variable ordering (cloning one from the other, or just reusing the same variables, guarantees this -- variables are canonical by name).  If exactly one is patched, the result takes that patch.");
-            def("clone", &Clone,(arg("self")), "Copy a System.  The copy shares the immutable node DAG (variables, functions, subexpressions) with the original but gets its own evaluation memory, so it is safe to evaluate concurrently AND its variables line up with the original's -- which is what lets you clone a set-up system, give the clone different functions, and concatenate the two (issue #256).  Adding/removing functions on one does not affect the other.  For a fully serialized deep copy use copy.deepcopy or pickle.");
+            def("concatenate", &Concatenate,(arg("self"), arg("other")), "concatenate two Systems to produce a new one.  Appends the second's functions onto a copy of the first.  The two must be over the same variables, in the same groups and the same order; variables are canonical by name, so systems built over the same names, clones, deep copies and unpickled systems all qualify.  A system that declares no variables takes the other's.  If exactly one is patched, the result takes that patch.");
+            def("clone", &Clone,(arg("self")), "Copy a System.  The copy shares the immutable node DAG (variables, functions, subexpressions) with the original but gets its own evaluation memory, so it is safe to evaluate concurrently AND its variables line up with the original's -- which is what lets you clone a set-up system, give the clone different functions, and concatenate the two (issue #256).  Adding/removing functions on one does not affect the other.  copy.deepcopy and pickle give a copy that combines with the original just as well; they go through an archive, which a clone does not need to.");
             def("make_homotopy", &MakeHomotopy,
                 (arg("target"), arg("start"), arg("path_variable")="t", arg("gamma")=std::shared_ptr<node::Node>()),
                 "Form the gamma-trick straight-line homotopy H = (1-t)*target + gamma*t*start, with the path variable added.  At t=1 the homotopy is gamma*start (so start's solutions are its roots) and at t=0 it is target.  When start carries a structured block (e.g. a products-of-linears start system) the two systems are combined with a blend block; otherwise node arithmetic is used.  gamma=None generates a random rational gamma.  Pair with nag_algorithm.user_homotopy to solve.");

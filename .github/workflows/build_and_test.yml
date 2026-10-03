@@ -33,7 +33,7 @@ on:
   workflow_call:
     inputs:
       minimal:
-        description: 'Build only the ubuntu-latest / python-3.11 wheel; skip C++ tests, Windows, macOS, and wheel tests.'
+        description: 'Build only the ubuntu-26.04 / python-3.11 wheel; skip C++ tests, Windows, macOS, and wheel tests.'
         required: false
         type: boolean
         default: false
@@ -50,7 +50,7 @@ on:
         type: boolean
         default: false
       minimal:
-        description: 'Build only the ubuntu-latest / python-3.11 wheel; skip C++ tests, Windows, macOS, and wheel tests.'
+        description: 'Build only the ubuntu-26.04 / python-3.11 wheel; skip C++ tests, Windows, macOS, and wheel tests.'
         required: false
         type: boolean
         default: false
@@ -68,10 +68,6 @@ concurrency:
 # Boost/Eigen/eigenpy versions are single-sourced in .github/ci-deps-versions.env and surfaced by
 # the `set_versions` job; the two jobs that build them from source consume it as job-level env.
 # That same file is in build-ci-image.yml's path filter, so a version bump rebuilds the Linux image.
-env:
-  # Opt JavaScript actions into Node 24 (Node 20 is being removed from the runners).
-  # Silences the conda-incubator/setup-miniconda@v3 (and other node20 action) deprecation.
-  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: "true"
 
 jobs:
   # Cheap, Doxygen-only gate (no compilation).  Every job that actually builds
@@ -84,7 +80,7 @@ jobs:
 
   set_versions:
     name: Resolve dependency versions
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-26.04
     outputs:
       boost: ${{ steps.v.outputs.boost }}
       eigen: ${{ steps.v.outputs.eigen }}
@@ -103,7 +99,7 @@ jobs:
 
   set_matrix:
     name: Set OS matrix
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-26.04
     outputs:
       os: ${{ steps.matrix.outputs.os }}
       python_versions: ${{ steps.matrix.outputs.python_versions }}
@@ -119,19 +115,22 @@ jobs:
           # If it SIGABRTs again, take it back out of this line and keep `-f os=macos-intel`,
           # which runs intel alone at one python version, for asking again later.
           if [[ "${{ inputs.minimal }}" == "true" ]]; then
-            OS='["ubuntu-latest"]'; PY='["3.11"]'
+            OS='["ubuntu-26.04"]'; PY='["3.11"]'
           elif [[ "${{ github.ref }}" == "refs/heads/main" || "${{ github.ref }}" == "refs/heads/develop" || "${{ github.ref }}" == refs/tags/* || "${{ inputs.full_matrix }}" == "true" || "${{ github.event.pull_request.base.ref }}" == "develop" || "${{ github.event.pull_request.base.ref }}" == "main" ]]; then
-            # ubuntu-24.04-arm is linux-aarch64 (#474): a full member, C++ tests and every wheel,
-            # on a native arm runner rather than under emulation.
-            OS='["ubuntu-latest","ubuntu-24.04-arm","macos-14","macos-15-intel"]'; PY='["3.10","3.11","3.12","3.13","3.14"]'
+            # ubuntu-26.04-arm is linux-aarch64 (#474): a full member, C++ tests and every wheel,
+            # on a native arm runner rather than under emulation.  Linux names its Ubuntu
+            # version on both architectures, here and in every workflow, instead of
+            # ubuntu-latest, so an image change is a deliberate edit rather than a surprise:
+            # the C++ test job compiles with the runner's own GCC and apt packages.
+            OS='["ubuntu-26.04","ubuntu-26.04-arm","macos-14","macos-15-intel"]'; PY='["3.10","3.11","3.12","3.13","3.14"]'
           else
-            OS='["ubuntu-latest"]'; PY='["3.11"]'
+            OS='["ubuntu-26.04"]'; PY='["3.11"]'
           fi
           # Manual OS targeting (the workflow_dispatch `os` input) narrows the unix matrix; the
           # separate Windows jobs gate on the same input.  Empty/`all` => leave as computed above.
           case "${{ inputs.os }}" in
-            linux)        OS='["ubuntu-latest","ubuntu-24.04-arm"]' ;;
-            linux-arm)    OS='["ubuntu-24.04-arm"]' ;;
+            linux)        OS='["ubuntu-26.04","ubuntu-26.04-arm"]' ;;
+            linux-arm)    OS='["ubuntu-26.04-arm"]' ;;
             macos)        OS='["macos-14"]' ;;
             macos-intel)  OS='["macos-15-intel"]'; PY='["3.11"]' ;;   # the #215 experiment
             windows)      OS='[]' ;;   # no unix jobs; only the standalone Windows jobs run
@@ -304,7 +303,7 @@ jobs:
             windows-conda-cpp-
             windows-conda-
 
-      - uses: conda-incubator/setup-miniconda@v3
+      - uses: conda-incubator/setup-miniconda@v4
         with:
           activate-environment: b2-windows
           environment-file: environment-win.yml
@@ -585,7 +584,7 @@ jobs:
           du -sh .ccache 2>/dev/null || echo "no .ccache directory was produced"
           if command -v ccache >/dev/null; then CCACHE_DIR=$PWD/.ccache ccache -s || true; fi
 
-      - uses: actions/upload-artifact@v5
+      - uses: actions/upload-artifact@v6
         with:
           name: wheels-${{ matrix.os }}-${{ matrix.python-version }}
           path: ./wheelhouse/*.whl
@@ -623,7 +622,7 @@ jobs:
           restore-keys: |
             windows-conda-${{ matrix.python-version }}-
             windows-conda-
-      - uses: conda-incubator/setup-miniconda@v3
+      - uses: conda-incubator/setup-miniconda@v4
         with:
           activate-environment: b2-windows
           environment-file: environment-win.yml
@@ -683,7 +682,7 @@ jobs:
           Remove-Item dist/*.whl
           Move-Item repaired/*.whl dist/
 
-      - uses: actions/upload-artifact@v5
+      - uses: actions/upload-artifact@v6
         with:
           name: wheels-windows-${{ matrix.python-version }}
           path: ./dist/*.whl
@@ -708,18 +707,18 @@ jobs:
         os: ${{ fromJson(needs.set_matrix.outputs.os) }}
         python-version: ${{ fromJson(needs.set_matrix.outputs.python_versions) }}
         exclude:
-          - os: ubuntu-latest
-          - os: ubuntu-24.04-arm
+          - os: ubuntu-26.04
+          - os: ubuntu-26.04-arm
 
     steps:
       - uses: actions/checkout@v5
 
-      - uses: actions/setup-python@v5
+      - uses: actions/setup-python@v6
         with:
           python-version: ${{ matrix.python-version }}
 
       - name: Download wheels artifact
-        uses: actions/download-artifact@v5
+        uses: actions/download-artifact@v7
         with:
           name: wheels-${{ matrix.os }}-${{ matrix.python-version }}
           path: dist/
@@ -754,7 +753,7 @@ jobs:
     steps:
       - uses: actions/checkout@v5
 
-      - uses: conda-incubator/setup-miniconda@v3
+      - uses: conda-incubator/setup-miniconda@v4
         with:
           activate-environment: b2-windows
           environment-file: environment-win.yml
@@ -763,7 +762,7 @@ jobs:
           channel-priority: strict
 
       - name: Download wheels artifact
-        uses: actions/download-artifact@v5
+        uses: actions/download-artifact@v7
         with:
           name: wheels-windows-${{ matrix.python-version }}
           path: dist/
@@ -791,14 +790,14 @@ jobs:
     name: Docs build (doctest + html -W)
     if: ${{ inputs.minimal != true }}
     needs: [build_macos_ubuntu_wheels]
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-26.04
     timeout-minutes: 20
     steps:
       - uses: actions/checkout@v5
         with:
           fetch-depth: 0   # gitpython in conf.py derives the version from the git history
 
-      - uses: actions/setup-python@v5
+      - uses: actions/setup-python@v6
         with:
           python-version: '3.11'
 
@@ -809,9 +808,9 @@ jobs:
             scikit-build-core build numpy tqdm matplotlib pandas sympy networkx
 
       - name: Download built wheel
-        uses: actions/download-artifact@v5
+        uses: actions/download-artifact@v7
         with:
-          name: wheels-ubuntu-latest-3.11
+          name: wheels-ubuntu-26.04-3.11
           path: dist/
 
       - name: Install bertini from built wheel

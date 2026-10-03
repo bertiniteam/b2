@@ -587,6 +587,12 @@ namespace bertini {
     factors exactly as before, so seeded square matrices are unchanged; non-square ones consume
     fewer random draws than the old recipe and therefore differ for the same seed.
 
+    The seed is a matrix of RandomOrthonormalSeed entries, not of units: a real unit is a sign,
+    and a tall matrix of signs has only 2^thin distinct rows, so the Q built from it has only
+    that many distinct rows -- the wide real result then has repeated columns, and a deflated
+    system randomized with it comes out singular.  Real seeds are continuous draws; complex
+    seeds are the units they always were.
+
     \param rows The number of rows of the returned matrix.
     \param cols The number of columns of the returned matrix.
     \tparam NumberType the (complex) number type to fill the matrix with.
@@ -599,7 +605,8 @@ namespace bertini {
         using std::min;
         const unsigned int tall = max(rows, cols);
         const unsigned int thin = min(rows, cols);
-        Mat<NumberType> seed = RandomOfUnits<NumberType>(tall, thin);
+        Mat<NumberType> seed = Mat<NumberType>(tall, thin).unaryExpr(
+            [](NumberType const& /*x*/) { return RandomOrthonormalSeed<NumberType>(); });
         Eigen::HouseholderQR<Mat<NumberType> > qr(seed);
         Mat<NumberType> Q = qr.householderQ() * Mat<NumberType>::Identity(tall, thin);   // tall x thin, orthonormal columns
         if (rows >= cols)

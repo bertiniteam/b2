@@ -44,6 +44,7 @@ needs.
 #include <vector>
 
 #include "bertini2/function_tree.hpp"
+#include "bertini2/function_tree/reintern.hpp"
 #include "bertini2/num_traits.hpp"
 #include "bertini2/eigen_extensions.hpp"
 #include "bertini2/system/blocks/linear_forms_block.hpp"
@@ -506,6 +507,14 @@ namespace bertini {
             ar & block_;
             ar & sliced_vars_;
             ar & is_homogeneous_;
+
+            // a loaded slice's variables join the live node universe, as a loaded System's do
+            // (ADR-0068): otherwise its system of linear forms could not be combined with the
+            // system it slices
+            if (Archive::is_loading::value)
+                for (auto& v : sliced_vars_)
+                    if (v)
+                        v = std::static_pointer_cast<node::Variable>(node::Reintern(v));
         }
 
         friend std::ostream& operator<<(std::ostream&, Slice const&);

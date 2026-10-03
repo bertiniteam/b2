@@ -937,4 +937,33 @@ BOOST_AUTO_TEST_CASE(the_crossing_verdict_round_trips_through_a_path_record)
     BOOST_CHECK(!records::DecodeFullPathResult<complex_dbl>(clean_encoded, 7).crossing_unresolved);
 }
 
+// ADR-0069: each accuracy estimate is recorded under a key that names its coordinates, and a
+// record written while the internal one was still called plain `accuracy_estimate` reads the same.
+BOOST_AUTO_TEST_CASE(the_accuracy_estimates_are_recorded_under_names_that_say_their_coordinates)
+{
+    parallel::FullPathResult<complex_dbl> result;
+    result.path_index = 3;
+    result.solution = Vec<complex_dbl>::Zero(1);
+    result.boundary_point = Vec<complex_dbl>::Zero(1);
+    result.accuracy_estimate_internal_coords = 3.5e-12;
+    result.accuracy_estimate_user_coords = 7.25e-8;
+
+    auto const encoded = records::EncodeFullPathResult(result);
+    BOOST_REQUIRE(encoded.if_contains("accuracy_estimate_internal_coords"));
+    BOOST_REQUIRE(encoded.if_contains("accuracy_estimate_user_coords"));
+    BOOST_CHECK(!encoded.if_contains("accuracy_estimate"));         // the bare key is not written
+
+    auto const decoded = records::DecodeFullPathResult<complex_dbl>(encoded, 3);
+    BOOST_CHECK_EQUAL(decoded.accuracy_estimate_internal_coords, 3.5e-12);
+    BOOST_CHECK_EQUAL(decoded.accuracy_estimate_user_coords, 7.25e-8);
+
+    // an earlier record: the same value, under the key it was written with
+    auto earlier = encoded;
+    earlier["accuracy_estimate"] = earlier.at("accuracy_estimate_internal_coords");
+    earlier.erase("accuracy_estimate_internal_coords");
+    auto const from_earlier = records::DecodeFullPathResult<complex_dbl>(earlier, 3);
+    BOOST_CHECK_EQUAL(from_earlier.accuracy_estimate_internal_coords, 3.5e-12);
+    BOOST_CHECK_EQUAL(from_earlier.accuracy_estimate_user_coords, 7.25e-8);
+}
+
 BOOST_AUTO_TEST_SUITE_END()

@@ -243,7 +243,7 @@ _SOLUTION_METADATA_FIELDS = (
     'is_finite', 'is_real', 'is_singular', 'is_nonsolution', 'crossing_unresolved',
     'multiplicity', 'multiplicity_representative',
     'condition_number', 'function_residual', 'newton_residual',
-    'accuracy_estimate', 'accuracy_estimate_user_coords',
+    'accuracy_estimate_internal_coords', 'accuracy_estimate_user_coords',
     'precision_digits', 'accuracy_digits',
     'cycle_num', 'endgame_success_code', 'pre_endgame_success_code', 'final_time_used',
     'precision_changed', 'max_precision_used', 'time_of_first_prec_increase',
@@ -369,7 +369,10 @@ def _make_group_getter(native):
         if group is None:
             return points
         sysm = self.target_system()
-        return [sysm.coordinates_of(p, group) for p in points]
+        # all_solutions() holds an empty placeholder for a path that reached no endpoint (at
+        # infinity, or failed); there is nothing to project, and it stays empty so the list
+        # keeps one entry per path, aligned with solution_metadata()
+        return [sysm.coordinates_of(p, group) if len(p) else p for p in points]
     getter.__name__ = getattr(native, '__name__', 'solutions')
     getter.__doc__ = (getattr(native, '__doc__', '') or '') + (
         "\n\ngroup=<VariableGroup or 0-based FIFO index>: project each returned point onto that "
