@@ -10,9 +10,9 @@ is real work to hand out).
 
 Run it::
 
-    python solve_eigenvalues.py --size 24                            # serial baseline
+    BERTINI_NUM_THREADS=1 python solve_eigenvalues.py --size 24      # serial baseline
     mpirun -n 5 python solve_eigenvalues.py --size 24                # 1 manager + 4 workers
-    OMP_NUM_THREADS=4 mpirun -n 3 --bind-to none python solve_eigenvalues.py --size 24
+    BERTINI_NUM_THREADS=4 mpirun -n 3 --bind-to none python solve_eigenvalues.py --size 24
 
 Only rank 0 prints; it checks the recovered eigenvalues against ``numpy.linalg.eigvals`` --
 correctness, not just a path count.
@@ -108,7 +108,7 @@ def main():
             distinct.append(g)
 
     print('eigen-{}:  ranks={}  threads/rank={}  paths={}  recovered={}  wall={:.1f}s'.format(
-        args.size, comm.Get_size(), os.environ.get('OMP_NUM_THREADS', '1'),
+        args.size, comm.Get_size(), os.environ.get('BERTINI_NUM_THREADS', 'auto'),
         args.size, len(distinct), elapsed))
 
     # Correctness: every numpy eigenvalue is matched by a homotopy-recovered one (closest-match,

@@ -339,6 +339,21 @@ the identity of the algorithm that answered it (#420).
 
 ### Changed
 
+- **The thread count is `BERTINI_NUM_THREADS`, and it defaults to every available CPU.**
+  b2 used to read `OMP_NUM_THREADS`, although it uses no OpenMP: its threads are its own
+  `std::thread` pool.  That variable also sets the thread count of numpy's OpenBLAS, so one
+  setting tied the two libraries together, and pinning b2 to one thread for a reproducible run
+  pinned numpy's linear algebra as well.  b2 now reads `BERTINI_NUM_THREADS` and ignores
+  `OMP_NUM_THREADS`.  The order is the variable if set, then the solver's `num_threads`, then
+  the number of CPUs the process may run on, which on Linux respects the affinity mask that
+  `taskset`, cpusets and a launcher's binding set.  That last default is OpenMP's, so threaded
+  runs come without configuration.
+  **MPI ranks change the most.**  A rank used one thread unless `OMP_NUM_THREADS` was set; it
+  now follows the same rule as a standalone solve, `num_threads` included.  How many CPUs a rank
+  may run on depends on how the launcher binds it, so several ranks on one machine can together
+  start more threads than the machine has cores.  Set `BERTINI_NUM_THREADS` whenever you run
+  more than one rank per machine.  A script or job file that set `OMP_NUM_THREADS` for b2
+  should set `BERTINI_NUM_THREADS` instead.
 - **An accuracy estimate names its coordinates** (ADR-0069).  A solution's metadata has two
   accuracy estimates, both the distance between the endgame's last two approximations of the
   root.  `accuracy_estimate` is renamed **`accuracy_estimate_internal_coords`**: it is in the

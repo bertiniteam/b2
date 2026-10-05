@@ -29,9 +29,12 @@ on every platform (no MPI required), which is what gives us cross-OS threading c
 */
 
 #include <atomic>
+#include <cstdlib>
 #include <memory>
 #include <numeric>
 #include <set>
+#include <string>
+#include <utility>
 #include <vector>
 
 #include <boost/test/unit_test.hpp>
@@ -121,16 +124,72 @@ BOOST_AUTO_TEST_CASE(thread_pool_state_is_per_thread)
     BOOST_CHECK_GE(total, static_cast<long>(N));
 }
 
+namespace {
+// Set (value != nullptr) or unset an environment variable for the life of the object, and put
+// back whatever was there.  POSIX setenv/unsetenv, or _putenv_s on Windows (where an empty value
+// unsets).
+class ScopedEnv
+{
+    std::string name_;
+    bool had_ = false;
+    std::string old_;
+
+    static void Put(std::string const& name, char const* value)
+    {
+#ifdef _WIN32
+        _putenv_s(name.c_str(), value ? value : "");
+#else
+        if (value)
+            setenv(name.c_str(), value, 1);
+        else
+            unsetenv(name.c_str());
+#endif
+    }
+
+public:
+    ScopedEnv(std::string name, char const* value) : name_(std::move(name))
+    {
+        if (char const* prev = std::getenv(name_.c_str()))
+        {
+            had_ = true;
+            old_ = prev;
+        }
+        Put(name_, value);
+    }
+    ~ScopedEnv() { Put(name_, had_ ? old_.c_str() : nullptr); }
+    ScopedEnv(ScopedEnv const&) = delete;
+    ScopedEnv& operator=(ScopedEnv const&) = delete;
+};
+} // namespace
+
 BOOST_AUTO_TEST_CASE(effective_thread_count_is_sane)
 {
     using bertini::parallel::EffectiveThreadCount;
-    // An explicit positive request is honored (when OMP_NUM_THREADS is unset in the test env).
-    if (std::getenv("OMP_NUM_THREADS") == nullptr)
-    {
-        BOOST_CHECK_EQUAL(EffectiveThreadCount(1), 1u);
-        BOOST_CHECK_EQUAL(EffectiveThreadCount(3), 3u);
-        BOOST_CHECK_GE(EffectiveThreadCount(0), 1u);   // auto -> hardware_concurrency, clamped >= 1
-    }
+    ScopedEnv no_override("BERTINI_NUM_THREADS", nullptr);
+    // an explicit positive request is honored; auto is every available CPU, at least one
+    BOOST_CHECK_EQUAL(EffectiveThreadCount(1), 1u);
+    BOOST_CHECK_EQUAL(EffectiveThreadCount(3), 3u);
+    BOOST_CHECK_EQUAL(EffectiveThreadCount(0), bertini::parallel::AvailableCpuCount());
+    BOOST_CHECK_GE(bertini::parallel::AvailableCpuCount(), 1u);
+}
+
+BOOST_AUTO_TEST_CASE(bertini_num_threads_overrides_the_configured_count)
+{
+    using bertini::parallel::EffectiveThreadCount;
+    ScopedEnv two("BERTINI_NUM_THREADS", "2");
+    BOOST_CHECK_EQUAL(EffectiveThreadCount(3), 2u);
+    BOOST_CHECK_EQUAL(EffectiveThreadCount(0), 2u);
+}
+
+// b2 reads its own variable.  OMP_NUM_THREADS also sets numpy's OpenBLAS thread count, and until
+// 4.0 b2 read it too, coupling two unrelated settings; it must not reach b2 any more.
+BOOST_AUTO_TEST_CASE(omp_num_threads_does_not_reach_b2)
+{
+    using bertini::parallel::EffectiveThreadCount;
+    ScopedEnv no_override("BERTINI_NUM_THREADS", nullptr);
+    ScopedEnv omp("OMP_NUM_THREADS", "1");
+    BOOST_CHECK_EQUAL(EffectiveThreadCount(3), 3u);
+    BOOST_CHECK_EQUAL(EffectiveThreadCount(0), bertini::parallel::AvailableCpuCount());
 }
 
 BOOST_AUTO_TEST_SUITE_END()  // thread_pool
@@ -320,16 +379,16 @@ BOOST_AUTO_TEST_CASE(event_tracker_is_member_tracker_when_serial)
 BOOST_AUTO_TEST_CASE(event_tracker_is_a_clone_when_threaded)
 {
     using namespace bertini;
-    // OMP_NUM_THREADS overrides the requested thread count (parallel::EffectiveThreadCount), so under
-    // OMP_NUM_THREADS=1 a "threaded" solve actually runs serially on the member tracker, and the
-    // clone-per-thread expectation below does not hold.  CI runs the test suite both with and without
-    // OMP_NUM_THREADS=1; the threaded path is exercised in the non-serial leg, so skip here when the
-    // environment forces serial.
+    // BERTINI_NUM_THREADS overrides the requested thread count (parallel::EffectiveThreadCount), so
+    // under BERTINI_NUM_THREADS=1 a "threaded" solve actually runs serially on the member tracker,
+    // and the clone-per-thread expectation below does not hold.  CI runs the test suite both with
+    // and without BERTINI_NUM_THREADS=1; the threaded path is exercised in the non-serial leg, so
+    // skip here when the environment forces serial.
     if (parallel::EffectiveThreadCount(4) <= 1)
     {
-        BOOST_TEST_MESSAGE("event_tracker_is_a_clone_when_threaded: skipped -- OMP_NUM_THREADS forces "
-                           "a serial run (threaded clone behavior is covered by the OMP_NUM_THREADS!=1 "
-                           "CI leg).");
+        BOOST_TEST_MESSAGE("event_tracker_is_a_clone_when_threaded: skipped -- BERTINI_NUM_THREADS "
+                           "forces a serial run (threaded clone behavior is covered by the "
+                           "BERTINI_NUM_THREADS!=1 CI leg).");
         return;
     }
     auto sys = TwoCubics();

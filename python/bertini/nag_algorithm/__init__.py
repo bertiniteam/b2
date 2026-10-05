@@ -1231,7 +1231,7 @@ def parameter_sweep(make_system, generic_parameters, target_parameters,
     comm : mpi4py communicator, optional
         If given, ``target_parameters`` is split across the ranks (each rank solves the generic
         once, then tracks its slice -- with the path tracking inside each solve threaded across the
-        rank's cores via ``OMP_NUM_THREADS``).  The collected results are gathered and **every rank
+        rank's cores, set with ``BERTINI_NUM_THREADS``).  The collected results are gathered and **every rank
         returns the full list in the original order**.  This is the two-level model: MPI across
         parameter points, threads across paths -- one extra argument, no manual scatter/gather.
     mptype, endgame

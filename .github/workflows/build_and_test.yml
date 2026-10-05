@@ -232,12 +232,12 @@ jobs:
           CCACHE_DIR: ${{ github.workspace }}/.ccache
         run: ccache -s || true
 
-      # Run the suite under BOTH thread settings.  OMP_NUM_THREADS overrides the requested per-solve
-      # thread count (parallel::EffectiveThreadCount), so the serial and threaded code paths genuinely
-      # differ; running both on every platform catches threading bugs (e.g. clone-per-thread) that a
-      # single setting would hide.  `--parallel` is ctest's *process* parallelism (independent of the
-      # per-solve OMP count), so each leg still runs the test executables concurrently.
-      - name: Test (threaded + OMP_NUM_THREADS=1)
+      # Run the suite under BOTH thread settings.  BERTINI_NUM_THREADS overrides the requested
+      # per-solve thread count (parallel::EffectiveThreadCount), so the serial and threaded code paths
+      # genuinely differ; running both on every platform catches threading bugs (e.g. clone-per-thread)
+      # that a single setting would hide.  `--parallel` is ctest's *process* parallelism (independent
+      # of the per-solve thread count), so each leg still runs the test executables concurrently.
+      - name: Test (threaded + BERTINI_NUM_THREADS=1)
         working-directory: build
         env:
           LD_LIBRARY_PATH: /tmp/boost-base/lib:/tmp/boost-base/lib64
@@ -245,11 +245,11 @@ jobs:
         run: |
           set -e
           jobs=$(nproc 2>/dev/null || sysctl -n hw.ncpu)
-          echo "::group::ctest with OMP_NUM_THREADS unset (per-solve threading on)"
-          env -u OMP_NUM_THREADS ctest --output-on-failure --timeout 600 --parallel "$jobs"
+          echo "::group::ctest with BERTINI_NUM_THREADS unset (per-solve threading on)"
+          env -u BERTINI_NUM_THREADS ctest --output-on-failure --timeout 600 --parallel "$jobs"
           echo "::endgroup::"
-          echo "::group::ctest with OMP_NUM_THREADS=1 (per-solve serial)"
-          OMP_NUM_THREADS=1 ctest --output-on-failure --timeout 600 --parallel "$jobs"
+          echo "::group::ctest with BERTINI_NUM_THREADS=1 (per-solve serial)"
+          BERTINI_NUM_THREADS=1 ctest --output-on-failure --timeout 600 --parallel "$jobs"
           echo "::endgroup::"
 
       # The published wheels ship WITHOUT MPI (we can't know the user's MPI), but this C++ build is
@@ -360,17 +360,17 @@ jobs:
           ccache --show-stats
 
       # Run under both per-solve thread settings (see the unix C++ test job for the rationale).
-      - name: Test (threaded + OMP_NUM_THREADS=1)
+      - name: Test (threaded + BERTINI_NUM_THREADS=1)
         shell: pwsh
         working-directory: build
         run: |
-          Remove-Item Env:\OMP_NUM_THREADS -ErrorAction SilentlyContinue
-          Write-Host "::group::ctest with OMP_NUM_THREADS unset (per-solve threading on)"
+          Remove-Item Env:\BERTINI_NUM_THREADS -ErrorAction SilentlyContinue
+          Write-Host "::group::ctest with BERTINI_NUM_THREADS unset (per-solve threading on)"
           ctest --output-on-failure --timeout 600 --parallel
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
           Write-Host "::endgroup::"
-          $env:OMP_NUM_THREADS = '1'
-          Write-Host "::group::ctest with OMP_NUM_THREADS=1 (per-solve serial)"
+          $env:BERTINI_NUM_THREADS = '1'
+          Write-Host "::group::ctest with BERTINI_NUM_THREADS=1 (per-solve serial)"
           ctest --output-on-failure --timeout 600 --parallel
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
           Write-Host "::endgroup::"

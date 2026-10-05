@@ -43,7 +43,6 @@ Each tracking thread owns its state (System copy + Tracker copy) built by state_
 #include "bertini2/parallel/mpi_include.hpp"
 
 #include <chrono>
-#include <cstdlib>   // std::getenv
 #include <functional>
 #include <limits>
 #include <string>
@@ -169,25 +168,6 @@ void RunWorkerLoopThreaded(
     }
 
     pool.shutdown();
-}
-
-
-/**
-\brief Read the thread count for a worker rank from OMP_NUM_THREADS.
-
-Returns the value of OMP_NUM_THREADS if set and >= 1, otherwise 1 (serial).
-HPC schedulers (SLURM) set OMP_NUM_THREADS automatically from --cpus-per-task.
-*/
-inline int WorkerThreadCount()
-{
-    const char* env = std::getenv("OMP_NUM_THREADS");
-    if (env)
-    {
-        int n = std::atoi(env);
-        if (n >= 1)
-            return n;
-    }
-    return 1;
 }
 
 

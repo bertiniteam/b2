@@ -757,7 +757,10 @@ run the endgame, classify the endpoints, report.  See the forward-declare doc ab
                 PreSolveChecks();
                 PreSolveSetup();
 
-                const int n_threads = parallel::WorkerThreadCount();
+                // threads per rank: the same rule as the standalone solve (BERTINI_NUM_THREADS,
+                // then num_threads, then every CPU this rank may run on)
+                const int n_threads = static_cast<int>(
+                    parallel::EffectiveThreadCount(this->template Get<ZeroDimConf>().num_threads));
 
                 // One round = dispatch a set of path indices, each executed as a WHOLE path
                 // (pre-endgame + endgame) by a worker.  Round 0 is every path; later rounds re-run
@@ -1197,8 +1200,9 @@ run the endgame, classify the endpoints, report.  See the forward-declare doc ab
                     indices_to_run = RecallRecordedPaths(all_indices);
                 }
 
-                // num_threads: 0 = auto (hardware_concurrency), 1 = serial, N = N threads;
-                // OMP_NUM_THREADS overrides.  n_threads <= 1 takes the pool-free serial path.
+                // num_threads: 0 = auto (every CPU this process may run on), 1 = serial, N = N
+                // threads; BERTINI_NUM_THREADS overrides.  n_threads <= 1 takes the pool-free
+                // serial path.
                 const unsigned n_threads =
                     parallel::EffectiveThreadCount(this->template Get<ZeroDimConf>().num_threads);
 

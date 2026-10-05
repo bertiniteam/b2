@@ -59,6 +59,10 @@ Example:
 // "MPI-less threading" plan: threading must be available in builds (and wheels) compiled
 // without any MPI installation.
 
+#if defined(__linux__)
+#include <sched.h>   // sched_getaffinity, CPU_COUNT (AvailableCpuCount)
+#endif
+
 #include <condition_variable>
 #include <cstdlib>   // std::getenv, std::atoi
 #include <deque>
@@ -75,21 +79,52 @@ namespace parallel {
 
 
 /**
+\brief The number of CPUs this process may run on.
+
+On Linux, the size of the process's CPU affinity mask, so a process bound to a subset of
+the machine (an MPI rank that `mpirun` bound, a job step confined to a cpuset) counts only
+its own CPUs, as OpenMP's default thread count does.  Elsewhere, and
+if the mask cannot be read, std::thread::hardware_concurrency().  Always >= 1.
+*/
+inline unsigned AvailableCpuCount()
+{
+#if defined(__linux__)
+    cpu_set_t mask;
+    CPU_ZERO(&mask);
+    if (sched_getaffinity(0, sizeof(mask), &mask) == 0)
+    {
+        const int n = CPU_COUNT(&mask);
+        if (n >= 1)
+            return static_cast<unsigned>(n);
+    }
+#endif
+    const unsigned hw = std::thread::hardware_concurrency();
+    return hw >= 1 ? hw : 1u;
+}
+
+
+/**
 \brief Resolve a configured thread count to the number of worker threads to actually spawn.
 
 Precedence (highest first):
-  1. The OMP_NUM_THREADS environment variable, if set to an integer >= 1.  HPC schedulers
-     (SLURM) set this from --cpus-per-task, so honoring it keeps the MPI+threads hybrid and
-     the standalone threaded solve behaving the same under a job allocation.
-  2. The `configured` value, if >= 1 (e.g. a num_threads config knob set by the user).
-  3. std::thread::hardware_concurrency() when `configured == 0` ("auto").
+  1. The BERTINI_NUM_THREADS environment variable, if set to an integer >= 1.
+  2. The `configured` value, if >= 1 (the `num_threads` config field).
+  3. AvailableCpuCount() when `configured == 0` ("auto"): every CPU this process may run on,
+     the same default OpenMP uses, so a solve is threaded without any configuration.
 
-Always returns >= 1 (a return of 1 means "run serially, no pool").  hardware_concurrency()
-can report 0 on exotic platforms; we clamp that to 1.
+The same rule serves the standalone threaded solve and each MPI rank.
+
+b2 reads its OWN variable, not OMP_NUM_THREADS (until 4.0 it read that one, although it uses
+std::thread and no OpenMP).  The shared name coupled two unrelated settings: numpy's
+OpenBLAS also takes its thread count from OMP_NUM_THREADS, so pinning b2 to one thread
+single-threaded every numpy call in the process, and tuning numpy changed how many paths b2
+tracked at once.
+
+Always returns >= 1 (a return of 1 means "run serially, no pool").
 */
 inline unsigned EffectiveThreadCount(unsigned configured = 0)
 {
-    if (const char* env = std::getenv("OMP_NUM_THREADS"))
+    if (const char* env = std::getenv("BERTINI_NUM_THREADS"))
     {
         int n = std::atoi(env);
         if (n >= 1)
@@ -99,8 +134,7 @@ inline unsigned EffectiveThreadCount(unsigned configured = 0)
     if (configured >= 1)
         return configured;
 
-    unsigned hw = std::thread::hardware_concurrency();
-    return hw >= 1 ? hw : 1u;
+    return AvailableCpuCount();
 }
 
 

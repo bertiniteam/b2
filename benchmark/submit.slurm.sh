@@ -5,7 +5,7 @@
 #SBATCH --job-name=bertini2_benchmark
 #SBATCH --nodes=4                  # total number of nodes
 #SBATCH --ntasks-per-node=1        # one MPI rank per node
-#SBATCH --cpus-per-task=8          # CPU cores per rank (= OMP_NUM_THREADS)
+#SBATCH --cpus-per-task=8          # CPU cores per rank (the script sets BERTINI_NUM_THREADS per run)
 #SBATCH --time=02:00:00
 #SBATCH --output=benchmark_%j.log
 #SBATCH --error=benchmark_%j.err

@@ -26,7 +26,7 @@ Two phases:
 
 1. **Serial** — one process, one thread. The MPI-built binaries are simply run directly (a single
    MPI process), which is the serial baseline.
-2. **MPI, single thread** — `mpirun -n N` with `OMP_NUM_THREADS=1`, sweeping `--ranks`.
+2. **MPI, single thread** — `mpirun -n N` with `BERTINI_NUM_THREADS=1`, sweeping `--ranks`.
 
 ## Correctness/agreement comes for free — and is *not* part of the timing
 

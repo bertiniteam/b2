@@ -74,7 +74,7 @@ def launch(script, args, nprocs, omp, bind_none, timeout):
     Aborts the whole tool if the run fails or does not print its ``OK:`` correctness line --
     we never want to publish a number from a solve that did not verify.
     """
-    env = dict(os.environ, OMP_NUM_THREADS=str(omp))
+    env = dict(os.environ, BERTINI_NUM_THREADS=str(omp))
     if nprocs <= 1:
         cmd = [sys.executable, script, *args]
     else:
@@ -87,7 +87,7 @@ def launch(script, args, nprocs, omp, bind_none, timeout):
             cmd += ["--bind-to", "none"]
         cmd += [sys.executable, script, *args]
 
-    shown = (f"OMP_NUM_THREADS={omp} " if omp != 1 else "") + " ".join(cmd)
+    shown = f"BERTINI_NUM_THREADS={omp} " + " ".join(cmd)
     print(f"    $ {shown}", flush=True)
     proc = subprocess.run(cmd, env=env, cwd=REPO, capture_output=True, text=True, timeout=timeout)
     out = proc.stdout + proc.stderr

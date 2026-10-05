@@ -215,10 +215,10 @@ struct ZeroDimConfig
     unsigned initial_ambient_precision = DefaultPrecision();  ///< Initial ambient (working) precision for the solve.
     unsigned max_num_crossed_path_resolve_attempts = 2; ///< The maximum number of times to attempt to re-solve crossed paths at the endgame boundary.
 
-    /// Number of worker threads for a shared-memory (non-MPI) solve.  0 = auto
-    /// (std::thread::hardware_concurrency); 1 = serial (no thread pool).  Overridden by the
-    /// OMP_NUM_THREADS environment variable when set.  See parallel::EffectiveThreadCount.
-    /// Under MPI the per-rank thread count comes from OMP_NUM_THREADS, not this field.
+    /// Number of worker threads tracking paths, in a standalone solve and on each MPI rank.
+    /// 0 = auto (every CPU this process may run on, as OpenMP's default); 1 = serial (no
+    /// thread pool).  Overridden by the BERTINI_NUM_THREADS environment variable when set.
+    /// See parallel::EffectiveThreadCount.
     unsigned num_threads = 0;
 
     /// Wall-clock budget for each path, in seconds; 0 (the default) means none.  A path that has not

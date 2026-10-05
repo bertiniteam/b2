@@ -49,7 +49,7 @@ def _time_run(argv, input_text, threads, timeout):
         f.write(input_text)
 
     env = os.environ.copy()
-    env["OMP_NUM_THREADS"] = str(threads)                  # single-thread for this benchmark phase
+    env["BERTINI_NUM_THREADS"] = str(threads)              # b2's path threads for this phase
 
     t0 = time.perf_counter()
     try:

@@ -109,7 +109,7 @@ def time_solver(exe, input_text, repeats=3, timeout=600):
         d = tempfile.mkdtemp()
         try:
             open(os.path.join(d, "input"), "w").write(input_text)
-            env = dict(os.environ, OMP_NUM_THREADS="1")
+            env = dict(os.environ, BERTINI_NUM_THREADS="1")
             t0 = time.perf_counter()
             r = subprocess.run([os.path.abspath(exe), "input"], cwd=d, env=env,
                                stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, timeout=timeout)

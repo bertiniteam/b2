@@ -149,7 +149,10 @@ def _env_with_determinism():
     rc = tempfile.NamedTemporaryFile("w", suffix="matplotlibrc", delete=False)
     rc.write(f"svg.hashsalt: {SVG_HASHSALT}\n")
     rc.close()
-    env = dict(os.environ, MATPLOTLIBRC=rc.name, MPLBACKEND="Agg", OMP_NUM_THREADS="1")
+    # serial b2 (BERTINI_NUM_THREADS) and serial numpy (OMP_NUM_THREADS, which OpenBLAS reads):
+    # a figure must not depend on thread scheduling in either library
+    env = dict(os.environ, MATPLOTLIBRC=rc.name, MPLBACKEND="Agg", BERTINI_NUM_THREADS="1",
+               OMP_NUM_THREADS="1")
     return env, rc.name
 
 

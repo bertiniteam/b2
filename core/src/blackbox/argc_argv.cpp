@@ -53,16 +53,16 @@ ParsedArgs ParseArgcArgv(int argc, char** argv)
                 "\n"
                 "Parallelism:\n"
 #ifdef BERTINI2_HAVE_MPI
-                "  MPI ranks:    mpirun --bind-to none -n N bertini2 [input_file]\n"
-                "  Threads/rank: OMP_NUM_THREADS=T mpirun --bind-to none -n N bertini2 [input_file]\n"
-                "    Total capacity = N ranks x T threads. OMP_NUM_THREADS defaults to 1.\n"
-                "    Note: threading uses std::thread, not OpenMP. OMP_NUM_THREADS is reused\n"
-                "    as the thread-count variable because HPC schedulers (e.g. SLURM) set it\n"
-                "    automatically from --cpus-per-task, so no extra configuration is needed.\n"
+                "  MPI ranks:    mpirun -n N bertini2 [input_file]\n"
+                "  Threads/rank: BERTINI_NUM_THREADS=T mpirun --bind-to none -n N bertini2 [input_file]\n"
+                "    Total capacity = N ranks x T threads.  Unset, each rank uses every CPU it\n"
+                "    may run on, which depends on how mpirun binds it; with several ranks on\n"
+                "    one machine, set BERTINI_NUM_THREADS so they do not start more threads\n"
+                "    than the machine has cores.\n"
 #else
                 "  This build was compiled without MPI. Rebuild with MPI present for\n"
                 "  multi-rank parallelism (it is auto-detected at configure time).\n"
-                "  Thread count: set OMP_NUM_THREADS (default: 1). Uses std::thread, not OpenMP.\n"
+                "  Thread count: BERTINI_NUM_THREADS (default: every CPU this process may run on).\n"
 #endif
                 ;
             std::exit(0);
