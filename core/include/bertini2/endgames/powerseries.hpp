@@ -911,6 +911,13 @@ public:
         this->adaptive_numeric_type_active_ = true;
         struct Disarmer { bool& flag; ~Disarmer(){ flag = false; } } disarm{this->adaptive_numeric_type_active_};
 
+        // Both lanes start empty.  A segment clears only the lane it runs in, so a path whose
+        // endgame stays in double would otherwise leave an earlier path's multiprecision times in
+        // place -- and LatestTime reads that lane first whenever it is non-empty, reporting the
+        // earlier path's last time as this one's (#378).
+        ClearTimesAndSamples<complex_dbl>();
+        ClearTimesAndSamples<complex_mp>();
+
         this->current_endgame_precision_ = std::max(DoublePrecision(), Precision(start_point));
 
         // ---- SETUP (restart-in-mpfr on escalation; bounded) ----

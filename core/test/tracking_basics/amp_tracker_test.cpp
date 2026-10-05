@@ -25,6 +25,7 @@
 #include <vector>
 
 #include <boost/test/unit_test.hpp>
+#include "bertini2/random.hpp"
 #include "bertini2/system/start_systems.hpp"
 #include "bertini2/trackers/tracker.hpp"
 #include "bertini2/records/solver_recording.hpp"   // CanonicalName, for readable test messages
@@ -1157,6 +1158,189 @@ BOOST_AUTO_TEST_CASE(set_start_precision_overrides_to_higher_precision)
     BOOST_CHECK(code == bertini::SuccessCode::Success);
     BOOST_CHECK(abs(y_end(0) - mpfr(0)) < 1e-5);
 }
+
+namespace {
+
+// Tracked from all ones at t = 1.  Cube root: y in (1-t)(y^3 - 2) + t(y^3 - 1), to the cube
+// root of 2 at t = 0, a smooth path that drops to double on its own.  Square root: (x, y) in
+// x^2 - t, y - x, toward the double root at t = 0; the Jacobian's condition grows like 1/x, so
+// a track to t = 1e-20 at tracking tolerance 1e-12 ends in multiple precision (30 digits),
+// where the condition estimate uses the multiprecision probe direction.  (One unknown would
+// not do: a 1x1 Jacobian has condition number 1.  And at a loose tolerance the corrector
+// accepts points well off the path near the root, so the track never needs the digits.)
+struct TestHomotopy
+{
+    enum class Kind { CubeRoot, SquareRoot };
+
+    Var x = Variable::Make("x");
+    Var y = Variable::Make("y");
+    Var t = Variable::Make("t");
+    System sys;
+    double tracking_tolerance;
+    mpfr t_end;
+
+    explicit TestHomotopy(Kind kind = Kind::CubeRoot)
+        : tracking_tolerance(kind == Kind::CubeRoot ? 1e-5 : 1e-12),
+          t_end(kind == Kind::CubeRoot ? mpfr(0) : mpfr("1e-20"))
+    {
+        if (kind == Kind::CubeRoot)
+        {
+            sys.AddFunction((1 - t) * (pow(y, 3) - 2) + t * (pow(y, 3) - 1));
+            sys.AddVariableGroup(VariableGroup{y});
+        }
+        else
+        {
+            sys.AddFunction(pow(x, 2) - t);
+            sys.AddFunction(y - x);
+            sys.AddVariableGroup(VariableGroup{x, y});
+        }
+        sys.AddPathVariable(t);
+    }
+
+    // Every tracker made here draws the same condition-number probe direction: the same seed,
+    // at the same precision.
+    bertini::tracking::AMPTracker MakeTracker() const
+    {
+        using namespace bertini::tracking;
+        DefaultPrecision(30);
+        bertini::ReseedThisThread(20261005);
+        AMPTracker tracker(sys);
+        tracker.Setup(Predictor::RKF45, tracking_tolerance, 1e5, SteppingConfig(), NewtonConfig());
+        tracker.PrecisionSetup(AMPConfigFrom(sys));
+        return tracker;
+    }
+};
+
+// Everything a track leaves behind that a caller can read: the code, the step count, the
+// precision, the step size, the latest condition-number estimate (which is computed from the
+// probe direction) and the endpoint, compared bit for bit and precision for precision.
+struct TrackOutcome
+{
+    bertini::SuccessCode code;
+    unsigned steps;
+    unsigned precision;
+    real_mp stepsize;
+    double condition_number;
+    Vec<mpfr> endpoint;
+};
+
+TrackOutcome Track(bertini::tracking::AMPTracker const& tracker, unsigned start_digits,
+                   mpfr const& t_end)
+{
+    DefaultPrecision(start_digits);
+    Vec<mpfr> start(tracker.NumVariables());
+    for (Eigen::Index ii = 0; ii < start.size(); ++ii)
+        start(ii) = mpfr(1);
+    Vec<mpfr> endpoint;
+    auto code = tracker.TrackPath(endpoint, mpfr(1), t_end, start);
+    return { code, tracker.NumTotalStepsTaken(), tracker.CurrentPrecision(),
+             tracker.CurrentStepsize(), static_cast<double>(tracker.LatestConditionNumber()),
+             endpoint };
+}
+
+void CheckIdentical(TrackOutcome const& a, TrackOutcome const& b)
+{
+    BOOST_CHECK(a.code == b.code);
+    BOOST_CHECK_EQUAL(a.steps, b.steps);
+    BOOST_CHECK_EQUAL(a.precision, b.precision);
+    BOOST_CHECK_EQUAL(a.condition_number, b.condition_number);
+    BOOST_CHECK_EQUAL(a.stepsize.precision(), b.stepsize.precision());
+    BOOST_CHECK(a.stepsize == b.stepsize);
+    BOOST_REQUIRE_EQUAL(a.endpoint.size(), b.endpoint.size());
+    for (Eigen::Index ii = 0; ii < a.endpoint.size(); ++ii)
+    {
+        BOOST_CHECK_EQUAL(a.endpoint(ii).precision(), b.endpoint(ii).precision());
+        BOOST_CHECK(a.endpoint(ii) == b.endpoint(ii));
+    }
+}
+
+} // namespace
+
+
+/**
+A track's result does not depend on what the tracker tracked before it (#378).
+
+A tracker is reused path after path -- by the zero-dim solver on each thread, by every
+endgame, and by anyone driving one by hand.  Until 4.0 the first step of a track was built at
+the precision the PREVIOUS track ended in, and kept that precision, so the same path tracked
+by the same tracker gave different bits depending on its predecessor; a threaded solve, where
+the scheduler picks each thread's predecessors, was irreproducible.  Every pairing of where the
+previous track ended and where this one starts: above, at and below it, double and not.
+*/
+BOOST_AUTO_TEST_CASE(a_track_does_not_depend_on_the_track_before_it)
+{
+    using Kind = TestHomotopy::Kind;
+    // (digits the previous track starts at, digits this track starts at)
+    std::vector<std::pair<unsigned, unsigned>> const pairings{
+        {60, 16}, {60, 30}, {16, 30}, {30, 16}, {30, 60}, {40, 30},
+        // below the 30 digits the probe direction was drawn at: a drop that rounds it
+        {20, 30}, {20, 60}, {20, 16}};
+
+    // the cube root ends in double; the square root, stopped just short of its double root,
+    // ends in multiple precision
+    for (auto const kind : {Kind::CubeRoot, Kind::SquareRoot})
+    {
+        TestHomotopy h(kind);
+        mpfr const& t_end = h.t_end;
+
+        for (auto const& [before_digits, digits] : pairings)
+        {
+            BOOST_TEST_CONTEXT((kind == Kind::CubeRoot ? "cube root" : "square root")
+                               << ", previous track starts at " << before_digits
+                               << " digits, this one at " << digits)
+            {
+                auto used = h.MakeTracker();
+                // preserved, the previous track ends where it started -- elsewhere than this one
+                used.PrecisionPreservation(true);
+                auto const before = Track(used, before_digits, mpfr(0.5));
+                used.PrecisionPreservation(false);
+                BOOST_REQUIRE(before.code == bertini::SuccessCode::Success);
+                BOOST_REQUIRE_NE(before.precision, digits);
+
+                auto const after_another = Track(used, digits, t_end);
+
+                auto fresh = h.MakeTracker();
+                auto const first_ever = Track(fresh, digits, t_end);
+
+                BOOST_CHECK(first_ever.code == bertini::SuccessCode::Success);
+                if (kind == Kind::SquareRoot)   // the premise of this half
+                    BOOST_CHECK_GT(first_ever.precision, 16u);
+                CheckIdentical(after_another, first_ever);
+            }
+        }
+    }
+}
+
+
+/**
+The step size is held at the tracker's working precision.
+
+An assignment takes its source's precision (preserve_related_precision), so a step size
+assigned from a number of another precision carries that precision into every product it
+enters.  Checked after tracks that end in double and in multiple precision, each after a
+predecessor at another precision.
+*/
+BOOST_AUTO_TEST_CASE(the_step_size_is_at_the_working_precision_after_a_track)
+{
+    using Kind = TestHomotopy::Kind;
+    for (auto const kind : {Kind::CubeRoot, Kind::SquareRoot})
+    {
+        TestHomotopy h(kind);
+        mpfr const& t_end = h.t_end;
+        auto tracker = h.MakeTracker();
+        for (unsigned digits : {60u, 30u, 16u, 40u, 16u, 20u})
+        {
+            BOOST_TEST_CONTEXT((kind == Kind::CubeRoot ? "cube root" : "square root")
+                               << ", starting at " << digits << " digits")
+            {
+                auto const outcome = Track(tracker, digits, t_end);
+                BOOST_REQUIRE(outcome.code == bertini::SuccessCode::Success);
+                BOOST_CHECK_EQUAL(outcome.stepsize.precision(), outcome.precision);
+            }
+        }
+    }
+}
+
 
 BOOST_AUTO_TEST_CASE(set_start_precision_clear_restores_default_behavior)
 {

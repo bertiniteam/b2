@@ -537,12 +537,21 @@ namespace bertini{
                 endtime_ = end_time;
                 endtime_.precision(initial_precision_);
 
-                current_stepsize_.precision(initial_precision_);
+                // The first step is built at THIS track's start precision, and the precision is set
+                // after the assignment, never before it.  current_precision_ still holds wherever the
+                // previous track ended, and an assignment takes its source's precision
+                // (preserve_related_precision), so building it at current_precision_ rounded the
+                // exact initial_step_size at the previous track's precision.  A track that starts in
+                // double then rounded that a second time, to a double, and the last bit of its first
+                // step -- and so its whole step sequence -- depended on which path the tracker had
+                // tracked before: thread scheduling made the threaded solve irreproducible, and path
+                // order made a serial solve depend on it (#378).
                 if (reinitialize_stepsize_)
                 {
                     real_mp segment_length = abs(start_time-end_time)/Get<Stepping>().min_num_steps;
-                    SetStepSize(min(real_mp(Get<Stepping>().initial_step_size, current_precision_),segment_length));
+                    SetStepSize(min(real_mp(Get<Stepping>().initial_step_size, initial_precision_),segment_length));
                 }
+                current_stepsize_.precision(initial_precision_);
 
                 // populate the current space value with the start point, in appropriate precision
                 if (initial_precision_==DoublePrecision())
@@ -1508,7 +1517,12 @@ namespace bertini{
                 for (unsigned ii=0; ii<source_point.size(); ii++)
                     std::get<Vec<complex_dbl> >(current_space_)(ii) = complex_dbl(source_point(ii));
 
-                endtime_.precision(DoublePrecision()); // i question this one  2021-04-12
+                // The same internals every other conversion re-precisions: the step size, the
+                // time, its increment, the end time, and the predictor's and corrector's work
+                // space.  Re-precisioning only the end time here left the rest at whatever
+                // multiple precision the track came down from, so a track's double-precision
+                // steps depended on the precision history before them (#378).
+                AdjustInternalsPrecision(DoublePrecision());
             }
 
             /**

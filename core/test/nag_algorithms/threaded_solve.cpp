@@ -40,6 +40,7 @@ on every platform (no MPI required), which is what gives us cross-OS threading c
 #include <boost/test/unit_test.hpp>
 
 #include "bertini2/parallel/thread_pool.hpp"
+#include "bertini2/random.hpp"
 #include "bertini2/nag_algorithms/zero_dim_solve.hpp"
 #include "bertini2/endgames.hpp"
 #include "bertini2/system/start_systems.hpp"
@@ -406,6 +407,120 @@ BOOST_AUTO_TEST_CASE(event_tracker_is_a_clone_when_threaded)
     BOOST_CHECK(cap.trackers_seen.count(member) == 0);   // never the member tracker
     BOOST_CHECK(!cap.trackers_seen.empty());
     BOOST_CHECK(cap.trackers_seen.size() <= 4u);          // at most one clone per worker thread
+}
+
+
+namespace {
+
+// cyclic-5: 120 total-degree paths, 70 finite roots, the rest diverging.  Enough paths, and
+// enough precision changes, that every thread count hands each thread a different sequence of
+// predecessor paths.
+bertini::System Cyclic5()
+{
+    using namespace bertini;
+    std::vector<std::shared_ptr<node::Variable>> z;
+    for (int i = 0; i < 5; ++i)
+        z.push_back(Variable::Make("z" + std::to_string(i)));
+    System sys;
+    using Nd = std::shared_ptr<node::Node>;
+    for (int k = 1; k < 5; ++k)
+    {
+        Nd total;
+        for (int i = 0; i < 5; ++i)
+        {
+            Nd term = z[i];
+            for (int j = 1; j < k; ++j)
+                term = term * z[(i + j) % 5];
+            total = total ? total + term : term;
+        }
+        sys.AddFunction(total);
+    }
+    sys.AddFunction(z[0] * z[1] * z[2] * z[3] * z[4] - 1);
+    sys.AddVariableGroup(VariableGroup(z.begin(), z.end()));
+    return sys;
+}
+
+// Every path's endpoint and its whole metadata record, from a seeded adaptive-precision solve.
+template<typename EndgameT>
+struct PathByPath
+{
+    using ZD = bertini::algorithm::ZeroDimSolver<bertini::tracking::AMPTracker, EndgameT,
+                                                 bertini::System>;
+    std::vector<bertini::Vec<bertini::complex_mp>> endpoints;
+    std::vector<bertini::algorithm::SolutionMetaData<bertini::complex_mp>> metadata;
+
+    explicit PathByPath(unsigned num_threads)
+    {
+        bertini::SetGlobalSeed(20261005);
+        auto sys = Cyclic5();
+        ZD zd(sys);
+        zd.DefaultSetup();
+        auto cfg = zd.template Get<bertini::algorithm::ZeroDimConfig>();
+        cfg.num_threads = num_threads;
+        zd.Set(cfg);
+        zd.Solve();
+        endpoints = zd.SolutionsInternalCoords();
+        metadata = zd.SolutionMetadata();
+    }
+};
+
+template<typename EndgameT>
+void CheckBitIdenticalAcrossThreadCounts()
+{
+    PathByPath<EndgameT> const serial(1);
+    BOOST_REQUIRE_EQUAL(serial.endpoints.size(), 120u);
+
+    for (unsigned nt : {2u, 3u, 8u})
+    {
+        PathByPath<EndgameT> const threaded(nt);
+        BOOST_REQUIRE_EQUAL(threaded.endpoints.size(), serial.endpoints.size());
+        for (std::size_t i = 0; i < serial.endpoints.size(); ++i)
+        {
+            BOOST_TEST_CONTEXT("path " << i << " at " << nt << " threads")
+            {
+                auto const& a = serial.endpoints[i];
+                auto const& b = threaded.endpoints[i];
+                BOOST_REQUIRE_EQUAL(a.size(), b.size());
+                for (Eigen::Index j = 0; j < a.size(); ++j)
+                {
+                    BOOST_CHECK_EQUAL(a(j).precision(), b(j).precision());
+                    BOOST_CHECK(a(j) == b(j));
+                }
+                auto md_a = serial.metadata[i];   // operator== is not const
+                BOOST_CHECK_MESSAGE(md_a == threaded.metadata[i],
+                                    "metadata differs:\n" << serial.metadata[i]
+                                    << "\nversus\n" << threaded.metadata[i]);
+            }
+        }
+    }
+}
+
+} // namespace
+
+
+/**
+A threaded solve is bit-identical to the serial solve, path by path (#378).
+
+A path's result is a function of the systems, the settings, the seed and its index -- not of
+the thread that ran it, nor of the paths that thread ran before it.  Endpoints are compared
+digit for digit and precision for precision, and every metadata field (step counts, precision
+record, condition number, residuals, accuracy estimates) exactly; only the wall-clock time is
+excluded.  Matching within a tolerance, as the tests above do, cannot see this: before the fix
+the endpoints of a threaded solve agreed with the serial ones to many digits and still differed.
+
+Under BERTINI_NUM_THREADS=1 every one of these solves is serial and the test proves nothing;
+the CI leg without it is the one that counts.
+*/
+BOOST_AUTO_TEST_CASE(threaded_solve_is_bit_identical_to_serial_power_series)
+{
+    using TrackerA = bertini::tracking::AMPTracker;
+    CheckBitIdenticalAcrossThreadCounts<bertini::endgame::EndgameSelector<TrackerA>::PSEG>();
+}
+
+BOOST_AUTO_TEST_CASE(threaded_solve_is_bit_identical_to_serial_cauchy)
+{
+    using TrackerA = bertini::tracking::AMPTracker;
+    CheckBitIdenticalAcrossThreadCounts<bertini::endgame::EndgameSelector<TrackerA>::Cauchy>();
 }
 
 BOOST_AUTO_TEST_SUITE_END()

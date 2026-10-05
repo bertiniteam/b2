@@ -1410,6 +1410,12 @@ public:
         this->adaptive_numeric_type_active_ = true;
         struct Disarmer { bool& flag; ~Disarmer(){ flag = false; } } disarm{this->adaptive_numeric_type_active_};
 
+        // Both lanes start empty: a phase clears only the lane it runs in, so a path whose endgame
+        // stays in double would otherwise leave an earlier path's multiprecision samples and times
+        // in place for anything that reads that lane first (#378).
+        ClearTimesAndSamples<complex_dbl>();
+        ClearTimesAndSamples<complex_mp>();
+
         // Start in the precision the tracker handed us at the endgame boundary: double for the easy
         // majority, already-mpfr for the few paths that escalated before the endgame.  Migrate UP only.
         this->current_endgame_precision_ = std::max(DoublePrecision(), Precision(start_point));
@@ -1667,7 +1673,6 @@ public:
             this->template CrossSampsUp<>(pseg_samples_,   newprec);
             this->template CrossTimesUp<>(cauchy_times_,   newprec);
             this->template CrossSampsUp<>(cauchy_samples_, newprec);
-            this->template CrossVecUp<>  (this->c_over_k_probe_, newprec);
         }
         else
         {
@@ -1675,8 +1680,6 @@ public:
             tracking::adaptive::SetPrecision(std::get<SampCont<complex_mp>>(pseg_samples_),   newprec);
             tracking::adaptive::SetPrecision(std::get<TimeCont<complex_mp>>(cauchy_times_),   newprec);
             tracking::adaptive::SetPrecision(std::get<SampCont<complex_mp>>(cauchy_samples_), newprec);
-            auto& pm = std::get<Vec<complex_mp>>(this->c_over_k_probe_);
-            if (pm.size() > 0) Precision(pm, newprec);
         }
 
         if (this->final_approximation_.size()    > 0) Precision(this->final_approximation_,    newprec);
