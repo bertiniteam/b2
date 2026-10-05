@@ -50,16 +50,34 @@ namespace bertini
     std::mt19937& ThreadEngine();
 
     /**
-    Set the global RNG seed.  seed == 0 draws from std::random_device and stores
-    the effective (non-zero) seed so it can be retrieved and reproduced later.
-    Must be called before system construction (gamma, patch, TD-constants) to make
-    those setup draws deterministic.
+    Set the global RNG seed.  Every value is a seed, 0 included, as in numpy and Python's
+    random; SetGlobalSeedFromEntropy asks for an unpredictable one.  Must be called before
+    system construction (gamma, patch, TD-constants) to make those setup draws deterministic.
+
+    The classic input format differs: there `randomseed: 0`, its default, means "draw from
+    entropy", as in Bertini 1, and the command-line program reads it that way (ADR-0072).
     */
     void SetGlobalSeed(unsigned long seed);
 
     /**
-    Returns the effective global seed.  If SetGlobalSeed has never been called, draws
-    from entropy on first call and caches the result.
+    Set the global RNG seed to one drawn from std::random_device, and return it, so the run
+    can be reproduced by setting that seed.
+    */
+    unsigned long SetGlobalSeedFromEntropy();
+
+    /**
+    Apply a classic input file's `randomseed`, as Bertini 1 does: 0, the default, draws a seed
+    from entropy; any other value is the seed.  Only the classic input format reads 0 this way;
+    to SetGlobalSeed it is an ordinary seed (ADR-0072).
+
+    \param randomseed The value of `randomseed` in the classic input file.
+    \return The seed now in effect.
+    */
+    unsigned long ApplyClassicRandomSeed(unsigned long randomseed);
+
+    /**
+    Returns the effective global seed.  If no seed has been set, draws one from entropy on
+    the first call and keeps it.
     */
     unsigned long GetGlobalSeed();
 
@@ -95,7 +113,8 @@ namespace bertini
     rekeys to each derived seed, so consecutive seedless solves form a deterministic
     seed chain from the initial master: same master, same sequence of solves, same
     seeds -- on every platform (the value is masked to 32 bits for LLP64 Windows).
-    Never returns 0 (SetGlobalSeed treats 0 as "draw from entropy").
+    Never returns 0, so a recorded seed replays through a classic input file, where
+    `randomseed: 0` means "draw from entropy".
 
     \return A nonzero seed for this solve, ready for SetGlobalSeed and the ask record.
     */

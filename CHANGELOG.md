@@ -339,6 +339,15 @@ the identity of the algorithm that answered it (#420).
 
 ### Changed
 
+- **Seed 0 is a seed** (#475, ADR-0072).  `bertini.set_random_seed(0)` and `SetGlobalSeed(0)`
+  meant "draw a seed from entropy", so a script that set seed 0 to make a run reproducible got
+  a different run every time.  0 is now an ordinary seed, as in numpy and Python's `random`.
+  Entropy is asked for by omitting the seed: `set_random_seed()` or `set_random_seed(None)` in
+  Python, `SetGlobalSeedFromEntropy()` in C++.  `set_random_seed` now returns the seed in
+  effect, so the run can be reproduced from it.  The classic input format keeps Bertini 1's
+  meaning: `randomseed: 0`, its default, still draws from entropy in the command-line program.
+  Seed 0 is therefore the one value that does not carry between a Python script and a classic
+  input file.
 - **The thread count is `BERTINI_NUM_THREADS`, and it defaults to every available CPU.**
   b2 used to read `OMP_NUM_THREADS`, although it uses no OpenMP: its threads are its own
   `std::thread` pool.  That variable also sets the thread count of numpy's OpenBLAS, so one

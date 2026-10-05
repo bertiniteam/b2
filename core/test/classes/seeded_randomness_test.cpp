@@ -103,7 +103,7 @@ BOOST_AUTO_TEST_CASE(derived_solve_seeds_capture_the_stream_deterministically)
     SetGlobalSeed(42);
     auto const s1 = DeriveSolveSeed();
     auto const s2 = DeriveSolveSeed();
-    BOOST_CHECK(s1 != 0u);                       // 0 means "entropy" to SetGlobalSeed
+    BOOST_CHECK(s1 != 0u);                       // 0 means "entropy" to a classic input file
     BOOST_CHECK(s1 != s2);                       // consecutive solves get distinct seeds
     BOOST_CHECK(s1 <= 0xFFFFFFFFul);             // 32-bit portable (Windows unsigned long)
     BOOST_CHECK(s2 <= 0xFFFFFFFFul);
@@ -175,6 +175,53 @@ BOOST_AUTO_TEST_CASE(bounded_modulus_factories_are_seeded_and_real_when_asked)
 
     SetGlobalSeed(43);                                   // a different seed => a different draw
     BOOST_CHECK(RandomRealBoundedModulus() != r1);       // (not the seed-independent orthonormal footgun)
+}
+
+// ---- seed 0 (#475, ADR-0072) ----
+
+// 0 is a seed like any other, as in numpy and Python's random.  It used to mean "draw one from
+// entropy", so a script that set seed 0 to make a run reproducible got a different run each time.
+BOOST_AUTO_TEST_CASE(seed_zero_is_an_ordinary_seed)
+{
+    SetGlobalSeed(0);
+    BOOST_CHECK_EQUAL(GetGlobalSeed(), 0ul);
+    auto const r = RandomRat();
+    auto const m = RandomMp(30);
+    auto const digest = SeededHomotopy(0).ContentDigest().Hex();
+
+    SetGlobalSeed(0);
+    BOOST_CHECK_EQUAL(GetGlobalSeed(), 0ul);
+    BOOST_CHECK_EQUAL(RandomRat(), r);
+    BOOST_CHECK_EQUAL(RandomMp(30), m);
+    BOOST_CHECK_EQUAL(SeededHomotopy(0).ContentDigest().Hex(), digest);
+
+    BOOST_CHECK(SeededHomotopy(1).ContentDigest().Hex() != digest);
+}
+
+// Entropy is its own request, and it says which seed it chose, so the run can be reproduced.
+BOOST_AUTO_TEST_CASE(a_seed_from_entropy_is_reported_and_reproduces_the_run)
+{
+    auto const chosen = SetGlobalSeedFromEntropy();
+    BOOST_CHECK_EQUAL(GetGlobalSeed(), chosen);
+    auto const r = RandomRat();
+
+    SetGlobalSeed(chosen);
+    BOOST_CHECK_EQUAL(RandomRat(), r);
+}
+
+// The classic input format keeps Bertini 1's meaning: randomseed 0, its default, draws a seed
+// from entropy; any other value is the seed.
+BOOST_AUTO_TEST_CASE(classic_randomseed_zero_draws_from_entropy)
+{
+    BOOST_CHECK_EQUAL(ApplyClassicRandomSeed(5), 5ul);
+    BOOST_CHECK_EQUAL(GetGlobalSeed(), 5ul);
+
+    auto const first = ApplyClassicRandomSeed(0);
+    BOOST_CHECK_EQUAL(GetGlobalSeed(), first);
+    auto const second = ApplyClassicRandomSeed(0);
+    BOOST_CHECK_EQUAL(GetGlobalSeed(), second);
+    // two draws from entropy agree with probability about 2^-32
+    BOOST_CHECK(first != second);
 }
 
 // ---- the acceptance test: same seed => digest-identical homotopies ----

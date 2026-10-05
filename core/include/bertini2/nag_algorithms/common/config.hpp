@@ -254,14 +254,15 @@ struct MetaConfig
 };
 
 /**
-Global RNG seed for reproducible runs.  random_seed == 0 (the default) draws from
-std::random_device and reports the effective seed so the run can be reproduced.
-Set via `randomseed: N;` in the classic Bertini input file or bertini.set_random_seed(N)
-in Python.  Must be applied before system construction (gamma, patch, TD-constants).
+The RNG seed a classic Bertini input file asks for, via `randomseed: N;`.  As in Bertini 1,
+random_seed == 0 (the default) means "draw from entropy": the command-line program then draws
+one and reports it, so the run can be reproduced.  The library API differs: to
+SetGlobalSeed and bertini.set_random_seed, 0 is an ordinary seed (ADR-0072).  Must be applied
+before system construction (gamma, patch, TD-constants).
 */
 struct RandomConfig
 {
-    unsigned long random_seed = 0;  ///< The RNG seed; 0 draws from std::random_device and reports the effective seed.
+    unsigned long random_seed = 0;  ///< The classic input's seed; 0 means draw one from entropy and report it.
 };
 
 

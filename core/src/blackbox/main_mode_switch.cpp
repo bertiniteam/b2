@@ -53,17 +53,19 @@ int RunZeroDim(std::string const& config_str, std::string const& input_str)
     // Parse and apply the RNG seed before any setup draws (gamma, TD-constants, patch).
     auto rand_cfg = parsing::classic::FillConfigStruct<algorithm::RandomConfig>(config_str);
 
+    // In the classic format randomseed 0, the default, means "draw from entropy", as in
+    // Bertini 1; to the library API 0 is an ordinary seed (ADR-0072).
 #ifdef BERTINI2_HAVE_MPI
-    // Manager sets the seed (possibly from entropy), then broadcasts the effective
-    // (non-zero) seed to workers so all ranks share identical per-path streams.
+    // Manager sets the seed (possibly from entropy), then broadcasts the effective seed to
+    // workers so all ranks share identical per-path streams.
     if (parallel::IsManager())
-        SetGlobalSeed(rand_cfg.random_seed);
+        ApplyClassicRandomSeed(rand_cfg.random_seed);
     unsigned long effective_seed = GetGlobalSeed();
     MPI_Bcast(&effective_seed, 1, MPI_UNSIGNED_LONG, 0, MPI_COMM_WORLD);
     if (!parallel::IsManager())
         SetGlobalSeed(effective_seed);
 #else
-    SetGlobalSeed(rand_cfg.random_seed);
+    ApplyClassicRandomSeed(rand_cfg.random_seed);
 #endif
 
     std::cout << "bertini: random seed = " << GetGlobalSeed() << "\n";
