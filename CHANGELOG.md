@@ -475,6 +475,25 @@ the identity of the algorithm that answered it (#420).
 
 ### Fixed
 
+- **A threaded solve gives the same bits as a serial one, and a path no longer depends on the
+  paths before it** (#378, ADR-0071).  Each path's random draws were already deterministic,
+  but state that is not random flowed from one path into the next on a reused tracker or
+  endgame.  Under a thread pool the scheduler chose each thread's predecessors, so a seeded
+  threaded solve differed from run to run in step counts, precision and the last digits of
+  its endpoints, and algorithms built on those endpoints differed with them.  A serial solve
+  depended on path order.  There were five sources:
+  - an adaptive track built its first step at the precision the previous track ended in;
+  - a drop to double left the step size and the time at the old multiple precision;
+  - the condition-number probe was rounded in place at each change of precision;
+  - the endgame's c/k probe was drawn once per endgame object, by whichever path first needed
+    it, or redrawn mid-path after an escalation;
+  - an endgame run in double left an earlier run's multiprecision times in place, so
+    `final_time_used` reported another path's last time.
+  Now a solve at any thread count, under MPI or not, is bit-identical path by path to a
+  serial solve with the same seed: every endpoint and every metadata field but the
+  wall-clock time.  A tracker or endgame driven by hand gives a track the same result as a
+  fresh one would.  Results differ from 4.0.0.dev1 in the last bits and, occasionally, in step
+  counts.
 - **A copied or unpickled system combines with its original** (ADR-0068).  `copy.deepcopy`,
   `copy.copy` and `pickle` go through an archive, and loading from one built variables
   outside the variable factory: a copy was over fresh variables with the same names, and

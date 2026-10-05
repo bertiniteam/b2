@@ -174,6 +174,34 @@ def _eigen_system(A):
     return sys
 
 
+def _cyclic5_path_by_path(comm=None):
+    pb.random.set_random_seed(20261005)
+    solver = ZeroDimSolver(_cyclic_system(5))
+    if comm is not None:
+        solver.solve(communicator=comm)
+    else:
+        solver.solve()
+    if not pb.parallel.is_manager():
+        return None
+    return [([repr(c) for c in point],
+             (int(md.endgame_success_code), int(md.num_successful_steps), int(md.num_failed_steps),
+              int(md.max_precision_used), repr(md.final_time_used), repr(md.condition_number)))
+            for point, md in zip(solver.all_solutions(), solver.solution_metadata())]
+
+
+def test_distributed_solve_is_bit_identical_to_serial():
+    """A path's result does not depend on which rank ran it, nor which thread, nor what ran
+    before it there (#378): the distributed solve matches a serial one bit for bit, path by path.
+    Under plain pytest (one rank) it compares two serial solves."""
+    comm = MPI.COMM_WORLD
+    serial = _cyclic5_path_by_path()
+    distributed = _cyclic5_path_by_path(comm if comm.Get_size() > 1 else None)
+    if pb.parallel.is_manager():
+        assert len(serial) == len(distributed) == 120
+        for index, (a, b) in enumerate(zip(serial, distributed)):
+            assert a == b, 'path {} differs between the serial and the distributed solve'.format(index)
+
+
 def test_distributed_mhom_eigenvalues_match_known_count():
     pb.random.set_random_seed(3)
     # small symmetric integer matrix: real, generically distinct spectrum, n paths under mhom.
