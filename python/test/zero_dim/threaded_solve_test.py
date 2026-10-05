@@ -124,6 +124,58 @@ def test_event_tracker_is_attachable_and_distinct_under_threads():
     assert not any(saw_member)             # never the member tracker -> a clone
 
 
+def _threads_that_ran_paths(num_threads):
+    """Solve with `num_threads` configured; return the set of OS threads that started a path.
+
+    A path's PathStarted event is delivered on the thread that runs the path: the calling thread in
+    a serial solve, a pool worker in a threaded one."""
+    import threading
+    from bertini._pybertini import nag_algorithms as nag
+
+    solver = ZeroDimSolver(_two_cubics(), mptype='amp')
+    cfg = solver.get_config(pb.nag_algorithm.ZeroDimConfig)
+    cfg.num_threads = num_threads
+    solver.set_config(cfg)
+    threads = set()
+
+    class Probe(nag.observers.CustomObserver):
+        def Observe(self, e):
+            if isinstance(e, nag.observers.PathStarted):
+                threads.add(threading.get_ident())
+
+    solver.add_observer(Probe())
+    solver.solve()
+    return threads
+
+
+def test_bertini_num_threads_one_overrides_a_threaded_config(monkeypatch):
+    """BERTINI_NUM_THREADS=1 wins over num_threads=4: every path runs on the calling thread."""
+    import threading
+    monkeypatch.setenv('BERTINI_NUM_THREADS', '1')
+    assert _threads_that_ran_paths(4) == {threading.get_ident()}
+
+
+def test_bertini_num_threads_overrides_a_serial_config(monkeypatch):
+    """BERTINI_NUM_THREADS=3 wins over num_threads=1: the paths run on at most three pool threads,
+    none of them the calling thread."""
+    import threading
+    monkeypatch.setenv('BERTINI_NUM_THREADS', '3')
+    threads = _threads_that_ran_paths(1)
+    assert threading.get_ident() not in threads
+    assert 1 <= len(threads) <= 3
+
+
+def test_omp_num_threads_does_not_reach_bertini(monkeypatch):
+    """OMP_NUM_THREADS is numpy's (OpenBLAS's) setting, not b2's (ADR-0070): with it at 1 and
+    BERTINI_NUM_THREADS unset, a solve configured for 4 threads still runs on pool threads."""
+    import threading
+    monkeypatch.delenv('BERTINI_NUM_THREADS', raising=False)
+    monkeypatch.setenv('OMP_NUM_THREADS', '1')
+    threads = _threads_that_ran_paths(4)
+    assert threading.get_ident() not in threads
+    assert 1 <= len(threads) <= 4
+
+
 def test_solution_path_collector_under_threads():
     """The two-level meta-observer collects exactly one series per path under threading, because
     it now attaches to event.tracker() (the clone that actually runs the path)."""
