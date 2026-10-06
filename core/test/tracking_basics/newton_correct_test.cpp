@@ -712,4 +712,43 @@ BOOST_AUTO_TEST_CASE(circle_line_one_corrector_step_double)
         BOOST_CHECK(success_code==bertini::SuccessCode::FailedToConverge);
     }
 
+
+/**
+The condition-number probe direction survives a drop in precision.
+
+The probe is drawn once per path and held fixed for the whole track, while the working
+precision rises and falls under it.  It used to be rounded in place at each change, so a drop
+to fewer digits destroyed digits that the next rise could not restore, and the direction a
+path used depended on the precisions it had passed through -- for a tracker reused path after
+path, on the paths before it.  The direction is stored as drawn, and every working copy is
+taken from that.
+*/
+BOOST_AUTO_TEST_CASE(the_probe_direction_survives_a_drop_in_precision)
+{
+    DefaultPrecision(50);
+    bertini::System sys;
+    Var x = Variable::Make("x"), y = Variable::Make("y"), t = Variable::Make("t");
+    sys.AddVariableGroup(VariableGroup{x, y});
+    sys.AddPathVariable(t);
+    sys.AddFunction(t * (pow(x, 2) - 1) + (1 - t) * (pow(x, 2) + pow(y, 2) - 4));
+    sys.AddFunction(t * (y - 1) + (1 - t) * (2 * x + 5 * y));
+
+    NewtonCorrector corrector(sys);
+    corrector.ChangePrecision(50);
+    corrector.RefreshRandomDirection();
+    Vec<mpfr> const drawn = std::get<Vec<mpfr>>(corrector.ConditionProbe());
+
+    for (unsigned digits : {20u, 60u, 30u, 50u})
+    {
+        corrector.ChangePrecision(digits);
+        Vec<mpfr> const now = std::get<Vec<mpfr>>(corrector.ConditionProbe());
+        BOOST_REQUIRE_EQUAL(now.size(), drawn.size());
+        for (Eigen::Index ii = 0; ii < drawn.size(); ++ii)
+        {
+            BOOST_CHECK_EQUAL(now(ii).precision(), drawn(ii).precision());
+            BOOST_CHECK(now(ii) == drawn(ii));
+        }
+    }
+}
+
 BOOST_AUTO_TEST_SUITE_END()

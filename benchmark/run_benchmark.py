@@ -16,7 +16,7 @@ Usage:
 Requirements:
     - mpirun must be on PATH
     - bertini2 must be compiled with MPI support (BERTINI2_HAVE_MPI)
-    - OMP_NUM_THREADS controls threads per MPI rank
+    - BERTINI_NUM_THREADS controls threads per MPI rank (the script sets it per run)
 """
 
 import argparse
@@ -40,7 +40,7 @@ def parse_args():
     p.add_argument("--ranks", nargs="+", type=int, default=[1, 2, 4],
                    help="MPI rank counts to sweep (default: 1 2 4)")
     p.add_argument("--threads", nargs="+", type=int, default=[1],
-                   help="OMP thread counts to sweep (default: 1)")
+                   help="Thread counts per rank to sweep, via BERTINI_NUM_THREADS (default: 1)")
     p.add_argument("--output", default="benchmark_results.csv",
                    help="CSV output file (default: benchmark_results.csv)")
     p.add_argument("--timeout", type=float, default=600.0,
@@ -68,7 +68,7 @@ def run_once(bertini2_path, input_file, ranks, threads, mpirun_cmd, mpirun_args,
     Run bertini2 with the given parallelism settings in a fresh temp directory.
 
     When use_mpi is True the solver is launched under `mpirun -n <ranks>` (MPI across ranks,
-    OMP_NUM_THREADS threads within each rank).  When use_mpi is False the binary is run directly
+    BERTINI_NUM_THREADS threads within each rank).  When use_mpi is False the binary is run directly
     -- a pure shared-memory thread sweep that needs no MPI at all; ranks is ignored (always 1).
 
     Returns (wall_time_s, solutions_found) or (float('nan'), -1) on failure.
@@ -79,9 +79,9 @@ def run_once(bertini2_path, input_file, ranks, threads, mpirun_cmd, mpirun_args,
         shutil.copy2(input_file, dest_input)
 
         env = os.environ.copy()
-        # OMP_NUM_THREADS drives the worker-thread count in both modes: per MPI rank under mpirun,
-        # and the whole shared-memory solve when run directly.
-        env["OMP_NUM_THREADS"] = str(threads)
+        # BERTINI_NUM_THREADS drives the worker-thread count in both modes: per MPI rank under
+        # mpirun, and the whole shared-memory solve when run directly.
+        env["BERTINI_NUM_THREADS"] = str(threads)
 
         if use_mpi:
             cmd = [mpirun_cmd, *shlex.split(mpirun_args), "-n", str(ranks),

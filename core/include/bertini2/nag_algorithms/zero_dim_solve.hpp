@@ -757,7 +757,10 @@ run the endgame, classify the endpoints, report.  See the forward-declare doc ab
                 PreSolveChecks();
                 PreSolveSetup();
 
-                const int n_threads = parallel::WorkerThreadCount();
+                // threads per rank: the same rule as the standalone solve (BERTINI_NUM_THREADS,
+                // then num_threads, then every CPU this rank may run on)
+                const int n_threads = static_cast<int>(
+                    parallel::EffectiveThreadCount(this->template Get<ZeroDimConf>().num_threads));
 
                 // One round = dispatch a set of path indices, each executed as a WHOLE path
                 // (pre-endgame + endgame) by a worker.  Round 0 is every path; later rounds re-run
@@ -866,7 +869,7 @@ run the endgame, classify the endpoints, report.  See the forward-declare doc ab
                                 // Trackers/Endgames have no default ctor, so aggregate-init via new.
                                 std::unique_ptr<PathThreadState> s(
                                     new PathThreadState{ Clone(GetTracker().GetSystem()), Clone(TargetSystem()),
-                                                         GetTracker(), GetEndgame(), {}, {} });
+                                                         GetTracker(), GetEndgame(), {} });
                                 s->tracker.SetSystem(s->sys);
                                 s->endgame.SetTracker(s->tracker);
                                 SetThreadPrecision(this->template Get<ZeroDimConf>().initial_ambient_precision);
@@ -1197,8 +1200,9 @@ run the endgame, classify the endpoints, report.  See the forward-declare doc ab
                     indices_to_run = RecallRecordedPaths(all_indices);
                 }
 
-                // num_threads: 0 = auto (hardware_concurrency), 1 = serial, N = N threads;
-                // OMP_NUM_THREADS overrides.  n_threads <= 1 takes the pool-free serial path.
+                // num_threads: 0 = auto (every CPU this process may run on), 1 = serial, N = N
+                // threads; BERTINI_NUM_THREADS overrides.  n_threads <= 1 takes the pool-free
+                // serial path.
                 const unsigned n_threads =
                     parallel::EffectiveThreadCount(this->template Get<ZeroDimConf>().num_threads);
 
@@ -1619,8 +1623,7 @@ run the endgame, classify the endpoints, report.  See the forward-declare doc ab
             struct BeforeEGContext
             {
                 TrackerType& tracker;
-                tracking::FirstPrecisionRecorder<TrackerType>&  first_prec_rec;
-                tracking::MinMaxPrecisionRecorder<TrackerType>& min_max_prec;
+                tracking::PathPrecisionRecorder<TrackerType>& path_prec;
             };
             struct DuringEGContext
             {
@@ -1630,17 +1633,29 @@ run the endgame, classify the endpoints, report.  See the forward-declare doc ab
                 SystemType const& target_sys;
                 TrackerType& tracker;
                 EndgameType& endgame;
-                tracking::FirstPrecisionRecorder<TrackerType>&  first_prec_rec;
-                tracking::MinMaxPrecisionRecorder<TrackerType>& min_max_prec;
+                tracking::PathPrecisionRecorder<TrackerType>& path_prec;
             };
 
             BeforeEGContext MemberBeforeEGContext()
             {
-                return BeforeEGContext{ GetTracker(), first_prec_rec_, min_max_prec_ };
+                return BeforeEGContext{ GetTracker(), path_prec_ };
             }
             DuringEGContext MemberDuringEGContext()
             {
-                return DuringEGContext{ TargetSystem(), GetTracker(), GetEndgame(), first_prec_rec_, min_max_prec_ };
+                return DuringEGContext{ TargetSystem(), GetTracker(), GetEndgame(), path_prec_ };
+            }
+
+            /// Fold the path's precision record so far into its metadata: called after each stage.
+            static void HarvestPathPrecision(SolutionMetaData<BaseComplexT>& smd,
+                                             tracking::PathPrecisionRecorder<TrackerType> const& rec)
+            {
+                if (rec.DidPrecisionIncrease() && !smd.precision_changed)
+                {
+                    smd.precision_changed = true;
+                    smd.time_of_first_prec_increase = rec.TimeOfIncrease();
+                }
+                using std::max;
+                smd.max_precision_used = max(smd.max_precision_used, rec.MaxPrecision());
             }
 
             /**
@@ -1672,12 +1687,6 @@ run the endgame, classify the endpoints, report.  See the forward-declare doc ab
             void ExecuteBeforeEG(BeforeEGContext ctx, SolnIndT soln_ind, Vec<BaseComplexT> const& start_point)
             {
                 ReseedThisThread(static_cast<uint64_t>(soln_ind));
-
-                if (tracking::TrackerTraits<TrackerType>::IsAdaptivePrec)
-                {
-                    ctx.tracker.AddObserver(ctx.first_prec_rec);
-                    ctx.tracker.AddObserver(ctx.min_max_prec);
-                }
 
                 auto& smd = solution_final_metadata_[soln_ind];
                 smd.path_index    = soln_ind;
@@ -1754,19 +1763,7 @@ run the endgame, classify the endpoints, report.  See the forward-declare doc ab
                 smd.pre_endgame_success_code = tracking_success;
 
                 if (tracking::TrackerTraits<TrackerType>::IsAdaptivePrec)
-                {
-                    if (ctx.first_prec_rec.DidPrecisionIncrease())
-                    {
-                        smd.precision_changed = true;
-                        smd.time_of_first_prec_increase = ctx.first_prec_rec.TimeOfIncrease();
-                    }
-                    else
-                    ctx.tracker.RemoveObserver(ctx.first_prec_rec);
-                    ctx.tracker.RemoveObserver(ctx.min_max_prec);
-                    using std::max;
-                    smd.max_precision_used =
-                        max(smd.max_precision_used, ctx.min_max_prec.MaxPrecision());
-                }
+                    HarvestPathPrecision(smd, ctx.path_prec);
 
                 StampWhereThePathGotTo(smd, ctx.tracker, tracking_success, ctx.tracker.CurrentTime());
             }
@@ -1807,7 +1804,7 @@ run the endgame, classify the endpoints, report.  See the forward-declare doc ab
             used by both the standalone (MPI-less) threaded solve and the threaded MPI worker.
             Each std::thread owns one: a homotopy copy (tracked by `tracker`), a target-system copy
             (residual evaluation mutates System precision state), a Tracker and Endgame, and its own
-            precision observers so observer-derived metadata matches serial runs.  Build a
+            precision recorder so observer-derived metadata matches serial runs.  Build a
             DuringEGContext from it to drive ExecuteOnePath.
             */
             struct PathThreadState
@@ -1816,12 +1813,11 @@ run the endgame, classify the endpoints, report.  See the forward-declare doc ab
                 System          target_sys;  // for function residuals / dehomogenization
                 TrackerType     tracker;
                 EndgameType     endgame;
-                tracking::FirstPrecisionRecorder<TrackerType>  first_prec_rec;
-                tracking::MinMaxPrecisionRecorder<TrackerType> min_max_prec;
+                tracking::PathPrecisionRecorder<TrackerType> path_prec;
 
                 DuringEGContext Context()
                 {
-                    return DuringEGContext{ target_sys, tracker, endgame, first_prec_rec, min_max_prec };
+                    return DuringEGContext{ target_sys, tracker, endgame, path_prec };
                 }
             };
 
@@ -1840,11 +1836,11 @@ run the endgame, classify the endpoints, report.  See the forward-declare doc ab
             {
                 return [this]() -> std::unique_ptr<PathThreadState>
                 {
-                    // Trackers/Endgames have no default ctor, so aggregate-init via new; {},{} default
-                    // the two precision recorders.
+                    // Trackers/Endgames have no default ctor, so aggregate-init via new; {} defaults
+                    // the path's precision recorder.
                     std::unique_ptr<PathThreadState> s(
                         new PathThreadState{ Clone(GetTracker().GetSystem()), Clone(TargetSystem()),
-                                             GetTracker(), GetEndgame(), {}, {} });
+                                             GetTracker(), GetEndgame(), {} });
                     s->tracker.SetSystem(s->sys);       // re-point the copy at its own System
                     s->endgame.SetTracker(s->tracker);  // ... and the endgame at that tracker
                     SetThreadPrecision(this->template Get<ZeroDimConf>().initial_ambient_precision);
@@ -1966,12 +1962,23 @@ run the endgame, classify the endpoints, report.  See the forward-declare doc ab
 
                 this->NotifyObservers(PathStarted<AnyZeroDim>(*this, static_cast<std::size_t>(soln_ind), exec_tracker));
 
+                // One precision record for the whole path, across the track to the boundary and
+                // every endgame sub-track: started here, read after each stage, detached at the end.
+                constexpr bool adaptive = tracking::TrackerTraits<TrackerType>::IsAdaptivePrec;
+                if (adaptive)
+                {
+                    ctx.path_prec.Reset();
+                    ctx.tracker.AddObserver(ctx.path_prec);
+                }
+
                 ctx.tracker.SetTrackingTolerance(midpath_retrack_tolerance_);
-                ExecuteBeforeEG(BeforeEGContext{ ctx.tracker, ctx.first_prec_rec, ctx.min_max_prec }, soln_ind, start_point);
+                ExecuteBeforeEG(BeforeEGContext{ ctx.tracker, ctx.path_prec }, soln_ind, start_point);
 
                 ReadSolveTimeoutAsAnInterrupt(solution_final_metadata_[soln_ind].pre_endgame_success_code, path_start_clock);
                 if (solution_final_metadata_[soln_ind].pre_endgame_success_code != SuccessCode::Success)
                 {
+                    if (adaptive)
+                        ctx.tracker.RemoveObserver(ctx.path_prec);
                     ctx.tracker.ClearMaxWallClockTime();
                     stamp_path_time();
                     this->NotifyObservers(PathComplete<AnyZeroDim>(*this, static_cast<std::size_t>(soln_ind), exec_tracker,
@@ -1981,6 +1988,8 @@ run the endgame, classify the endpoints, report.  See the forward-declare doc ab
 
                 ctx.tracker.SetTrackingTolerance(this->template Get<Tolerances>().newton_during_endgame);
                 ExecuteDuringEG(ctx, soln_ind);
+                if (adaptive)
+                    ctx.tracker.RemoveObserver(ctx.path_prec);
 
                 ReadSolveTimeoutAsAnInterrupt(solution_final_metadata_[soln_ind].endgame_success_code, path_start_clock);
                 ctx.tracker.ClearMaxWallClockTime();   // the budget was this path's; do not carry it to the next
@@ -2118,12 +2127,6 @@ run the endgame, classify the endpoints, report.  See the forward-declare doc ab
                 ReseedThisThread(static_cast<uint64_t>(soln_ind) + static_cast<uint64_t>(num_start_points_));
 
                 auto& smd = solution_final_metadata_[soln_ind];
-                if (tracking::TrackerTraits<TrackerType>::IsAdaptivePrec)
-                {
-                    if (!smd.precision_changed)
-                        ctx.tracker.AddObserver(ctx.first_prec_rec);
-                    ctx.tracker.AddObserver(ctx.min_max_prec);
-                }
 
                 const auto& bdry_point = solutions_at_endgame_boundary_[soln_ind].path_point;
 
@@ -2155,28 +2158,12 @@ run the endgame, classify the endpoints, report.  See the forward-declare doc ab
                                        eg_success == SuccessCode::Success ? ctx.endgame.LatestTime()
                                                                           : ctx.tracker.CurrentTime());
 
-                // Harvest the AMP observers REGARDLESS of the endgame outcome: the precision a
-                // path used is a fact about the tracking that happened, and it is exactly the
-                // FAILED paths -- e.g. slow divergers escalating in the mp lane -- whose
-                // precision honesty matters most for diagnostics.  (Previously the failure
-                // path returned before this harvest, so a path that escalated to 70 digits
-                // and then failed reported its pre-endgame precision, e.g. 16.)
+                // Harvest the path's precision record REGARDLESS of the endgame outcome: the
+                // precision a path used is a fact about the tracking that happened, and it is
+                // exactly the FAILED paths -- e.g. slow divergers escalating in the mp lane --
+                // whose precision honesty matters most for diagnostics.
                 if (tracking::TrackerTraits<TrackerType>::IsAdaptivePrec)
-                {
-                    if (!smd.precision_changed)
-                    {
-                        if (ctx.first_prec_rec.DidPrecisionIncrease())
-                        {
-                            smd.precision_changed = true;
-                            smd.time_of_first_prec_increase = ctx.first_prec_rec.TimeOfIncrease();
-                        }
-                        ctx.tracker.RemoveObserver(ctx.first_prec_rec);
-                    }
-                    ctx.tracker.RemoveObserver(ctx.min_max_prec);
-                    using std::max;
-                    smd.max_precision_used =
-                        max(smd.max_precision_used, ctx.min_max_prec.MaxPrecision());
-                }
+                    HarvestPathPrecision(smd, ctx.path_prec);
 
                 // an unsuccessful endgame has no final approximation, so the final-point-dependent
                 // metadata cannot be computed.
@@ -3091,8 +3078,7 @@ run the endgame, classify the endpoints, report.  See the forward-declare doc ab
 
             /// observers used during tracking
             // i feel like these should be factored out into some policy class which prescribes how they are used, so that the actions taken are customizable.
-            tracking::FirstPrecisionRecorder<TrackerType> first_prec_rec_;   ///< Records the time of the first precision increase on each path.
-            tracking::MinMaxPrecisionRecorder<TrackerType> min_max_prec_;    ///< Records the min/max precision used on each path.
+            tracking::PathPrecisionRecorder<TrackerType> path_prec_;   ///< Records the precision each path used, across all its tracks.
 
 
             /// function objects used during the algorithm

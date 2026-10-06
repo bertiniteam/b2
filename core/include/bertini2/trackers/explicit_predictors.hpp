@@ -342,7 +342,8 @@ namespace bertini{
                     std::get< Vec<complex_dbl> >(step_temp_).resize(numTotalFunctions_);
                     std::get< Vec<complex_mp> >(step_temp_).resize(numTotalFunctions_);
                     std::get< Vec<complex_dbl> >(rand_temp_) = RandomOfUnits<complex_dbl>(numVariables_);
-                    std::get< Vec<complex_mp> >(rand_temp_) = RandomOfUnits<complex_mp>(numVariables_);
+                    probe_as_drawn_ = RandomOfUnits<complex_mp>(numVariables_);
+                    std::get< Vec<complex_mp> >(rand_temp_) = probe_as_drawn_;
                     std::get< Vec<complex_dbl> >(solve_temp_).resize(numVariables_);
                     std::get< Vec<complex_mp> >(solve_temp_).resize(numVariables_);
 
@@ -376,7 +377,9 @@ namespace bertini{
                  */
                 void SetConditionProbe(std::tuple< Vec<complex_dbl>, Vec<complex_mp> > const& probe)
                 {
-                    rand_temp_ = probe;
+                    std::get< Vec<complex_dbl> >(rand_temp_) = std::get< Vec<complex_dbl> >(probe);
+                    probe_as_drawn_ = std::get< Vec<complex_mp> >(probe);
+                    std::get< Vec<complex_mp> >(rand_temp_) = probe_as_drawn_;
                 }
 
 
@@ -402,7 +405,13 @@ namespace bertini{
                     Precision(std::get< Mat<complex_mp> >(dh_dx_0_),new_precision);
                     Precision(std::get< Mat<complex_mp> >(dh_dx_temp_),new_precision);
                     Precision(std::get< Vec<complex_mp> >(step_temp_),new_precision);
-                    Precision(std::get< Vec<complex_mp> >(rand_temp_),new_precision);
+                    // the probe is re-derived from the stored copy, never rounded in place: a drop
+                    // in precision would otherwise destroy digits that a later rise cannot restore
+                    {
+                        auto& probe = std::get< Vec<complex_mp> >(rand_temp_);
+                        probe = probe_as_drawn_;
+                        Precision(probe, new_precision);
+                    }
                     Precision(std::get< Vec<complex_mp> >(solve_temp_),new_precision);
                     Precision(std::get< Vec<complex_mp> >(stage_pt_temp_),new_precision);
                     Precision(std::get< Vec<complex_mp> >(err_temp_),new_precision);
@@ -960,6 +969,7 @@ namespace bertini{
 
                 mutable std::tuple< Vec<complex_dbl>, Vec<complex_mp> > step_temp_;  // reused scratch for FullStep stage accumulation
                 mutable std::tuple< Vec<complex_dbl>, Vec<complex_mp> > rand_temp_;  // reused scratch: random RHS for norm_J_inverse
+                Vec<complex_mp> probe_as_drawn_;  ///< the probe direction at the precision it was drawn at; rand_temp_'s multiprecision half is this at the working precision
                 mutable std::tuple< Vec<complex_dbl>, Vec<complex_mp> > solve_temp_; // reused scratch: LU solve result
                 mutable std::tuple< Vec<complex_dbl>, Vec<complex_mp> > stage_pt_temp_; // reused scratch: RK stage point (current_space + delta_t*temp)
                 mutable std::tuple< Vec<complex_dbl>, Vec<complex_mp> > err_temp_;   // reused scratch: embedded-RK error estimate vector

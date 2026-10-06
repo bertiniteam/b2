@@ -215,10 +215,10 @@ struct ZeroDimConfig
     unsigned initial_ambient_precision = DefaultPrecision();  ///< Initial ambient (working) precision for the solve.
     unsigned max_num_crossed_path_resolve_attempts = 2; ///< The maximum number of times to attempt to re-solve crossed paths at the endgame boundary.
 
-    /// Number of worker threads for a shared-memory (non-MPI) solve.  0 = auto
-    /// (std::thread::hardware_concurrency); 1 = serial (no thread pool).  Overridden by the
-    /// OMP_NUM_THREADS environment variable when set.  See parallel::EffectiveThreadCount.
-    /// Under MPI the per-rank thread count comes from OMP_NUM_THREADS, not this field.
+    /// Number of worker threads tracking paths, in a standalone solve and on each MPI rank.
+    /// 0 = auto (every CPU this process may run on, as OpenMP's default); 1 = serial (no
+    /// thread pool).  Overridden by the BERTINI_NUM_THREADS environment variable when set.
+    /// See parallel::EffectiveThreadCount.
     unsigned num_threads = 0;
 
     /// Wall-clock budget for each path, in seconds; 0 (the default) means none.  A path that has not
@@ -254,14 +254,15 @@ struct MetaConfig
 };
 
 /**
-Global RNG seed for reproducible runs.  random_seed == 0 (the default) draws from
-std::random_device and reports the effective seed so the run can be reproduced.
-Set via `randomseed: N;` in the classic Bertini input file or bertini.set_random_seed(N)
-in Python.  Must be applied before system construction (gamma, patch, TD-constants).
+The RNG seed a classic Bertini input file asks for, via `randomseed: N;`.  As in Bertini 1,
+random_seed == 0 (the default) means "draw from entropy": the command-line program then draws
+one and reports it, so the run can be reproduced.  The library API differs: to
+SetGlobalSeed and bertini.set_random_seed, 0 is an ordinary seed.  Must be applied
+before system construction (gamma, patch, TD-constants).
 */
 struct RandomConfig
 {
-    unsigned long random_seed = 0;  ///< The RNG seed; 0 draws from std::random_device and reports the effective seed.
+    unsigned long random_seed = 0;  ///< The classic input's seed; 0 means draw one from entropy and report it.
 };
 
 

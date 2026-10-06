@@ -31,7 +31,7 @@ python benchmark/run_benchmark.py \
 
 `--no-mpi` runs the solver directly (no `mpirun`) and sweeps the thread counts you list. The
 run at `threads=1` is the serial baseline; every other run's speedup is reported relative to it.
-The thread count is passed to the solver through `OMP_NUM_THREADS`, which the script sets for
+The thread count is passed to the solver through `BERTINI_NUM_THREADS`, which the script sets for
 you — don't set it yourself.
 
 Example output:
@@ -79,7 +79,7 @@ python benchmark/run_benchmark.py \
     --threads  1 2 4
 ```
 
-This launches each combination under `mpirun -n <ranks>` with `OMP_NUM_THREADS=<threads>` per
+This launches each combination under `mpirun -n <ranks>` with `BERTINI_NUM_THREADS=<threads>` per
 rank. `--bind-to none` is passed to `mpirun` automatically so threaded workers can spread across
 a node's cores without affinity conflicts. The total worker count in the table is
 `ranks × threads`.

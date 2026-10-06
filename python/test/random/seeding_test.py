@@ -64,6 +64,36 @@ def test_different_seed_changes_multiprecision_draws():
     assert first != other
 
 
+def test_seed_zero_is_an_ordinary_seed():
+    """0 is a seed like any other, as in numpy and Python's random (#475, ADR-0072)."""
+    assert pb.random.set_random_seed(0) == 0
+    assert pb.random.get_random_seed() == 0
+    first = _draw_sequence()
+
+    pb.random.set_random_seed(0)
+    assert first == _draw_sequence()
+
+    pb.random.set_random_seed(1)
+    assert first != _draw_sequence()
+
+
+@pytest.mark.parametrize("call", [lambda: pb.random.set_random_seed(),
+                                  lambda: pb.random.set_random_seed(None)],
+                         ids=["no argument", "None"])
+def test_entropy_is_asked_for_by_omitting_the_seed_and_the_seed_is_returned(call):
+    chosen = call()
+    assert pb.random.get_random_seed() == chosen
+    first = _draw_sequence()
+
+    pb.random.set_random_seed(chosen)            # the returned seed reproduces the run
+    assert first == _draw_sequence()
+
+
+def test_two_entropy_seeds_differ():
+    # equal with probability about 2^-32
+    assert pb.random.set_random_seed() != pb.random.set_random_seed()
+
+
 def test_unit_draws_also_honor_the_seed():
     pb.random.set_random_seed(99)
     first = [repr(pb.random.complex_unit()) for _ in range(4)]
@@ -118,6 +148,31 @@ def test_same_seed_reproduces_patched_solution_coordinates():
     for va, vb in zip(a, b):
         # identical seed -> identical random patch -> identical internal coords
         assert np.linalg.norm(va - vb) < 1e-10
+
+
+@pytest.mark.parametrize("num_threads", [1, 4])
+def test_seed_zero_reproduces_a_solve_path_by_path(num_threads, monkeypatch):
+    """The reproducer from #475: re-solving after set_random_seed(0) changed which path diverged
+    and how many steps each took, from trial to trial, single-threaded too."""
+    monkeypatch.delenv('BERTINI_NUM_THREADS', raising=False)
+    x, y = pb.Variable('x'), pb.Variable('y')
+    sys = pb.System()
+    sys.add_variable_group(pb.VariableGroup([x, y]))
+    sys.add_function(x * y - 1)
+    sys.add_function(x**2 - y)
+
+    trials = []
+    for _ in range(3):
+        pb.random.set_random_seed(0)
+        solver = ZeroDimSolver(sys)
+        cfg = solver.get_config(pb.nag_algorithm.ZeroDimConfig)
+        cfg.num_threads = num_threads
+        solver.set_config(cfg)
+        solver.solve()
+        trials.append([([repr(c) for c in point], int(md.num_successful_steps),
+                        int(md.num_failed_steps), bool(md.is_finite))
+                       for point, md in zip(solver.all_solutions(), solver.solution_metadata())])
+    assert trials[0] == trials[1] == trials[2]
 
 
 def test_user_solutions_are_seed_independent():

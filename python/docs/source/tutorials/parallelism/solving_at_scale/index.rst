@@ -13,7 +13,7 @@ the parallel payoff.  This tutorial shows the two knobs:
 
 * **MPI ranks** -- a *manager-worker* pool, possibly spread across many machines.  Pass a
   communicator to :func:`solve` and rank ``0`` hands paths out to the rest.
-* **threads per rank** -- each worker can track several paths at once.  Set ``OMP_NUM_THREADS``.
+* **threads per rank** -- each worker can track several paths at once.  Set ``BERTINI_NUM_THREADS``.
 
 Ideally, the two knobs scale *multiplicatively*: ``R`` worker ranks of ``T`` threads each track ``R × T`` paths
 at a time.  We demonstrate on two driving problems -- a **cyclic-n** system (hundreds of cheap
@@ -45,8 +45,8 @@ communicator.
   the manager says "done".
 
 Because the manager does not track, a distributed run needs **at least two ranks** (one manager +
-one worker).  The serial baseline is just :func:`solve` with no communicator.  The minimal program
-is::
+one worker).  A single process is just :func:`solve` with no communicator; it still tracks paths on
+every CPU it may run on, and ``BERTINI_NUM_THREADS=1`` makes it serial.  The minimal program is::
 
     from mpi4py import MPI
     import bertini as pb
@@ -57,7 +57,7 @@ is::
     if comm.Get_size() > 1:
         solver.solve(communicator=comm)      # rank 0 dispatches; the others track
     else:
-        solver.solve()                       # serial: a lone manager would have no workers
+        solver.solve()                       # one process: a lone manager would have no workers
 
     if pb.parallel.is_manager():             # only rank 0 has the collected solutions
         print(len(solver.all_solutions()), "solutions")
@@ -68,11 +68,13 @@ The :mod:`bertini.parallel` helpers -- :func:`~bertini.parallel.rank`,
 holding the solution list, so guard your reporting and your correctness checks with
 ``is_manager()``.
 
-Launch it with ``mpirun``::
+Launch it with ``mpirun``.  The examples in this section set ``BERTINI_NUM_THREADS=1`` so that
+each worker tracks one path at a time and the rank count alone sets the parallelism; threads are
+the subject of a later section::
 
-    python            my_solve.py     # serial baseline (1 process)
-    mpirun -n 2 python my_solve.py    # 1 manager + 1 worker  (the smallest parallel run)
-    mpirun -n 9 python my_solve.py    # 1 manager + 8 workers
+    BERTINI_NUM_THREADS=1 python            my_solve.py     # serial baseline (1 process)
+    BERTINI_NUM_THREADS=1 mpirun -n 2 python my_solve.py    # 1 manager + 1 worker
+    BERTINI_NUM_THREADS=1 mpirun -n 9 python my_solve.py    # 1 manager + 8 workers
 
 .. warning::
 
@@ -86,7 +88,7 @@ Launch it with ``mpirun``::
    ("not enough slots"); add ``--map-by :OVERSUBSCRIBE`` to let the manager share a core (it barely
    uses one).  For example, to run 8 workers on an 8-core box::
 
-       mpirun -n 9 --map-by :OVERSUBSCRIBE python my_solve.py
+       BERTINI_NUM_THREADS=1 mpirun -n 9 --map-by :OVERSUBSCRIBE python my_solve.py
 
 Scaling a cyclic system
 =======================
@@ -129,6 +131,7 @@ Run the ladder (serial, then 2, 4, 8 workers):
 
 .. code-block:: console
 
+    $ export BERTINI_NUM_THREADS=1                               # one path per worker at a time
     $ python python/examples/solve_cyclic.py --n 6              # serial baseline
     $ mpirun -n 3 python python/examples/solve_cyclic.py --n 6  # 2 workers
     $ mpirun -n 5 python python/examples/solve_cyclic.py --n 6  # 4 workers
@@ -176,6 +179,7 @@ Run the same ladder on a sizable matrix:
 
 .. code-block:: console
 
+    $ export BERTINI_NUM_THREADS=1                                        # one path per worker at a time
     $ python python/examples/solve_eigenvalues.py --size 24              # serial baseline
     $ mpirun -n 3 python python/examples/solve_eigenvalues.py --size 24  # 2 workers
     $ mpirun -n 5 python python/examples/solve_eigenvalues.py --size 24  # 4 workers
@@ -203,14 +207,16 @@ Using both threads and processes
 ======================================
 
 Each worker rank can itself track several paths concurrently, one per thread, set with the
-``OMP_NUM_THREADS`` environment variable (default 1).  This stacks with MPI: ``R`` worker ranks of
-``T`` threads each give ``R × T`` paths in flight.
+``BERTINI_NUM_THREADS`` environment variable.  Unset, a rank uses one thread per CPU it may run on,
+the same default OpenMP uses.  This stacks with MPI: ``R`` worker ranks of ``T`` threads each give
+``R × T`` paths in flight.
 
-The launch needs one extra flag, ``--bind-to none``.  By default ``mpirun`` pins each rank to a
-single core, which would strangle that rank's threads onto one core; ``--bind-to none`` lets a
-rank's threads spread across the machine::
+Set ``BERTINI_NUM_THREADS`` whenever you run more than one rank on a machine.  How many CPUs a rank
+may run on depends on how ``mpirun`` binds it, and ranks that each see most of the machine would
+together start several threads per core.  Launch with ``--bind-to none`` as well: it lets a
+rank's threads spread across the machine instead of sharing the cores the rank was bound to::
 
-    OMP_NUM_THREADS=4 mpirun -n 3 --bind-to none python python/examples/solve_cyclic.py --n 6
+    BERTINI_NUM_THREADS=4 mpirun -n 3 --bind-to none python python/examples/solve_cyclic.py --n 6
     #               4 threads  x  (3 ranks = 1 manager + 2 workers)  =  8 paths at a time
 
 Why have two knobs for the same cores?  MPI ranks can live on

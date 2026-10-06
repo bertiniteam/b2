@@ -4,14 +4,14 @@
 The cyclic-n polynomials are a classic benchmark for polynomial system solving.  Total-degree
 homotopy tracks one path per Bezout count (the product of the degrees), and the work is
 pleasantly parallel: each path is independent.  Bertini hands the paths out from rank 0 (the
-manager) to the worker ranks, and -- if OMP_NUM_THREADS > 1 -- each worker runs several tracking
-threads.
+manager) to the worker ranks, and each worker runs several tracking threads: by default one per
+CPU it may run on, or ``BERTINI_NUM_THREADS`` of them.
 
 Run it::
 
-    python solve_cyclic.py --n 6                              # serial baseline
+    BERTINI_NUM_THREADS=1 python solve_cyclic.py --n 6        # serial baseline
     mpirun -n 5 python solve_cyclic.py --n 6                  # 1 manager + 4 workers
-    OMP_NUM_THREADS=4 mpirun -n 3 --bind-to none python solve_cyclic.py --n 6   # 2 workers x 4 threads
+    BERTINI_NUM_THREADS=4 mpirun -n 3 --bind-to none python solve_cyclic.py --n 6   # 2 workers x 4 threads
 
 Only rank 0 prints; it checks the distinct finite-solution count -- taken from the solver's own
 solution metadata -- against the known cyclic-n value.
@@ -80,7 +80,7 @@ def main():
     report = solver.report()
 
     print('cyclic-{}:  ranks={}  threads/rank={}  paths tracked={}  finite solutions={}  wall={:.1f}s'.format(
-        args.n, comm.Get_size(), os.environ.get('OMP_NUM_THREADS', '1'),
+        args.n, comm.Get_size(), os.environ.get('BERTINI_NUM_THREADS', 'auto'),
         report.num_paths_tracked, report.num_finite_solutions, elapsed))
 
     if not report.all_paths_resolved:        # a failed path OR an unresolved crossing -- show what and why

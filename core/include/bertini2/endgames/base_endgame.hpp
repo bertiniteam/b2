@@ -146,22 +146,46 @@ protected:
     BCT target_time_{};  ///< The final target time (default 0); set via SetTargetTime().
 
     /**
-    The random direction the c/k estimate is projected along.  Generated once per size+precision
-    and reused for the whole endgame, so consecutive estimates differ only because the samples
-    differ.  A fresh random probe every call made the stabilization test noisy -- it could certify
-    the operating zone spuriously -- and churned mpfr allocations.  See z_notes/20260629.
+    The random direction the c/k estimate is projected along, as drawn: in double precision, so
+    that it is exact in every lane and at every multiple precision.  Drawn at the start of every
+    run (RefreshCOverKProbe) and fixed for the run, so consecutive estimates differ only because
+    the samples differ.  A fresh random probe every call made the stabilization test noisy -- it
+    could certify the operating zone spuriously -- and churned mpfr allocations.  See
+    z_notes/20260629.
     */
+    mutable Vec<complex_dbl> c_over_k_probe_as_drawn_;
+
+    /// The c/k probe in each numeric type the endgame computes in: exact conversions of
+    /// c_over_k_probe_as_drawn_, re-derived when their size or precision is wrong, never rounded.
     mutable TupOfVec c_over_k_probe_;
 
 
+    /**
+    \brief Draw the c/k probe direction for a run.
 
+    Called at the start of every run, after whatever reseed the caller does for the path, so the
+    direction is a function of the random-number stream at that point and nothing else.
+
+    \param size The number of coordinates the probe must have.
+    */
+    // Drawn per run, never lazily on first use: a lazy draw lands in whichever path first needs
+    // the probe, so the direction a path used, and the draws it consumed, would depend on the
+    // paths the same endgame ran before it, and on which thread ran them (#378, ADR-0071).
+    void RefreshCOverKProbe(unsigned size) const
+    {
+        c_over_k_probe_as_drawn_.resize(size);
+        for (unsigned ii = 0; ii < size; ++ii)
+            c_over_k_probe_as_drawn_(ii) = RandomUnit<complex_dbl>();
+        std::apply([](auto&... working){ (working.resize(0), ...); }, c_over_k_probe_);
+    }
 
 
     /**
     \brief The fixed random direction the c/k estimate is projected along.
 
-    Regenerated only when the size changes; re-precisioned in place otherwise, so the direction
-    itself is preserved across a precision increase.
+    An exact conversion of the direction as drawn, at the requested precision.  Converted, not
+    rounded in place: the drawn values are doubles, which every multiple precision holds exactly,
+    so the direction is the same in both lanes and survives any change of precision.
 
     \tparam ComplexT The complex number type.
     \param size The number of coordinates the probe must have.
@@ -172,15 +196,21 @@ protected:
     Vec<ComplexT> const& GetCOverKProbe(unsigned size, unsigned prec) const
     {
         using bertini::Precision;
+        if (static_cast<unsigned>(c_over_k_probe_as_drawn_.size()) != size)
+            RefreshCOverKProbe(size);   // samples of another size than this run began with
+
         auto& probe = std::get<Vec<ComplexT> >(c_over_k_probe_);
-        if (static_cast<unsigned>(probe.size()) != size)
+        bool stale = static_cast<unsigned>(probe.size()) != size;
+        if constexpr (!std::is_same<ComplexT, complex_dbl>::value)
+            stale = stale || Precision(probe) != prec;
+        if (stale)
         {
             probe.resize(size);
             for (unsigned ii = 0; ii < size; ++ii)
-                probe(ii) = RandomUnit<ComplexT>();
+                probe(ii) = ComplexT(c_over_k_probe_as_drawn_(ii));
+            if constexpr (!std::is_same<ComplexT, complex_dbl>::value)
+                Precision(probe, prec);
         }
-        if (Precision(probe) != prec)
-            Precision(probe, prec);
         return probe;
     }
 
@@ -313,6 +343,8 @@ public:
         // endgame concatenates every path into one undifferentiated heap.  Initializing was
         // declared, and handled by GoryDetailLogger, but emitted by nothing.
         NotifyObservers(Initializing<EmitterType>(this->AsFlavor()));
+        // a run's c/k direction is drawn here, at its start, never inherited from an earlier run
+        RefreshCOverKProbe(static_cast<unsigned>(start_point.size()));
         auto prec = Precision(start_point);
         BCT t  = start_time_;   Precision(t,  prec);
         BCT t0 = target_time_;  Precision(t0, prec);

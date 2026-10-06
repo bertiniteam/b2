@@ -31,6 +31,7 @@
 #include <random>
 #include <atomic>
 #include <cstdint>
+#include <mutex>
 
 namespace bertini {
 
@@ -44,7 +45,17 @@ inline uint64_t splitmix64(uint64_t x)
     return x ^ (x >> 31);
 }
 
+// The global seed, and whether one has been chosen.  Every value is a seed, 0 included, so
+// "not chosen yet" is its own flag; the mutex only guards the one-time entropy draw.
 std::atomic<unsigned long> g_global_seed{0};
+std::atomic<bool> g_global_seed_chosen{false};
+std::mutex g_global_seed_mutex;
+
+unsigned long EntropySeed()
+{
+    std::random_device rd;
+    return static_cast<unsigned long>(rd());
+}
 
 // Domain tags for stream derivation.  Distinct domains (and distinct indices within a domain)
 // produce distinct engine states, so no two streams ever coincide and no path/worker stream can
@@ -82,26 +93,38 @@ std::mt19937& ThreadEngine() { return g_thread_engine; }
 
 unsigned long GetGlobalSeed()
 {
-    unsigned long s = g_global_seed.load(std::memory_order_relaxed);
-    if (s == 0) {
-        std::random_device rd;
-        s = static_cast<unsigned long>(rd());
-        if (s == 0) s = 1;
-        unsigned long expected = 0;
-        if (!g_global_seed.compare_exchange_strong(expected, s, std::memory_order_relaxed))
-            s = g_global_seed.load(std::memory_order_relaxed);
+    if (g_global_seed_chosen.load(std::memory_order_acquire))
+        return g_global_seed.load(std::memory_order_relaxed);
+
+    // never set: choose one from entropy, once, however many threads ask at the same time
+    std::lock_guard<std::mutex> lock(g_global_seed_mutex);
+    if (!g_global_seed_chosen.load(std::memory_order_relaxed))
+    {
+        g_global_seed.store(EntropySeed(), std::memory_order_relaxed);
+        g_global_seed_chosen.store(true, std::memory_order_release);
     }
-    return s;
+    return g_global_seed.load(std::memory_order_relaxed);
+}
+
+unsigned long SetGlobalSeedFromEntropy()
+{
+    unsigned long const seed = EntropySeed();
+    SetGlobalSeed(seed);
+    return seed;
+}
+
+unsigned long ApplyClassicRandomSeed(unsigned long randomseed)
+{
+    if (randomseed == 0)
+        return SetGlobalSeedFromEntropy();
+    SetGlobalSeed(randomseed);
+    return randomseed;
 }
 
 void SetGlobalSeed(unsigned long seed)
 {
-    if (seed == 0) {
-        std::random_device rd;
-        seed = static_cast<unsigned long>(rd());
-        if (seed == 0) seed = 1;
-    }
     g_global_seed.store(seed, std::memory_order_relaxed);
+    g_global_seed_chosen.store(true, std::memory_order_release);
     g_solve_ordinal.store(0, std::memory_order_relaxed);   // (master, ordinal) restarts here
     // the setup stream: domain = setup, index = 0.  Path/worker streams use other domains, so none
     // of them can ever reproduce this stream (the old ReseedThisThread(0) == SetGlobalSeed collision).
@@ -126,7 +149,7 @@ unsigned long DerivedWorkerSeed(uint64_t worker_index)
 {
     uint64_t s = static_cast<uint64_t>(GetGlobalSeed());
     uint64_t h = splitmix64(s ^ kDomainWorker ^ splitmix64(worker_index));
-    if (h == 0) h = 1; // SetGlobalSeed treats 0 as "draw from entropy"; avoid that
+    if (h == 0) h = 1; // classic input reads randomseed 0 as "draw from entropy"; never hand out 0
     return static_cast<unsigned long>(h);
 }
 
@@ -145,7 +168,8 @@ unsigned long DeriveSolveSeed()
     uint64_t const h = splitmix64(master ^ kDomainSolve ^ splitmix64(ordinal));
     unsigned long s = static_cast<unsigned long>(h & 0xFFFFFFFFull);
     if (s == 0) s = static_cast<unsigned long>(h >> 32);   // deterministic nonzero fallback
-    if (s == 0) s = 1;                                     // 0 means "entropy" to SetGlobalSeed
+    if (s == 0) s = 1;                                     // so a recorded seed replays through a classic
+                                                           // input file, where randomseed 0 means entropy
     return s;
 }
 

@@ -75,13 +75,23 @@ void ExportRandom(){
         (arg("rows"), arg("cols"), arg("real")=false),
         "A rows x cols random conjugate-orthonormal matrix (its rows orthonormal -- QR-factored from a square matrix of units, then truncated; perfectly conditioned), at the current default precision.  real=True yields a real orthogonal matrix (entries with zero imaginary part).  Returns a complex_mp matrix.");
 
-    def("set_random_seed", &bertini::SetGlobalSeed, boost::python::arg("seed") = 0ul,
-        "Set the global RNG seed (0 = draw from entropy). Call before constructing any "
-        "homotopy or solver to get reproducible results. The effective seed (which may "
-        "differ from 0 when entropy is used) is retrievable via get_random_seed().");
+    def("set_random_seed",
+        +[](object seed) -> unsigned long {
+            if (seed.is_none())
+                return bertini::SetGlobalSeedFromEntropy();
+            unsigned long const s = extract<unsigned long>(seed);
+            bertini::SetGlobalSeed(s);
+            return s;
+        },
+        boost::python::arg("seed") = object(),
+        "Set the global RNG seed, and return it.  Every non-negative integer is a seed, 0 "
+        "included, as in numpy and Python's random; set_random_seed() or set_random_seed(None) "
+        "draws one from entropy, and the returned value reproduces the run.  Call before "
+        "constructing any homotopy or solver to get reproducible results.  (In a classic Bertini "
+        "input file, randomseed: 0 instead means draw from entropy, as in Bertini 1.)");
     def("get_random_seed", &bertini::GetGlobalSeed,
-        "Return the effective global RNG seed. If set_random_seed has not been called, "
-        "draws from entropy on first call and caches the result.");
+        "Return the global RNG seed in effect.  If none has been set, draws one from entropy "
+        "on the first call and keeps it.");
     def("derive_solve_seed", &bertini::DeriveSolveSeed,
         "Capture the session stream's current position as an effective per-solve seed: "
         "one draw off the current stream (advancing it), nonzero, 32-bit portable. "

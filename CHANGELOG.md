@@ -339,6 +339,30 @@ the identity of the algorithm that answered it (#420).
 
 ### Changed
 
+- **Seed 0 is a seed** (#475, ADR-0072).  `bertini.set_random_seed(0)` and `SetGlobalSeed(0)`
+  meant "draw a seed from entropy", so a script that set seed 0 to make a run reproducible got
+  a different run every time.  0 is now an ordinary seed, as in numpy and Python's `random`.
+  Entropy is asked for by omitting the seed: `set_random_seed()` or `set_random_seed(None)` in
+  Python, `SetGlobalSeedFromEntropy()` in C++.  `set_random_seed` now returns the seed in
+  effect, so the run can be reproduced from it.  The classic input format keeps Bertini 1's
+  meaning: `randomseed: 0`, its default, still draws from entropy in the command-line program.
+  Seed 0 is therefore the one value that does not carry between a Python script and a classic
+  input file.
+- **The thread count is `BERTINI_NUM_THREADS`, and it defaults to every available CPU.**
+  b2 used to read `OMP_NUM_THREADS`, although it uses no OpenMP: its threads are its own
+  `std::thread` pool.  That variable also sets the thread count of numpy's OpenBLAS, so one
+  setting tied the two libraries together, and pinning b2 to one thread for a reproducible run
+  pinned numpy's linear algebra as well.  b2 now reads `BERTINI_NUM_THREADS` and ignores
+  `OMP_NUM_THREADS`.  The order is the variable if set, then the solver's `num_threads`, then
+  the number of CPUs the process may run on, which on Linux respects the affinity mask that
+  `taskset`, cpusets and a launcher's binding set.  That last default is OpenMP's, so threaded
+  runs come without configuration.
+  **MPI ranks change the most.**  A rank used one thread unless `OMP_NUM_THREADS` was set; it
+  now follows the same rule as a standalone solve, `num_threads` included.  How many CPUs a rank
+  may run on depends on how the launcher binds it, so several ranks on one machine can together
+  start more threads than the machine has cores.  Set `BERTINI_NUM_THREADS` whenever you run
+  more than one rank per machine.  A script or job file that set `OMP_NUM_THREADS` for b2
+  should set `BERTINI_NUM_THREADS` instead.
 - **An accuracy estimate names its coordinates** (ADR-0069).  A solution's metadata has two
   accuracy estimates, both the distance between the endgame's last two approximations of the
   root.  `accuracy_estimate` is renamed **`accuracy_estimate_internal_coords`**: it is in the
@@ -460,6 +484,34 @@ the identity of the algorithm that answered it (#420).
 
 ### Fixed
 
+- **A threaded solve gives the same bits as a serial one, and a path no longer depends on the
+  paths before it** (#378, ADR-0071).  Each path's random draws were already deterministic,
+  but state that is not random flowed from one path into the next on a reused tracker or
+  endgame.  Under a thread pool the scheduler chose each thread's predecessors, so a seeded
+  threaded solve differed from run to run in step counts, precision and the last digits of
+  its endpoints, and algorithms built on those endpoints differed with them.  A serial solve
+  depended on path order.  There were five sources:
+  - an adaptive track built its first step at the precision the previous track ended in;
+  - a drop to double left the step size and the time at the old multiple precision;
+  - the condition-number probe was rounded in place at each change of precision;
+  - the endgame's c/k probe was drawn once per endgame object, by whichever path first needed
+    it, or redrawn mid-path after an escalation;
+  - an endgame run in double left an earlier run's multiprecision times in place, so
+    `final_time_used` reported another path's last time.
+  Now a solve at any thread count, under MPI or not, is bit-identical path by path to a
+  serial solve with the same seed: every endpoint and every metadata field but the
+  wall-clock time.  A tracker or endgame driven by hand gives a track the same result as a
+  fresh one would.  Results differ from 4.0.0.dev1 in the last bits and, occasionally, in step
+  counts.
+- **`max_precision_used` is the highest precision a path used, over all of its tracking**
+  (ADR-0071).  The endgame tracks a path in many calls, and the solver's record started afresh
+  with every one, so a precision raised in an earlier endgame sub-track and lowered before the
+  last went unreported: seeded cyclic-5 had paths that reported 30 digits after tracking at 40.
+  The tracker's `FirstPrecisionRecorder` and `MinMaxPrecisionRecorder` now record each track
+  from its very start, the start-point refinement included, and keep recording every track
+  once attached.  `FirstPrecisionRecorder` used to unsubscribe at its first increase and
+  report that track ever after, and a track whose initialization failed was reported with the
+  previous track's values.  A new `PathPrecisionRecorder` records a whole path.
 - **A copied or unpickled system combines with its original** (ADR-0068).  `copy.deepcopy`,
   `copy.copy` and `pickle` go through an archive, and loading from one built variables
   outside the variable factory: a copy was over fresh variables with the same names, and

@@ -7,7 +7,7 @@ tracking settings (precision mode, predictor, tolerances, step cadence) are iden
 solvers by construction. Two phases:
 
   * serial            -- one process, one thread, every system through every solver;
-  * MPI single-thread -- sweep --ranks with OMP_NUM_THREADS=1, each solver under `mpirun -n N`.
+  * MPI single-thread -- sweep --ranks with BERTINI_NUM_THREADS=1, each solver under `mpirun -n N`.
 
 We get a correctness/agreement check for free: every solver should report the same solution count,
 equal to the system's known expected count. That check is done AFTER timing, from output files, and

@@ -1124,6 +1124,86 @@ BOOST_AUTO_TEST_CASE(full_run_multiple_variables)
 
 
 
+/**
+A power-series run does not depend on the run before it (#378).
+
+The same run, after another under a different random stream, must match a fresh endgame's run
+bit for bit, given the same reseed.  See cauchy_run_does_not_depend_on_the_run_before_it: the
+c/k probe direction and the sample times are shared state of every endgame flavor, and a run
+in double after one in multiple precision read the earlier run's times.
+*/
+BOOST_AUTO_TEST_CASE(power_series_run_does_not_depend_on_the_run_before_it)
+{
+    DefaultPrecision(ambient_precision);
+    bertini::SetGlobalSeed(20261005);   // ReseedThisThread derives from it; entropy would vary the runs
+
+    bertini::System sys;
+    Var x = Variable::Make("x"), t = Variable::Make("t"), y = Variable::Make("y");
+    sys.AddVariableGroup(VariableGroup{x, y});
+    sys.AddPathVariable(t);
+    sys.AddFunction((pow(x-1,3))*(1-t) + (pow(x,3) + 1)*t);
+    sys.AddFunction((pow(y-1,2))*(1-t) + (pow(y,2) + 1)*t);
+
+    // A tracker draws its condition-number probe when it is built, so every tracker here is built
+    // from the same point of the random stream: they differ only in what they have tracked.
+    auto make_tracker = [&sys]()
+    {
+        bertini::ReseedThisThread(7);
+        TrackerType tracker(sys);
+        tracker.Setup(TestedPredictor, 1e-6, 1e5,
+                      bertini::tracking::SteppingConfig(), bertini::tracking::NewtonConfig());
+        tracker.PrecisionSetup(PrecisionConfig(sys));
+        return tracker;
+    };
+
+    BCT const boundary_time = ComplexFromString(".1");
+    Vec<BCT> boundary_point(2);
+    boundary_point << ComplexFromString("5.000000000000001e-01", "9.084258952712920e-17"),
+                      ComplexFromString("9.000000000000001e-01", "4.358898943540673e-01");
+
+    auto used_tracker = make_tracker();
+    TestedEGType used(used_tracker);
+    used.SetBoundaryTime(boundary_time);
+    bertini::ReseedThisThread(1);
+    BOOST_REQUIRE(used.Run(boundary_point) == SuccessCode::Success);
+    bertini::ReseedThisThread(2);
+    auto const used_code = used.Run(boundary_point);
+
+    auto fresh_tracker = make_tracker();
+    TestedEGType fresh(fresh_tracker);
+    fresh.SetBoundaryTime(boundary_time);
+    bertini::ReseedThisThread(2);
+    auto const fresh_code = fresh.Run(boundary_point);
+
+    BOOST_REQUIRE(fresh_code == SuccessCode::Success);
+    BOOST_CHECK(used_code == fresh_code);
+    BOOST_CHECK_EQUAL(used.CycleNumber(), fresh.CycleNumber());
+    BOOST_CHECK(used.LatestTime() == fresh.LatestTime());
+    BOOST_CHECK_EQUAL(used.ApproximateError(), fresh.ApproximateError());
+    auto const& a = used.template FinalApproximation<BCT>();
+    auto const& b = fresh.template FinalApproximation<BCT>();
+    BOOST_REQUIRE_EQUAL(a.size(), b.size());
+    for (Eigen::Index ii = 0; ii < a.size(); ++ii)
+    {
+        BOOST_CHECK_EQUAL(Precision(a(ii)), Precision(b(ii)));
+        BOOST_CHECK(a(ii) == b(ii));
+    }
+
+    // The c/k estimate reads the samples only through the probe direction; see the same check in
+    // cauchy_run_does_not_depend_on_the_run_before_it for why these samples.
+    bertini::SampCont<BCT> samples;
+    for (auto const& [first, second] : {std::pair<char const*, char const*>{"0", "0"},
+                                        {"1", "0"}, {"1.9", "0.1"}})
+    {
+        Vec<BCT> s(2);
+        s << ComplexFromString(first), ComplexFromString(second);
+        samples.push_back(s);
+    }
+    BOOST_CHECK(used.ComputeCOverK(samples) == fresh.ComputeCOverK(samples));
+}
+
+
+
 
 /**
 The function that runs the power series endgame is called PSEG. PSEG takes an endgame_time value and an endgame_space value that is

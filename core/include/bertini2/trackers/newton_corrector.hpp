@@ -86,7 +86,13 @@ namespace bertini{
                     Precision(std::get< Vec<complex_mp> >(f_temp_), new_precision);
                     Precision(std::get< Vec<complex_mp> >(step_temp_), new_precision);
                     Precision(std::get< Mat<complex_mp> >(J_temp_), new_precision);
-                    Precision(std::get< Vec<complex_mp> >(rand_temp_), new_precision);
+                    // the probe is re-derived from the stored copy, never rounded in place: a drop
+                    // in precision would otherwise destroy digits that a later rise cannot restore
+                    {
+                        auto& probe = std::get< Vec<complex_mp> >(rand_temp_);
+                        probe = probe_as_drawn_;
+                        Precision(probe, new_precision);
+                    }
                     Precision(std::get< Vec<complex_mp> >(solve_temp_), new_precision);
                     std::get< linalg::PartialPivLU<complex_mp> >(LU_).ChangePrecision(new_precision);
 
@@ -137,17 +143,20 @@ namespace bertini{
                 void RefreshRandomDirection()
                 {
                     std::get< Vec<complex_dbl> >(rand_temp_) = RandomOfUnits<complex_dbl>(numVariables_);
-                    std::get< Vec<complex_mp> >(rand_temp_) = RandomOfUnits<complex_mp>(numVariables_);
+                    probe_as_drawn_ = RandomOfUnits<complex_mp>(numVariables_);
+                    std::get< Vec<complex_mp> >(rand_temp_) = probe_as_drawn_;
                 }
 
                 /**
-                 \brief The condition-number probe direction (both precisions), so the tracker can share
-                 the SAME per-path probe with the predictor -- making the predictor's and corrector's
-                 ||J^{-1}|| estimates use one consistent direction.  \see RefreshRandomDirection.
+                 \brief The condition-number probe direction as drawn (both precisions), so the tracker
+                 can share the SAME per-path probe with the predictor -- making the predictor's and
+                 corrector's ||J^{-1}|| estimates use one consistent direction.  The multiprecision
+                 half is the stored copy, at the precision it was drawn at, not the working copy the
+                 corrector holds at its current precision.  \see RefreshRandomDirection.
                  */
-                std::tuple< Vec<complex_dbl>, Vec<complex_mp> > const& ConditionProbe() const
+                std::tuple< Vec<complex_dbl>, Vec<complex_mp> > ConditionProbe() const
                 {
-                    return rand_temp_;
+                    return { std::get< Vec<complex_dbl> >(rand_temp_), probe_as_drawn_ };
                 }
 
 
@@ -304,6 +313,7 @@ namespace bertini{
                 std::tuple< Vec<complex_dbl>, Vec<complex_mp> > step_temp_;
                 std::tuple< Mat<complex_dbl>, Mat<complex_mp> > J_temp_;
                 std::tuple< Vec<complex_dbl>, Vec<complex_mp> > rand_temp_;  // reused scratch: random RHS for norm_J_inverse
+                Vec<complex_mp> probe_as_drawn_;  ///< the probe direction at the precision it was drawn at; rand_temp_'s multiprecision half is this at the working precision
                 std::tuple< Vec<complex_dbl>, Vec<complex_mp> > solve_temp_; // reused scratch: LU solve result
 
                 std::tuple< linalg::PartialPivLU<complex_dbl>, linalg::PartialPivLU<complex_mp> > LU_;

@@ -28,15 +28,21 @@ as a serial one -- threading is a performance feature, never a correctness chang
 on every platform (no MPI required), which is what gives us cross-OS threading coverage.
 */
 
+#include <algorithm>
 #include <atomic>
+#include <cstdlib>
+#include <map>
 #include <memory>
 #include <numeric>
 #include <set>
+#include <string>
+#include <utility>
 #include <vector>
 
 #include <boost/test/unit_test.hpp>
 
 #include "bertini2/parallel/thread_pool.hpp"
+#include "bertini2/random.hpp"
 #include "bertini2/nag_algorithms/zero_dim_solve.hpp"
 #include "bertini2/endgames.hpp"
 #include "bertini2/system/start_systems.hpp"
@@ -121,16 +127,72 @@ BOOST_AUTO_TEST_CASE(thread_pool_state_is_per_thread)
     BOOST_CHECK_GE(total, static_cast<long>(N));
 }
 
+namespace {
+// Set (value != nullptr) or unset an environment variable for the life of the object, and put
+// back whatever was there.  POSIX setenv/unsetenv, or _putenv_s on Windows (where an empty value
+// unsets).
+class ScopedEnv
+{
+    std::string name_;
+    bool had_ = false;
+    std::string old_;
+
+    static void Put(std::string const& name, char const* value)
+    {
+#ifdef _WIN32
+        _putenv_s(name.c_str(), value ? value : "");
+#else
+        if (value)
+            setenv(name.c_str(), value, 1);
+        else
+            unsetenv(name.c_str());
+#endif
+    }
+
+public:
+    ScopedEnv(std::string name, char const* value) : name_(std::move(name))
+    {
+        if (char const* prev = std::getenv(name_.c_str()))
+        {
+            had_ = true;
+            old_ = prev;
+        }
+        Put(name_, value);
+    }
+    ~ScopedEnv() { Put(name_, had_ ? old_.c_str() : nullptr); }
+    ScopedEnv(ScopedEnv const&) = delete;
+    ScopedEnv& operator=(ScopedEnv const&) = delete;
+};
+} // namespace
+
 BOOST_AUTO_TEST_CASE(effective_thread_count_is_sane)
 {
     using bertini::parallel::EffectiveThreadCount;
-    // An explicit positive request is honored (when OMP_NUM_THREADS is unset in the test env).
-    if (std::getenv("OMP_NUM_THREADS") == nullptr)
-    {
-        BOOST_CHECK_EQUAL(EffectiveThreadCount(1), 1u);
-        BOOST_CHECK_EQUAL(EffectiveThreadCount(3), 3u);
-        BOOST_CHECK_GE(EffectiveThreadCount(0), 1u);   // auto -> hardware_concurrency, clamped >= 1
-    }
+    ScopedEnv no_override("BERTINI_NUM_THREADS", nullptr);
+    // an explicit positive request is honored; auto is every available CPU, at least one
+    BOOST_CHECK_EQUAL(EffectiveThreadCount(1), 1u);
+    BOOST_CHECK_EQUAL(EffectiveThreadCount(3), 3u);
+    BOOST_CHECK_EQUAL(EffectiveThreadCount(0), bertini::parallel::AvailableCpuCount());
+    BOOST_CHECK_GE(bertini::parallel::AvailableCpuCount(), 1u);
+}
+
+BOOST_AUTO_TEST_CASE(bertini_num_threads_overrides_the_configured_count)
+{
+    using bertini::parallel::EffectiveThreadCount;
+    ScopedEnv two("BERTINI_NUM_THREADS", "2");
+    BOOST_CHECK_EQUAL(EffectiveThreadCount(3), 2u);
+    BOOST_CHECK_EQUAL(EffectiveThreadCount(0), 2u);
+}
+
+// b2 reads its own variable.  OMP_NUM_THREADS also sets numpy's OpenBLAS thread count, and until
+// 4.0 b2 read it too, coupling two unrelated settings; it must not reach b2 any more.
+BOOST_AUTO_TEST_CASE(omp_num_threads_does_not_reach_b2)
+{
+    using bertini::parallel::EffectiveThreadCount;
+    ScopedEnv no_override("BERTINI_NUM_THREADS", nullptr);
+    ScopedEnv omp("OMP_NUM_THREADS", "1");
+    BOOST_CHECK_EQUAL(EffectiveThreadCount(3), 3u);
+    BOOST_CHECK_EQUAL(EffectiveThreadCount(0), bertini::parallel::AvailableCpuCount());
 }
 
 BOOST_AUTO_TEST_SUITE_END()  // thread_pool
@@ -320,16 +382,16 @@ BOOST_AUTO_TEST_CASE(event_tracker_is_member_tracker_when_serial)
 BOOST_AUTO_TEST_CASE(event_tracker_is_a_clone_when_threaded)
 {
     using namespace bertini;
-    // OMP_NUM_THREADS overrides the requested thread count (parallel::EffectiveThreadCount), so under
-    // OMP_NUM_THREADS=1 a "threaded" solve actually runs serially on the member tracker, and the
-    // clone-per-thread expectation below does not hold.  CI runs the test suite both with and without
-    // OMP_NUM_THREADS=1; the threaded path is exercised in the non-serial leg, so skip here when the
-    // environment forces serial.
+    // BERTINI_NUM_THREADS overrides the requested thread count (parallel::EffectiveThreadCount), so
+    // under BERTINI_NUM_THREADS=1 a "threaded" solve actually runs serially on the member tracker,
+    // and the clone-per-thread expectation below does not hold.  CI runs the test suite both with
+    // and without BERTINI_NUM_THREADS=1; the threaded path is exercised in the non-serial leg, so
+    // skip here when the environment forces serial.
     if (parallel::EffectiveThreadCount(4) <= 1)
     {
-        BOOST_TEST_MESSAGE("event_tracker_is_a_clone_when_threaded: skipped -- OMP_NUM_THREADS forces "
-                           "a serial run (threaded clone behavior is covered by the OMP_NUM_THREADS!=1 "
-                           "CI leg).");
+        BOOST_TEST_MESSAGE("event_tracker_is_a_clone_when_threaded: skipped -- BERTINI_NUM_THREADS "
+                           "forces a serial run (threaded clone behavior is covered by the "
+                           "BERTINI_NUM_THREADS!=1 CI leg).");
         return;
     }
     auto sys = TwoCubics();
@@ -347,6 +409,214 @@ BOOST_AUTO_TEST_CASE(event_tracker_is_a_clone_when_threaded)
     BOOST_CHECK(cap.trackers_seen.count(member) == 0);   // never the member tracker
     BOOST_CHECK(!cap.trackers_seen.empty());
     BOOST_CHECK(cap.trackers_seen.size() <= 4u);          // at most one clone per worker thread
+}
+
+
+namespace {
+
+// cyclic-5: 120 total-degree paths, 70 finite roots, the rest diverging.  Enough paths, and
+// enough precision changes, that every thread count hands each thread a different sequence of
+// predecessor paths.
+bertini::System Cyclic5()
+{
+    using namespace bertini;
+    std::vector<std::shared_ptr<node::Variable>> z;
+    for (int i = 0; i < 5; ++i)
+        z.push_back(Variable::Make("z" + std::to_string(i)));
+    System sys;
+    using Nd = std::shared_ptr<node::Node>;
+    for (int k = 1; k < 5; ++k)
+    {
+        Nd total;
+        for (int i = 0; i < 5; ++i)
+        {
+            Nd term = z[i];
+            for (int j = 1; j < k; ++j)
+                term = term * z[(i + j) % 5];
+            total = total ? total + term : term;
+        }
+        sys.AddFunction(total);
+    }
+    sys.AddFunction(z[0] * z[1] * z[2] * z[3] * z[4] - 1);
+    sys.AddVariableGroup(VariableGroup(z.begin(), z.end()));
+    return sys;
+}
+
+// Every path's endpoint and its whole metadata record, from a seeded adaptive-precision solve.
+template<typename EndgameT>
+struct PathByPath
+{
+    using ZD = bertini::algorithm::ZeroDimSolver<bertini::tracking::AMPTracker, EndgameT,
+                                                 bertini::System>;
+    std::vector<bertini::Vec<bertini::complex_mp>> endpoints;
+    std::vector<bertini::algorithm::SolutionMetaData<bertini::complex_mp>> metadata;
+
+    explicit PathByPath(unsigned num_threads)
+    {
+        bertini::SetGlobalSeed(20261005);
+        auto sys = Cyclic5();
+        ZD zd(sys);
+        zd.DefaultSetup();
+        auto cfg = zd.template Get<bertini::algorithm::ZeroDimConfig>();
+        cfg.num_threads = num_threads;
+        zd.Set(cfg);
+        zd.Solve();
+        endpoints = zd.SolutionsInternalCoords();
+        metadata = zd.SolutionMetadata();
+    }
+};
+
+template<typename EndgameT>
+void CheckBitIdenticalAcrossThreadCounts()
+{
+    PathByPath<EndgameT> const serial(1);
+    BOOST_REQUIRE_EQUAL(serial.endpoints.size(), 120u);
+
+    for (unsigned nt : {2u, 3u, 8u})
+    {
+        PathByPath<EndgameT> const threaded(nt);
+        BOOST_REQUIRE_EQUAL(threaded.endpoints.size(), serial.endpoints.size());
+        for (std::size_t i = 0; i < serial.endpoints.size(); ++i)
+        {
+            BOOST_TEST_CONTEXT("path " << i << " at " << nt << " threads")
+            {
+                auto const& a = serial.endpoints[i];
+                auto const& b = threaded.endpoints[i];
+                BOOST_REQUIRE_EQUAL(a.size(), b.size());
+                for (Eigen::Index j = 0; j < a.size(); ++j)
+                {
+                    BOOST_CHECK_EQUAL(a(j).precision(), b(j).precision());
+                    BOOST_CHECK(a(j) == b(j));
+                }
+                auto md_a = serial.metadata[i];   // operator== is not const
+                BOOST_CHECK_MESSAGE(md_a == threaded.metadata[i],
+                                    "metadata differs:\n" << serial.metadata[i]
+                                    << "\nversus\n" << threaded.metadata[i]);
+            }
+        }
+    }
+}
+
+} // namespace
+
+
+/**
+A threaded solve is bit-identical to the serial solve, path by path (#378).
+
+A path's result is a function of the systems, the settings, the seed and its index -- not of
+the thread that ran it, nor of the paths that thread ran before it.  Endpoints are compared
+digit for digit and precision for precision, and every metadata field (step counts, precision
+record, condition number, residuals, accuracy estimates) exactly; only the wall-clock time is
+excluded.  Matching within a tolerance, as the tests above do, cannot see this: before the fix
+the endpoints of a threaded solve agreed with the serial ones to many digits and still differed.
+
+Under BERTINI_NUM_THREADS=1 every one of these solves is serial and the test proves nothing;
+the CI leg without it is the one that counts.
+*/
+BOOST_AUTO_TEST_CASE(threaded_solve_is_bit_identical_to_serial_power_series)
+{
+    using TrackerA = bertini::tracking::AMPTracker;
+    CheckBitIdenticalAcrossThreadCounts<bertini::endgame::EndgameSelector<TrackerA>::PSEG>();
+}
+
+BOOST_AUTO_TEST_CASE(threaded_solve_is_bit_identical_to_serial_cauchy)
+{
+    using TrackerA = bertini::tracking::AMPTracker;
+    CheckBitIdenticalAcrossThreadCounts<bertini::endgame::EndgameSelector<TrackerA>::Cauchy>();
+}
+
+
+namespace {
+
+// The highest precision the watched tracker reports, in any event: the start of a track, and
+// both ends of a change of precision.
+struct TrackerPrecisionWatch : public bertini::Observer<bertini::tracking::AMPTracker>
+{
+    unsigned highest = 0;
+
+    bertini::ObserveResult Observe(bertini::AnyEvent const& e) override
+    {
+        using namespace bertini::tracking;
+        if (auto s = dynamic_cast<TrackingStarted<AMPTracker> const*>(&e))
+            highest = std::max(highest, s->Get().CurrentPrecision());
+        else if (auto c = dynamic_cast<PrecisionChanged<AMPTracker> const*>(&e))
+            highest = std::max({highest, c->Previous(), c->Next()});
+        return bertini::ObserveResult::KeepObserving;
+    }
+};
+
+// Starts the watch afresh at each path, and keeps its reading when the path completes.
+struct PerPathPrecision : public bertini::Observer<bertini::algorithm::AnyZeroDim>
+{
+    TrackerPrecisionWatch& watch;
+    std::map<std::size_t, unsigned> highest_by_path;
+
+    explicit PerPathPrecision(TrackerPrecisionWatch& w) : watch(w) {}
+
+    bertini::ObserveResult Observe(bertini::AnyEvent const& e) override
+    {
+        using namespace bertini::algorithm;
+        if (dynamic_cast<PathStarted<AnyZeroDim> const*>(&e))
+            watch.highest = 0;
+        else if (auto c = dynamic_cast<PathComplete<AnyZeroDim> const*>(&e))
+            highest_by_path[c->PathIndex()] = watch.highest;
+        return bertini::ObserveResult::KeepObserving;
+    }
+};
+
+template<typename EndgameT>
+void CheckMaxPrecisionUsedCoversEveryTrack()
+{
+    using namespace bertini;
+    // serial, so every path runs on the solver's own tracker, where the watch is attached
+    thread_pool::ScopedEnv serial("BERTINI_NUM_THREADS", "1");
+
+    SetGlobalSeed(20261005);
+    auto sys = Cyclic5();
+    algorithm::ZeroDimSolver<tracking::AMPTracker, EndgameT, System> zd(sys);
+    zd.DefaultSetup();
+
+    TrackerPrecisionWatch watch;
+    PerPathPrecision per_path(watch);
+    zd.GetTracker().AddObserver(watch);
+    zd.AddObserver(per_path);
+    zd.Solve();
+
+    auto const& md = zd.SolutionMetadata();
+    BOOST_REQUIRE_EQUAL(per_path.highest_by_path.size(), md.size());
+    bool some_path_raised_precision = false;
+    for (std::size_t i = 0; i < md.size(); ++i)
+    {
+        BOOST_TEST_CONTEXT("path " << i)
+        {
+            BOOST_CHECK_EQUAL(md[i].max_precision_used, per_path.highest_by_path.at(i));
+            some_path_raised_precision = some_path_raised_precision || md[i].max_precision_used > 16;
+        }
+    }
+    BOOST_CHECK(some_path_raised_precision);   // the premise: the check is not about doubles alone
+}
+
+} // namespace
+
+
+/**
+A path's max_precision_used is the highest precision any of its tracks used (#378 follow-up).
+
+The endgame tracks a path in many calls to TrackPath.  The solver's record of a path's precision
+used to start afresh with every call, so a precision raised in an earlier endgame sub-track and
+lowered before the last went unreported.  Checked against every precision the tracker reports
+while tracking each path, on a serial solve so that the solver's own tracker runs every path.
+*/
+BOOST_AUTO_TEST_CASE(max_precision_used_covers_every_track_of_a_path_power_series)
+{
+    using TrackerA = bertini::tracking::AMPTracker;
+    CheckMaxPrecisionUsedCoversEveryTrack<bertini::endgame::EndgameSelector<TrackerA>::PSEG>();
+}
+
+BOOST_AUTO_TEST_CASE(max_precision_used_covers_every_track_of_a_path_cauchy)
+{
+    using TrackerA = bertini::tracking::AMPTracker;
+    CheckMaxPrecisionUsedCoversEveryTrack<bertini::endgame::EndgameSelector<TrackerA>::Cauchy>();
 }
 
 BOOST_AUTO_TEST_SUITE_END()

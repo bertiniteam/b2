@@ -14,7 +14,7 @@ build each system once in pybertini and emit it as a Bertini-1 classic input wit
 :py:meth:`System.to_classic_input`, which writes the equations *and* the tracking knobs (precision
 mode, predictor, tolerances, step cadence).  Both solvers read that one file, each builds its own
 random start system, and solves.  We time only the solver subprocess (never parsing/IO) and keep the
-fastest of a few repeats, serial (``OMP_NUM_THREADS=1``):
+fastest of a few repeats, serial (``BERTINI_NUM_THREADS=1``):
 
 .. literalinclude:: b1_vs_b2_timing.py
    :language: python

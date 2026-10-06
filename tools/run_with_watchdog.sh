@@ -13,7 +13,7 @@
 #   tools/run_with_watchdog.sh <seconds> <command> [args...]
 # Examples:
 #   tools/run_with_watchdog.sh 30 ./build/core/test_nag_algorithms
-#   OMP_NUM_THREADS=1 PYTHONPATH=python tools/run_with_watchdog.sh 60 python3 my_solve.py
+#   BERTINI_NUM_THREADS=1 PYTHONPATH=python tools/run_with_watchdog.sh 60 python3 my_solve.py
 #
 # Exit code: the command's exit code if it finished in time; 124 if it was killed by the watchdog
 # (the conventional timeout(1) code).

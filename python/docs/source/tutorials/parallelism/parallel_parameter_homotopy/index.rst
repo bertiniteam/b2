@@ -135,7 +135,7 @@ Run it serially, or across ranks with threads inside each (the ``--bind-to none`
 ``--map-by`` notes from :doc:`/tutorials/parallelism/solving_at_scale/index` apply -- and always run a *file*, never a heredoc)::
 
    python parallel_parameter_homotopy.py --grid 28 --save schlogl.svg     # serial + threads
-   OMP_NUM_THREADS=3 mpirun -n 4 --bind-to none \
+   BERTINI_NUM_THREADS=3 mpirun -n 4 --bind-to none \
        python parallel_parameter_homotopy.py --grid 28 --save schlogl.svg # 4 ranks x 3 threads
 
 Both produce the **identical** map -- parallelism changes the wall-clock, never the answer:

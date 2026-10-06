@@ -7,7 +7,7 @@ Two-level parallelism for a parameter sweep:
   *outer* loop; the points are independent, so no manager-worker dispatch is needed -- just split
   the grid and gather the answers).
 * **threads across paths** -- inside each point's solve, the path tracking runs on all the cores
-  the rank is given (``OMP_NUM_THREADS``).
+  the rank may run on, or on ``BERTINI_NUM_THREADS`` of them.
 
 The model is the **Schlogl** reaction network, whose steady state is a cubic in the species
 concentration ``X``::
@@ -22,9 +22,10 @@ never a hand-rolled cutoff.
 Run it (per the MPI notes in the "Solving at scale" tutorial -- always run a *file*, never a
 heredoc; ``--bind-to none`` lets each rank's threads spread across cores)::
 
-    python parallel_parameter_homotopy.py                       # serial baseline
-    mpirun -n 4 python parallel_parameter_homotopy.py           # 4 ranks, 1 thread each
-    OMP_NUM_THREADS=3 mpirun -n 4 --bind-to none \
+    BERTINI_NUM_THREADS=1 python parallel_parameter_homotopy.py # serial baseline
+    BERTINI_NUM_THREADS=1 mpirun -n 4 \
+        python parallel_parameter_homotopy.py                   # 4 ranks, 1 thread each
+    BERTINI_NUM_THREADS=3 mpirun -n 4 --bind-to none \
         python parallel_parameter_homotopy.py                   # 4 ranks x 3 threads
 
 The result (a counts grid, and optionally a heatmap PNG) is assembled on rank 0.

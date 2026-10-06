@@ -125,9 +125,9 @@ namespace bertini{
                 "How many times to re-track crossed paths (with tightened settings) at the endgame "
                 "boundary before giving up. 0 = detect and report only, do not re-track. Default 2.")
             .def_readwrite("num_threads", &ZeroDimConfig::num_threads,
-                "Worker threads for a shared-memory (non-MPI) solve. 0 = auto "
-                "(all available cores), 1 = serial (no thread pool), N = N threads. The "
-                "OMP_NUM_THREADS environment variable overrides this. Threading needs no MPI and "
+                "Worker threads tracking paths, in a standalone solve and on each MPI rank. 0 = auto "
+                "(every CPU this process may run on), 1 = serial (no thread pool), N = N threads. The "
+                "BERTINI_NUM_THREADS environment variable overrides this. Threading needs no MPI and "
                 "no free-threaded Python: the heavy tracking runs in C++ with the GIL released.")
             .def_readwrite("max_path_wall_clock_duration", &ZeroDimConfig::max_path_wall_clock_duration,
                 "Wall-clock budget for EACH path, in seconds; 0 (the default) means none.  A path that "
