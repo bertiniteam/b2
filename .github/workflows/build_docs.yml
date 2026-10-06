@@ -133,12 +133,16 @@ jobs:
       - name: Install Python deps for Sphinx
         # The bertini2 wheel bundles the eigenpy C++ libraries it links
         # against; no Python `eigenpy` install is required to import bertini
-        # for sphinx autodoc.
+        # for sphinx autodoc.  The wheel is installed below with --no-index, so
+        # every runtime dependency in pyproject.toml's `dependencies` must be
+        # installed HERE (as build_and_test.yml's docs job does): a missing one
+        # fails the install, and this workflow runs only for final releases and
+        # on dispatch, so no pull request catches it.
         run: |
           python -m pip install --upgrade pip
           pip install \
             sphinx furo sphinxcontrib-bibtex gitpython \
-            scikit-build-core build numpy matplotlib pandas sympy networkx
+            scikit-build-core build numpy tqdm matplotlib pandas sympy networkx
 
       - name: Download built wheel
         uses: actions/download-artifact@v7
