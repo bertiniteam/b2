@@ -257,7 +257,7 @@ struct MetaConfig
 The RNG seed a classic Bertini input file asks for, via `randomseed: N;`.  As in Bertini 1,
 random_seed == 0 (the default) means "draw from entropy": the command-line program then draws
 one and reports it, so the run can be reproduced.  The library API differs: to
-SetGlobalSeed and bertini.set_random_seed, 0 is an ordinary seed (ADR-0072).  Must be applied
+SetGlobalSeed and bertini.set_random_seed, 0 is an ordinary seed.  Must be applied
 before system construction (gamma, patch, TD-constants).
 */
 struct RandomConfig

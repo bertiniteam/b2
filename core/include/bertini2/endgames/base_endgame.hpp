@@ -164,14 +164,13 @@ protected:
     \brief Draw the c/k probe direction for a run.
 
     Called at the start of every run, after whatever reseed the caller does for the path, so the
-    direction is a function of the random-number stream at that point and nothing else.  It used
-    to be drawn the first time an endgame object needed it and kept for the object's life -- or
-    redrawn mid-path, once an escalation had moved it out of the double lane -- so the direction
-    a path used, and the draws it consumed, depended on which paths the same endgame had run
-    before it, and on which thread (#378).
+    direction is a function of the random-number stream at that point and nothing else.
 
     \param size The number of coordinates the probe must have.
     */
+    // Drawn per run, never lazily on first use: a lazy draw lands in whichever path first needs
+    // the probe, so the direction a path used, and the draws it consumed, would depend on the
+    // paths the same endgame ran before it, and on which thread ran them (#378, ADR-0071).
     void RefreshCOverKProbe(unsigned size) const
     {
         c_over_k_probe_as_drawn_.resize(size);

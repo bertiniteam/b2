@@ -55,8 +55,9 @@ namespace bertini
     system construction (gamma, patch, TD-constants) to make those setup draws deterministic.
 
     The classic input format differs: there `randomseed: 0`, its default, means "draw from
-    entropy", as in Bertini 1, and the command-line program reads it that way (ADR-0072).
+    entropy", as in Bertini 1, and the command-line program reads it that way.
     */
+    // 0 is a seed here and entropy in the classic format: each follows its users' convention (ADR-0072)
     void SetGlobalSeed(unsigned long seed);
 
     /**
@@ -68,7 +69,7 @@ namespace bertini
     /**
     Apply a classic input file's `randomseed`, as Bertini 1 does: 0, the default, draws a seed
     from entropy; any other value is the seed.  Only the classic input format reads 0 this way;
-    to SetGlobalSeed it is an ordinary seed (ADR-0072).
+    to SetGlobalSeed it is an ordinary seed.
 
     \param randomseed The value of `randomseed` in the classic input file.
     \return The seed now in effect.

@@ -112,16 +112,13 @@ Precedence (highest first):
   3. AvailableCpuCount() when `configured == 0` ("auto"): every CPU this process may run on,
      the same default OpenMP uses, so a solve is threaded without any configuration.
 
-The same rule serves the standalone threaded solve and each MPI rank.
-
-b2 reads its OWN variable, not OMP_NUM_THREADS (until 4.0 it read that one, although it uses
-std::thread and no OpenMP).  The shared name coupled two unrelated settings: numpy's
-OpenBLAS also takes its thread count from OMP_NUM_THREADS, so pinning b2 to one thread
-single-threaded every numpy call in the process, and tuning numpy changed how many paths b2
-tracked at once.
+The same rule serves the standalone threaded solve and each MPI rank.  OMP_NUM_THREADS has
+no effect.
 
 Always returns >= 1 (a return of 1 means "run serially, no pool").
 */
+// b2 reads its own variable, never OMP_NUM_THREADS: numpy's OpenBLAS takes its thread count from
+// that one, so a shared name would tie the two libraries' thread counts together (ADR-0070).
 inline unsigned EffectiveThreadCount(unsigned configured = 0)
 {
     if (const char* env = std::getenv("BERTINI_NUM_THREADS"))
