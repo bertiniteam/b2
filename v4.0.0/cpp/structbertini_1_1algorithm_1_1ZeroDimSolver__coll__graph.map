@@ -1,0 +1,29 @@
+<map id="bertini::algorithm::ZeroDimSolver&lt; TrackerType, EndgameType, SystemType &gt;" name="bertini::algorithm::ZeroDimSolver&lt; TrackerType, EndgameType, SystemType &gt;">
+<area shape="rect" id="Node000001" title="The zero&#45;dimensional solve algorithm: given a polynomial system, form a start system and a homotopy,..." alt="" coords="1457,125,1680,186"/>
+<area shape="rect" id="Node000002" href="$structbertini_1_1algorithm_1_1zero__dim__detail_1_1OwnedHomotopy.html" title="Owns and builds the target / start system / homotopy for a zero&#45;dim solve." alt="" coords="1154,82,1408,144"/>
+<area shape="poly" id="edge1_Node000001_Node000002" title=" " alt="" coords="1423,131,1460,139,1454,139,1423,137"/>
+<area shape="rect" id="Node000003" href="$structbertini_1_1algorithm_1_1HomotopySolver.html" title="The continuation primitive: given a homotopy + a source of start points, track each path through the ..." alt="" coords="1164,168,1398,229"/>
+<area shape="poly" id="edge2_Node000001_Node000003" title=" " alt="" coords="1413,176,1460,172,1454,173,1414,181"/>
+<area shape="rect" id="Node000004" href="$structbertini_1_1algorithm_1_1AnyZeroDim.html" title="Type&#45;erased base for a zero&#45;dimensional solve, exposing output and config entry points." alt="" coords="795,5,930,50"/>
+<area shape="poly" id="edge3_Node000003_Node000004" title=" " alt="" coords="945,43,992,59,1064,92,1131,135,1155,153,1180,167,1175,167,1152,158,1128,139,1061,97,990,63,945,48"/>
+<area shape="rect" id="Node000005" href="$structbertini_1_1algorithm_1_1AnyAlgorithm.html" title="Type&#45;erased base for all nag algorithms, exposing a single Run() entry point." alt="" coords="478,5,612,50"/>
+<area shape="poly" id="edge4_Node000004_Node000005" title=" " alt="" coords="627,25,797,27,792,29,628,30"/>
+<area shape="rect" id="Node000006" href="$classbertini_1_1Observable.html" title="An abstract observable type, maintaining a list of observers, who can be notified in case of Events." alt="" coords="210,14,355,42"/>
+<area shape="poly" id="edge5_Node000005_Node000006" title=" " alt="" coords="370,25,480,26,475,29,372,30"/>
+<area shape="rect" id="Node000007" href="$structbertini_1_1detail_1_1Configured.html" title=" " alt="" coords="735,74,990,152"/>
+<area shape="poly" id="edge6_Node000003_Node000007" title=" " alt="" coords="1006,139,1166,174,1161,175,1006,145"/>
+<area shape="rect" id="Node000008" href="$structbertini_1_1algorithm_1_1MidpathCheckReport.html" title="Summary of what the midpath (path&#45;crossing) check found at the endgame boundary, and what the algorit..." alt="" coords="780,176,945,221"/>
+<area shape="poly" id="edge7_Node000003_Node000008" title=" " alt="" coords="960,196,1166,198,1161,199,961,201"/>
+<area shape="rect" id="Node000009" href="$classbertini_1_1tracking_1_1PathPrecisionRecorder.html" title=" " alt="" coords="779,245,946,306"/>
+<area shape="poly" id="edge8_Node000003_Node000009" title=" " alt="" coords="960,257,1129,226,1161,223,1166,222,1130,231,961,262"/>
+<area shape="rect" id="Node000010" href="$classbertini_1_1TypedObserver.html" title=" " alt="" coords="405,207,685,336"/>
+<area shape="poly" id="edge9_Node000009_Node000010" title=" " alt="" coords="700,271,782,274,776,275,700,276"/>
+<area shape="rect" id="Node000011" href="$classbertini_1_1Observer.html" title=" " alt="" coords="212,249,353,294"/>
+<area shape="poly" id="edge10_Node000010_Node000011" title=" " alt="" coords="369,269,407,271,402,272,369,274"/>
+<area shape="rect" id="Node000012" href="$classbertini_1_1AnyObserver.html" title="Strawman base class for Observer objects." alt="" coords="5,258,161,286"/>
+<area shape="poly" id="edge11_Node000011_Node000012" title=" " alt="" coords="175,269,214,271,209,273,177,274"/>
+<area shape="rect" id="Node000013" href="$structbertini_1_1algorithm_1_1MidpathChecker.html" title=" " alt="" coords="734,335,991,414"/>
+<area shape="poly" id="edge12_Node000003_Node000013" title=" " alt="" coords="1001,327,1129,277,1223,231,1229,229,1131,282,1002,332"/>
+<area shape="rect" id="Node000014" href="$structbertini_1_1detail_1_1Configured.html" title=" " alt="" coords="452,360,638,405"/>
+<area shape="poly" id="edge13_Node000013_Node000014" title=" " alt="" coords="654,377,736,377,731,378,654,382"/>
+</map>

@@ -1,0 +1,23 @@
+<map id="core/include/bertini2/settings/configIni_parse.hpp" name="core/include/bertini2/settings/configIni_parse.hpp">
+<area shape="rect" id="Node000001" title="Converts configuration settings into ini format." alt="" coords="820,5,1028,50"/>
+<area shape="rect" id="Node000002" title=" " alt="" coords="5,106,192,134"/>
+<area shape="poly" id="edge1_Node000001_Node000002" title=" " alt="" coords="817,36,541,61,373,79,204,101,175,106,174,100,203,95,372,73,541,56,822,35"/>
+<area shape="rect" id="Node000003" title=" " alt="" coords="216,98,368,143"/>
+<area shape="poly" id="edge2_Node000001_Node000003" title=" " alt="" coords="817,39,622,64,384,100,383,95,621,59,822,39"/>
+<area shape="rect" id="Node000004" title=" " alt="" coords="392,98,538,143"/>
+<area shape="poly" id="edge3_Node000001_Node000004" title=" " alt="" coords="822,46,554,100,553,95,817,47"/>
+<area shape="rect" id="Node000005" title=" " alt="" coords="562,98,707,143"/>
+<area shape="poly" id="edge4_Node000001_Node000005" title=" " alt="" coords="857,50,719,96,717,90,852,51"/>
+<area shape="rect" id="Node000006" title=" " alt="" coords="732,106,905,134"/>
+<area shape="poly" id="edge5_Node000001_Node000006" title=" " alt="" coords="901,49,846,98,844,94,896,51"/>
+<area shape="rect" id="Node000007" title=" " alt="" coords="930,106,1129,134"/>
+<area shape="poly" id="edge6_Node000001_Node000007" title=" " alt="" coords="950,48,1005,97,1000,95,948,53"/>
+<area shape="rect" id="Node000008" title=" " alt="" coords="1153,98,1366,143"/>
+<area shape="poly" id="edge7_Node000001_Node000008" title=" " alt="" coords="1005,48,1167,94,1162,93,1004,53"/>
+<area shape="rect" id="Node000009" title=" " alt="" coords="1391,106,1584,134"/>
+<area shape="poly" id="edge8_Node000001_Node000009" title=" " alt="" coords="1028,41,1379,95,1410,103,1404,103,1378,101,1028,46"/>
+<area shape="rect" id="Node000010" title=" " alt="" coords="1608,106,1688,134"/>
+<area shape="poly" id="edge9_Node000001_Node000010" title=" " alt="" coords="1028,28,1146,33,1289,44,1444,64,1598,95,1609,101,1604,100,1597,101,1443,70,1289,50,1146,38,1028,33"/>
+<area shape="rect" id="Node000011" title=" " alt="" coords="1712,106,1770,134"/>
+<area shape="poly" id="edge10_Node000001_Node000011" title=" " alt="" coords="1028,31,1386,53,1569,72,1643,83,1701,95,1708,100,1703,99,1699,101,1643,88,1568,77,1386,58,1028,36"/>
+</map>

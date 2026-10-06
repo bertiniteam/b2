@@ -1,0 +1,33 @@
+<map id="core/include/bertini2/mpfr_complex.hpp" name="core/include/bertini2/mpfr_complex.hpp">
+<area shape="rect" id="Node000001" title="The main multiprecision complex number type." alt="" coords="471,5,626,50"/>
+<area shape="rect" id="Node000002" title=" " alt="" coords="5,191,145,235"/>
+<area shape="poly" id="edge1_Node000001_Node000002" title=" " alt="" coords="470,52,331,100,226,144,134,186,131,181,223,139,329,96,475,49"/>
+<area shape="rect" id="Node000003" title=" " alt="" coords="169,191,309,235"/>
+<area shape="poly" id="edge2_Node000001_Node000003" title=" " alt="" coords="497,52,407,100,340,142,281,183,279,179,337,138,404,96,502,49"/>
+<area shape="rect" id="Node000004" title=" " alt="" coords="333,191,476,235"/>
+<area shape="poly" id="edge3_Node000001_Node000004" title=" " alt="" coords="493,49,459,73,432,100,422,117,415,137,407,177,403,173,410,135,417,115,428,96,456,68,489,52"/>
+<area shape="rect" id="Node000005" title=" " alt="" coords="1090,199,1148,227"/>
+<area shape="poly" id="edge4_Node000001_Node000005" title=" " alt="" coords="590,48,669,96,694,120,704,131,720,140,771,159,816,168,857,171,897,170,979,169,1026,175,1080,188,1086,193,1081,192,1078,193,1025,180,978,174,897,176,857,177,815,174,770,164,718,145,701,135,690,124,665,100,589,53"/>
+<area shape="rect" id="Node000006" title=" " alt="" coords="730,106,804,134"/>
+<area shape="poly" id="edge5_Node000001_Node000006" title=" " alt="" coords="601,48,724,100,719,100,600,53"/>
+<area shape="rect" id="Node000007" href="$mpfr__extensions_8hpp.html" title="Extensions to the Boost.Multiprecision library." alt="" coords="442,106,654,134"/>
+<area shape="poly" id="edge6_Node000001_Node000007" title=" " alt="" coords="550,48,551,92,546,90,547,53"/>
+<area shape="rect" id="Node000014" title=" " alt="" coords="827,98,982,143"/>
+<area shape="poly" id="edge17_Node000001_Node000014" title=" " alt="" coords="626,46,815,95,810,96,626,51"/>
+<area shape="poly" id="edge9_Node000007_Node000002" title=" " alt="" coords="461,136,326,161,161,193,159,188,325,156,466,134"/>
+<area shape="poly" id="edge10_Node000007_Node000003" title=" " alt="" coords="501,136,324,190,323,185,506,134"/>
+<area shape="poly" id="edge11_Node000007_Node000004" title=" " alt="" coords="530,134,453,184,451,180,525,136"/>
+<area shape="poly" id="edge12_Node000007_Node000005" title=" " alt="" coords="623,132,674,140,789,151,879,153,968,161,1020,172,1080,188,1086,193,1081,192,1078,193,1019,177,967,167,879,159,788,156,673,145,623,137"/>
+<area shape="rect" id="Node000008" title=" " alt="" coords="499,191,654,235"/>
+<area shape="poly" id="edge7_Node000007_Node000008" title=" " alt="" coords="554,132,568,177,563,175,551,137"/>
+<area shape="rect" id="Node000009" title=" " alt="" coords="677,199,817,227"/>
+<area shape="poly" id="edge8_Node000007_Node000009" title=" " alt="" coords="578,132,707,192,702,192,577,137"/>
+<area shape="rect" id="Node000010" href="$double__extensions_8hpp.html" title="Provides bertini extensions to the double and complex&lt;double&gt; types." alt="" coords="841,199,1066,227"/>
+<area shape="poly" id="edge13_Node000007_Node000010" title=" " alt="" coords="607,132,883,195,877,196,607,137"/>
+<area shape="rect" id="Node000011" title=" " alt="" coords="778,292,849,320"/>
+<area shape="poly" id="edge14_Node000010_Node000011" title=" " alt="" coords="936,226,848,286,846,281,931,228"/>
+<area shape="rect" id="Node000012" href="$draw__functions_8hpp.html" title="Dependency&#45;free declarations of the pinned draw primitives (ADR&#45;0044)." alt="" coords="874,283,1033,328"/>
+<area shape="poly" id="edge15_Node000010_Node000012" title=" " alt="" coords="956,225,956,269,952,266,952,229"/>
+<area shape="rect" id="Node000013" title=" " alt="" coords="1058,292,1135,320"/>
+<area shape="poly" id="edge16_Node000010_Node000013" title=" " alt="" coords="975,225,1065,284,1060,283,973,230"/>
+</map>

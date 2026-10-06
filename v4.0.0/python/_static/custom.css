@@ -1,0 +1,76 @@
+/* _static/custom.css */
+/* Make code blocks more readable */
+div.highlight pre {
+    font-size: 0.9em;
+    line-height: 1.4;
+}
+
+/* Improve table styling */
+table.docutils {
+    border-collapse: collapse;
+    width: 100%;
+}
+
+table.docutils th, table.docutils td {
+    border: 1px solid #ddd;
+    padding: 8px;
+    text-align: left;
+}
+
+/* Make TOC more compact */
+.rst-versions {
+    font-size: 0.9em;
+}
+
+/* Build metadata in the footer (rendered by _templates/footer.html) */
+footer .build-info {
+    margin-top: 0.5rem;
+    font-size: 0.85em;
+    color: #888;
+    font-family: ui-monospace, SFMono-Regular, "SF Mono", Consolas, monospace;
+}
+footer .build-info code {
+    font-family: inherit;
+    background: rgba(0, 0, 0, 0.04);
+    padding: 0.05em 0.4em;
+    border-radius: 4px;
+}
+
+figcaption, .figure p.caption {
+    font-size: 0.85em;
+}
+
+
+
+
+
+
+/* sidebar toctree - always style l1 */
+.toc-tree li.toctree-l1 {
+    margin-top: 1em;
+}
+.toc-tree li.toctree-l1 > a {
+    font-weight: bold;
+    font-size: 1.05em;
+    color: var(--color-foreground-primary);
+}
+
+/* on-page toctree - only style l1 when it has children */
+.toctree-wrapper ul li.toctree-l1:has(ul) {
+    margin-top: 1em;
+}
+.toctree-wrapper ul li.toctree-l1:has(ul) > a {
+    font-weight: bold;
+    font-size: 1.05em;
+}
+
+/* remove bullets but keep indentation */
+.toctree-wrapper ul {
+    list-style: none;
+}
+.toctree-wrapper ul li.toctree-l1 {
+    padding-left: 0;
+}
+.toctree-wrapper ul li.toctree-l2 {
+    padding-left: 1.5em;
+}

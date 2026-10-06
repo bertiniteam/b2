@@ -1,0 +1,28 @@
+<map id="core/include/bertini2/io/parsing/settings_parsers/base.hpp" name="core/include/bertini2/io/parsing/settings_parsers/base.hpp">
+<area shape="rect" id="Node000001" title="Provides the base type for config settings parsers." alt="" coords="307,5,462,67"/>
+<area shape="rect" id="Node000002" href="$algorithm_8hpp.html" title="Provides the parsing rules for algorithm&#45;related settings in bertini2." alt="" coords="5,115,177,177"/>
+<area shape="poly" id="edge1_Node000001_Node000002" title=" " alt="" coords="291,73,175,117,172,112,294,69"/>
+<area shape="rect" id="Node000009" href="$io_2parsing_2settings__parsers_2endgames_8hpp.html" title="Provides the parsing rules for endgames&#45;related settings in bertini2." alt="" coords="200,115,376,177"/>
+<area shape="poly" id="edge10_Node000001_Node000009" title=" " alt="" coords="346,81,317,116,313,113,349,76"/>
+<area shape="rect" id="Node000010" href="$io_2parsing_2settings__parsers_2random_8hpp.html" title="Parser specialisation for RandomConfig — handles randomseed: &lt;uint&gt;;." alt="" coords="401,115,560,177"/>
+<area shape="poly" id="edge12_Node000001_Node000010" title=" " alt="" coords="421,76,456,114,451,115,421,81"/>
+<area shape="rect" id="Node000011" href="$io_2parsing_2settings__parsers_2tracking_8hpp.html" title="Provides the parsing rules for tracking&#45;related settings in bertini2." alt="" coords="584,115,745,177"/>
+<area shape="poly" id="edge14_Node000001_Node000011" title=" " alt="" coords="476,70,588,114,583,115,477,75"/>
+<area shape="rect" id="Node000003" href="$settings__parsers_8hpp.html" title="Provides the parsers for settings in bertini2." alt="" coords="307,225,462,286"/>
+<area shape="poly" id="edge2_Node000002_Node000003" title=" " alt="" coords="187,180,309,225,305,227,188,185"/>
+<area shape="rect" id="Node000004" href="$parsing_8hpp.html" title="A collective include file for parsing utilities." alt="" coords="218,343,372,388"/>
+<area shape="poly" id="edge3_Node000003_Node000004" title=" " alt="" coords="352,296,315,344,311,340,348,300"/>
+<area shape="rect" id="Node000005" href="$zero__dim__solve_8hpp.html" title="Provides the algorithm for computing all zero&#45;dimensional solutions for an algberaic system." alt="" coords="396,334,554,396"/>
+<area shape="poly" id="edge4_Node000003_Node000005" title=" " alt="" coords="420,296,452,334,447,334,419,301"/>
+<area shape="rect" id="Node000006" href="$switches__zerodim_8hpp.html" title="A sequence of switches for getting a particular instantiation of a ZeroDim algorithm,..." alt="" coords="136,444,369,489"/>
+<area shape="poly" id="edge5_Node000005_Node000006" title=" " alt="" coords="391,404,302,446,300,441,395,402"/>
+<area shape="rect" id="Node000007" href="$user__homotopy_8hpp.html" title=" " alt="" coords="222,537,437,581"/>
+<area shape="poly" id="edge7_Node000005_Node000007" title=" " alt="" coords="446,408,348,538,344,534,441,409"/>
+<area shape="rect" id="Node000008" href="$output_8hpp.html" title="Provides some outputting classes for printing results of running algorithms." alt="" coords="444,444,644,489"/>
+<area shape="poly" id="edge8_Node000005_Node000008" title=" " alt="" coords="497,407,524,444,519,443,495,412"/>
+<area shape="poly" id="edge6_Node000006_Node000007" title=" " alt="" coords="282,498,314,537,309,536,279,503"/>
+<area shape="poly" id="edge9_Node000008_Node000005" title=" " alt="" coords="526,430,504,399,506,394,531,431"/>
+<area shape="poly" id="edge11_Node000009_Node000003" title=" " alt="" coords="325,185,360,224,355,224,325,191"/>
+<area shape="poly" id="edge13_Node000010_Node000003" title=" " alt="" coords="446,186,413,226,409,222,442,190"/>
+<area shape="poly" id="edge15_Node000011_Node000003" title=" " alt="" coords="569,184,463,227,461,222,574,181"/>
+</map>

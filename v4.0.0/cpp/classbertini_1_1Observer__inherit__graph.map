@@ -1,0 +1,9 @@
+<map id="bertini::Observer&lt; ObservedT &gt;" name="bertini::Observer&lt; ObservedT &gt;">
+<area shape="rect" id="Node000001" title="Actual observer type, which you should derive from to extract custom information from observable type..." alt="" coords="209,44,350,89"/>
+<area shape="rect" id="Node000003" href="$classbertini_1_1MultiObserver.html" title="A class which can glob together observer types into a new, single observer type." alt="" coords="398,5,623,50"/>
+<area shape="poly" id="edge2_Node000001_Node000003" title=" " alt="" coords="365,49,400,46,395,47,366,55"/>
+<area shape="rect" id="Node000004" href="$classbertini_1_1TypedObserver.html" title="CRTP base that turns an observer into a set of typed Observe() overloads." alt="" coords="426,74,595,136"/>
+<area shape="poly" id="edge3_Node000001_Node000004" title=" " alt="" coords="365,78,428,91,423,91,365,83"/>
+<area shape="rect" id="Node000002" href="$classbertini_1_1AnyObserver.html" title="Strawman base class for Observer objects." alt="" coords="5,52,161,80"/>
+<area shape="poly" id="edge1_Node000001_Node000002" title=" " alt="" coords="176,64,211,66,206,67,176,69"/>
+</map>

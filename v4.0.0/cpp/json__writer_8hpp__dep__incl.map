@@ -1,0 +1,13 @@
+<map id="core/include/bertini2/io/json_writer.hpp" name="core/include/bertini2/io/json_writer.hpp">
+<area shape="rect" id="Node000001" title="Render a System&#39;s structure as JSON: named fields for its parts." alt="" coords="268,5,422,50"/>
+<area shape="rect" id="Node000002" href="$zero__dim__solve_8hpp.html" title="Provides the algorithm for computing all zero&#45;dimensional solutions for an algberaic system." alt="" coords="266,98,424,160"/>
+<area shape="poly" id="edge1_Node000001_Node000002" title=" " alt="" coords="346,63,347,99,342,97,343,68"/>
+<area shape="rect" id="Node000003" href="$switches__zerodim_8hpp.html" title="A sequence of switches for getting a particular instantiation of a ZeroDim algorithm,..." alt="" coords="5,208,239,252"/>
+<area shape="poly" id="edge2_Node000002_Node000003" title=" " alt="" coords="261,168,172,209,170,205,265,165"/>
+<area shape="rect" id="Node000004" href="$user__homotopy_8hpp.html" title=" " alt="" coords="92,300,307,345"/>
+<area shape="poly" id="edge4_Node000002_Node000004" title=" " alt="" coords="315,172,217,302,214,298,310,173"/>
+<area shape="rect" id="Node000005" href="$output_8hpp.html" title="Provides some outputting classes for printing results of running algorithms." alt="" coords="314,208,514,252"/>
+<area shape="poly" id="edge5_Node000002_Node000005" title=" " alt="" coords="367,170,394,208,389,207,365,175"/>
+<area shape="poly" id="edge3_Node000003_Node000004" title=" " alt="" coords="151,262,184,300,178,300,149,267"/>
+<area shape="poly" id="edge6_Node000005_Node000002" title=" " alt="" coords="396,194,373,163,375,158,401,195"/>
+</map>

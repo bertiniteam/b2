@@ -1,0 +1,17 @@
+<map id="bertini::node::NamedSymbol" name="bertini::node::NamedSymbol">
+<area shape="rect" id="Node000001" title="Symbols which have names are named symbols." alt="" coords="224,249,432,277"/>
+<area shape="rect" id="Node000006" href="$classbertini_1_1node_1_1Differential.html" title="Provides the differential type for differentiation of expression trees." alt="" coords="5,325,190,353"/>
+<area shape="poly" id="edge5_Node000001_Node000006" title=" " alt="" coords="275,284,140,327,138,322,270,281"/>
+<area shape="rect" id="Node000007" href="$classbertini_1_1node_1_1NamedExpression.html" title="A user&#45;named expression — the surviving, immutable entry point into a subtree." alt="" coords="214,325,443,353"/>
+<area shape="poly" id="edge6_Node000001_Node000007" title=" " alt="" coords="330,291,330,326,326,323,326,295"/>
+<area shape="rect" id="Node000008" href="$classbertini_1_1node_1_1Variable.html" title="Represents variable leaves in the function tree." alt="" coords="467,325,632,353"/>
+<area shape="poly" id="edge7_Node000001_Node000008" title=" " alt="" coords="383,280,513,324,507,325,382,285"/>
+<area shape="rect" id="Node000002" href="$classbertini_1_1node_1_1Symbol.html" title="Abstract symbol class." alt="" coords="248,174,408,201"/>
+<area shape="poly" id="edge1_Node000001_Node000002" title=" " alt="" coords="330,215,330,250,326,248,326,219"/>
+<area shape="rect" id="Node000003" href="$classbertini_1_1node_1_1Node.html" title="An interface for all nodes in a function tree, and for a function object as well." alt="" coords="256,98,401,126"/>
+<area shape="poly" id="edge2_Node000002_Node000003" title=" " alt="" coords="330,139,331,174,326,172,327,144"/>
+<area shape="rect" id="Node000004" href="$classbertini_1_1VisitableBase.html" title="The base class for visitable types." alt="" coords="157,5,318,50"/>
+<area shape="poly" id="edge3_Node000003_Node000004" title=" " alt="" coords="273,58,316,97,311,98,272,63"/>
+<area shape="rect" id="Node000005" title=" " alt="" coords="342,5,496,50"/>
+<area shape="poly" id="edge4_Node000003_Node000005" title=" " alt="" coords="386,59,344,99,341,95,382,62"/>
+</map>

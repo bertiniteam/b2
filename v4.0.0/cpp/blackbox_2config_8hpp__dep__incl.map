@@ -1,0 +1,8 @@
+<map id="core/include/bertini2/blackbox/config.hpp" name="core/include/bertini2/blackbox/config.hpp">
+<area shape="rect" id="Node000001" title="Configs for the blackbox whatnot." alt="" coords="122,5,277,50"/>
+<area shape="rect" id="Node000002" href="$switches__zerodim_8hpp.html" title="A sequence of switches for getting a particular instantiation of a ZeroDim algorithm,..." alt="" coords="5,98,239,143"/>
+<area shape="poly" id="edge1_Node000001_Node000002" title=" " alt="" coords="173,60,142,100,138,96,169,64"/>
+<area shape="rect" id="Node000003" href="$user__homotopy_8hpp.html" title=" " alt="" coords="92,191,307,235"/>
+<area shape="poly" id="edge3_Node000001_Node000003" title=" " alt="" coords="232,60,254,97,259,120,254,144,241,170,223,192,220,188,236,167,249,142,253,120,249,99,230,65"/>
+<area shape="poly" id="edge2_Node000002_Node000003" title=" " alt="" coords="151,152,184,191,178,190,149,157"/>
+</map>

@@ -1,0 +1,13 @@
+<map id="bertini::start_system::StartSystem" name="bertini::start_system::StartSystem">
+<area shape="rect" id="Node000001" title="Abstract base class for other start systems." alt="" coords="174,109,330,154"/>
+<area shape="rect" id="Node000003" href="$classbertini_1_1start__system_1_1MHomogeneous.html" title="The $m$&#45;homogeneous start system for Numerical Algebraic Geometry." alt="" coords="398,5,554,50"/>
+<area shape="poly" id="edge2_Node000001_Node000003" title=" " alt="" coords="303,99,377,60,409,49,404,52,379,65,305,103"/>
+<area shape="rect" id="Node000004" href="$classbertini_1_1start__system_1_1TotalDegreeBinomial.html" title="Roots&#45;of&#45;unity start system for 1&#45;homogeneous polynomial systems." alt="" coords="394,75,559,119"/>
+<area shape="poly" id="edge3_Node000001_Node000004" title=" " alt="" coords="344,115,396,109,391,111,346,120"/>
+<area shape="rect" id="Node000005" href="$classbertini_1_1start__system_1_1TotalDegreeLinearProduct.html" title="Total degree start system for 1&#45;homogeneous polynomial systems, built from random linear products." alt="" coords="378,144,574,189"/>
+<area shape="poly" id="edge4_Node000001_Node000005" title=" " alt="" coords="345,143,380,151,375,151,345,149"/>
+<area shape="rect" id="Node000006" href="$classbertini_1_1start__system_1_1User.html" title="The user&#45;provided start system for Numerical Algebraic Geometry." alt="" coords="398,213,554,258"/>
+<area shape="poly" id="edge5_Node000001_Node000006" title=" " alt="" coords="304,160,379,199,409,213,404,213,377,203,303,165"/>
+<area shape="rect" id="Node000002" href="$classbertini_1_1System.html" title="The fundamental polynomial system class for Bertini2." alt="" coords="5,118,126,146"/>
+<area shape="poly" id="edge1_Node000001_Node000002" title=" " alt="" coords="140,129,176,131,171,133,142,134"/>
+</map>

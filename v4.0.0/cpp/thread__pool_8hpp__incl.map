@@ -1,0 +1,23 @@
+<map id="core/include/bertini2/parallel/thread_pool.hpp" name="core/include/bertini2/parallel/thread_pool.hpp">
+<area shape="rect" id="Node000001" title="Thread&#45;safe queue and worker thread pool for MPI+thread hybrid parallelism." alt="" coords="440,5,624,50"/>
+<area shape="rect" id="Node000002" title=" " alt="" coords="5,98,147,126"/>
+<area shape="poly" id="edge1_Node000001_Node000002" title=" " alt="" coords="440,48,163,98,162,92,439,43"/>
+<area shape="rect" id="Node000003" title=" " alt="" coords="170,98,235,126"/>
+<area shape="poly" id="edge2_Node000001_Node000003" title=" " alt="" coords="443,50,250,100,249,95,437,50"/>
+<area shape="rect" id="Node000004" title=" " alt="" coords="259,98,320,126"/>
+<area shape="poly" id="edge3_Node000001_Node000004" title=" " alt="" coords="470,50,336,98,334,93,465,51"/>
+<area shape="rect" id="Node000005" title=" " alt="" coords="344,98,430,126"/>
+<area shape="poly" id="edge4_Node000001_Node000005" title=" " alt="" coords="496,50,424,93,422,88,491,51"/>
+<area shape="rect" id="Node000006" title=" " alt="" coords="454,98,517,126"/>
+<area shape="poly" id="edge5_Node000001_Node000006" title=" " alt="" coords="522,49,502,86,499,82,517,52"/>
+<area shape="rect" id="Node000007" title=" " alt="" coords="542,98,616,126"/>
+<area shape="poly" id="edge6_Node000001_Node000007" title=" " alt="" coords="546,48,566,85,561,83,543,53"/>
+<area shape="rect" id="Node000008" title=" " alt="" coords="640,98,704,126"/>
+<area shape="poly" id="edge7_Node000001_Node000008" title=" " alt="" coords="570,48,640,90,634,90,568,53"/>
+<area shape="rect" id="Node000009" title=" " alt="" coords="728,98,819,126"/>
+<area shape="poly" id="edge8_Node000001_Node000009" title=" " alt="" coords="596,48,723,93,718,92,596,53"/>
+<area shape="rect" id="Node000010" title=" " alt="" coords="844,98,911,126"/>
+<area shape="poly" id="edge9_Node000001_Node000010" title=" " alt="" coords="624,47,831,97,826,98,623,52"/>
+<area shape="rect" id="Node000011" title=" " alt="" coords="936,98,998,126"/>
+<area shape="poly" id="edge10_Node000001_Node000011" title=" " alt="" coords="624,40,760,63,923,98,918,98,759,68,624,45"/>
+</map>

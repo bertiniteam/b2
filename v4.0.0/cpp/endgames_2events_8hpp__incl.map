@@ -1,0 +1,7 @@
+<map id="core/include/bertini2/endgames/events.hpp" name="core/include/bertini2/endgames/events.hpp">
+<area shape="rect" id="Node000001" title="Contains the endgames/events base types." alt="" coords="15,5,184,50"/>
+<area shape="rect" id="Node000002" href="$detail_2events_8hpp.html" title="Contains the detail/events base types." alt="" coords="5,98,194,126"/>
+<area shape="poly" id="edge1_Node000001_Node000002" title=" " alt="" coords="101,48,102,83,97,82,98,53"/>
+<area shape="rect" id="Node000003" title=" " alt="" coords="19,174,180,201"/>
+<area shape="poly" id="edge2_Node000002_Node000003" title=" " alt="" coords="101,124,102,159,97,157,98,128"/>
+</map>

@@ -1,0 +1,9 @@
+﻿bertini.config
+==============
+.. automodule:: bertini.config
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+
+

@@ -1,0 +1,19 @@
+<map id="core/include/bertini2/logging.hpp" name="core/include/bertini2/logging.hpp">
+<area shape="rect" id="Node000001" title="Logging in Bertini using Boost.Log." alt="" coords="650,5,804,50"/>
+<area shape="rect" id="Node000002" title=" " alt="" coords="5,106,147,134"/>
+<area shape="poly" id="edge1_Node000001_Node000002" title=" " alt="" coords="646,36,428,61,294,78,159,101,139,105,138,100,158,95,293,73,428,55,652,35"/>
+<area shape="rect" id="Node000003" title=" " alt="" coords="171,106,322,134"/>
+<area shape="poly" id="edge2_Node000001_Node000003" title=" " alt="" coords="652,41,503,69,335,101,314,105,313,100,334,95,502,63,646,42"/>
+<area shape="rect" id="Node000004" title=" " alt="" coords="347,106,538,134"/>
+<area shape="poly" id="edge3_Node000001_Node000004" title=" " alt="" coords="661,50,499,104,498,99,656,51"/>
+<area shape="rect" id="Node000005" title=" " alt="" coords="563,98,712,143"/>
+<area shape="poly" id="edge4_Node000001_Node000005" title=" " alt="" coords="708,49,670,89,668,85,703,51"/>
+<area shape="rect" id="Node000006" title=" " alt="" coords="736,98,899,143"/>
+<area shape="poly" id="edge5_Node000001_Node000006" title=" " alt="" coords="749,48,788,88,783,86,747,53"/>
+<area shape="rect" id="Node000007" title=" " alt="" coords="923,98,1104,143"/>
+<area shape="poly" id="edge6_Node000001_Node000007" title=" " alt="" coords="796,48,933,93,928,93,795,53"/>
+<area shape="rect" id="Node000008" title=" " alt="" coords="1128,98,1320,143"/>
+<area shape="poly" id="edge7_Node000001_Node000008" title=" " alt="" coords="805,40,1115,97,1110,98,804,45"/>
+<area shape="rect" id="Node000009" title=" " alt="" coords="1344,98,1525,143"/>
+<area shape="poly" id="edge8_Node000001_Node000009" title=" " alt="" coords="804,33,1036,56,1332,98,1327,98,1035,62,804,38"/>
+</map>

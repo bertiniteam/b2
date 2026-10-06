@@ -1,0 +1,7 @@
+<map id="core/include/bertini2/records/producer.hpp" name="core/include/bertini2/records/producer.hpp">
+<area shape="rect" id="Node000001" title="Which software produced a record: name, version, and source commit, for the producer field of run hea..." alt="" coords="10,5,171,50"/>
+<area shape="rect" id="Node000002" title=" " alt="" coords="5,98,64,126"/>
+<area shape="poly" id="edge1_Node000001_Node000002" title=" " alt="" coords="78,49,54,87,50,83,74,52"/>
+<area shape="rect" id="Node000003" title=" " alt="" coords="88,98,205,126"/>
+<area shape="poly" id="edge2_Node000001_Node000003" title=" " alt="" coords="106,48,132,85,126,85,104,53"/>
+</map>

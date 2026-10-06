@@ -1,0 +1,13 @@
+<map id="bertini::algorithm::AnyZeroDim" name="bertini::algorithm::AnyZeroDim">
+<area shape="rect" id="Node000001" title="Type&#45;erased base for a zero&#45;dimensional solve, exposing output and config entry points." alt="" coords="381,56,515,101"/>
+<area shape="rect" id="Node000004" href="$structbertini_1_1algorithm_1_1HomotopySolver.html" title=" " alt="" coords="597,5,763,67"/>
+<area shape="poly" id="edge3_Node000001_Node000004" title=" " alt="" coords="530,61,594,52,599,51,531,66"/>
+<area shape="rect" id="Node000005" href="$structbertini_1_1algorithm_1_1HomotopySolver.html" title="The continuation primitive: given a homotopy + a source of start points, track each path through the ..." alt="" coords="563,91,797,152"/>
+<area shape="poly" id="edge4_Node000001_Node000005" title=" " alt="" coords="531,91,566,100,560,100,531,97"/>
+<area shape="rect" id="Node000002" href="$structbertini_1_1algorithm_1_1AnyAlgorithm.html" title="Type&#45;erased base for all nag algorithms, exposing a single Run() entry point." alt="" coords="199,56,333,101"/>
+<area shape="poly" id="edge1_Node000001_Node000002" title=" " alt="" coords="348,76,383,79,378,79,349,81"/>
+<area shape="rect" id="Node000003" href="$classbertini_1_1Observable.html" title="An abstract observable type, maintaining a list of observers, who can be notified in case of Events." alt="" coords="5,65,151,93"/>
+<area shape="poly" id="edge2_Node000002_Node000003" title=" " alt="" coords="166,76,201,78,196,80,167,81"/>
+<area shape="rect" id="Node000006" href="$structbertini_1_1algorithm_1_1ZeroDimSolver.html" title="The zero&#45;dimensional solve algorithm: given a polynomial system, form a start system and a homotopy,..." alt="" coords="845,91,1067,152"/>
+<area shape="poly" id="edge5_Node000005_Node000006" title=" " alt="" coords="812,119,847,121,841,122,812,124"/>
+</map>

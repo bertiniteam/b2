@@ -1,0 +1,11 @@
+<map id="bertini::tracking::DoublePrecisionTracker" name="bertini::tracking::DoublePrecisionTracker">
+<area shape="rect" id="Node000001" title="A tracker that works entirely in hardware double precision." alt="" coords="806,36,979,80"/>
+<area shape="rect" id="Node000002" href="$classbertini_1_1tracking_1_1FixedPrecisionTracker.html" title=" " alt="" coords="556,27,758,89"/>
+<area shape="poly" id="edge1_Node000001_Node000002" title=" " alt="" coords="774,55,808,58,803,58,774,60"/>
+<area shape="rect" id="Node000003" href="$classbertini_1_1tracking_1_1Tracker.html" title=" " alt="" coords="287,27,508,89"/>
+<area shape="poly" id="edge2_Node000002_Node000003" title=" " alt="" coords="523,55,558,58,553,58,524,60"/>
+<area shape="rect" id="Node000004" href="$classbertini_1_1Observable.html" title="An abstract observable type, maintaining a list of observers, who can be notified in case of Events." alt="" coords="49,5,195,33"/>
+<area shape="poly" id="edge3_Node000003_Node000004" title=" " alt="" coords="210,29,289,41,283,43,210,34"/>
+<area shape="rect" id="Node000005" href="$structbertini_1_1detail_1_1Configured.html" title=" " alt="" coords="5,57,239,136"/>
+<area shape="poly" id="edge4_Node000003_Node000005" title=" " alt="" coords="254,75,289,73,284,74,255,81"/>
+</map>

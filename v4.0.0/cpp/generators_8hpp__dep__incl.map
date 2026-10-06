@@ -1,0 +1,16 @@
+<map id="core/include/bertini2/io/generators.hpp" name="core/include/bertini2/io/generators.hpp">
+<area shape="rect" id="Node000001" title="Provides the generators for bertini2." alt="" coords="260,5,414,50"/>
+<area shape="rect" id="Node000002" href="$output_8hpp.html" title="Provides some outputting classes for printing results of running algorithms." alt="" coords="99,98,300,143"/>
+<area shape="poly" id="edge1_Node000001_Node000002" title=" " alt="" coords="290,61,234,100,230,96,293,57"/>
+<area shape="rect" id="Node000003" href="$zero__dim__solve_8hpp.html" title="Provides the algorithm for computing all zero&#45;dimensional solutions for an algberaic system." alt="" coords="120,191,278,252"/>
+<area shape="poly" id="edge8_Node000001_Node000003" title=" " alt="" coords="337,63,331,105,314,144,290,171,262,192,258,188,286,167,309,141,326,104,334,68"/>
+<area shape="rect" id="Node000006" href="$sharpen_8hpp.html" title="Provides the algorithms for sharpening points." alt="" coords="374,98,584,143"/>
+<area shape="poly" id="edge7_Node000001_Node000006" title=" " alt="" coords="384,56,448,97,443,98,384,61"/>
+<area shape="poly" id="edge2_Node000002_Node000003" title=" " alt="" coords="192,156,194,191,188,190,190,161"/>
+<area shape="poly" id="edge6_Node000003_Node000002" title=" " alt="" coords="206,174,206,146,208,141,211,176"/>
+<area shape="rect" id="Node000004" href="$switches__zerodim_8hpp.html" title="A sequence of switches for getting a particular instantiation of a ZeroDim algorithm,..." alt="" coords="5,300,239,345"/>
+<area shape="poly" id="edge3_Node000003_Node000004" title=" " alt="" coords="168,263,141,302,137,298,165,267"/>
+<area shape="rect" id="Node000005" href="$user__homotopy_8hpp.html" title=" " alt="" coords="92,393,307,438"/>
+<area shape="poly" id="edge5_Node000003_Node000005" title=" " alt="" coords="235,263,254,299,259,323,254,346,241,372,223,395,220,390,236,369,249,344,253,323,249,301,233,268"/>
+<area shape="poly" id="edge4_Node000004_Node000005" title=" " alt="" coords="151,354,184,393,178,393,149,359"/>
+</map>

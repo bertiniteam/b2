@@ -1,0 +1,17 @@
+<map id="bertini::tracking::DoublePrecisionTracker" name="bertini::tracking::DoublePrecisionTracker">
+<area shape="rect" id="Node000001" title="A tracker that works entirely in hardware double precision." alt="" coords="883,160,1055,204"/>
+<area shape="rect" id="Node000002" href="$classbertini_1_1tracking_1_1FixedPrecisionTracker.html" title=" " alt="" coords="631,151,834,213"/>
+<area shape="poly" id="edge1_Node000001_Node000002" title=" " alt="" coords="849,179,885,182,880,182,850,184"/>
+<area shape="rect" id="Node000003" href="$classbertini_1_1tracking_1_1Tracker.html" title=" " alt="" coords="361,151,582,213"/>
+<area shape="poly" id="edge2_Node000002_Node000003" title=" " alt="" coords="597,179,633,181,628,182,598,184"/>
+<area shape="rect" id="Node000004" href="$classbertini_1_1Observable.html" title="An abstract observable type, maintaining a list of observers, who can be notified in case of Events." alt="" coords="49,5,195,33"/>
+<area shape="poly" id="edge3_Node000003_Node000004" title=" " alt="" coords="209,32,240,42,292,66,344,94,430,150,424,151,341,98,290,71,238,47,211,38"/>
+<area shape="rect" id="Node000005" href="$structbertini_1_1detail_1_1Configured.html" title=" " alt="" coords="5,57,239,136"/>
+<area shape="poly" id="edge4_Node000003_Node000005" title=" " alt="" coords="254,126,363,154,358,156,254,131"/>
+<area shape="rect" id="Node000006" href="$classbertini_1_1tracking_1_1predict_1_1ExplicitRKPredictor.html" title="A class which stores all the explicit single&#45;step multi&#45;stage ODE predictor methods." alt="" coords="23,160,221,204"/>
+<area shape="poly" id="edge5_Node000003_Node000006" title=" " alt="" coords="236,179,363,181,358,183,237,184"/>
+<area shape="rect" id="Node000007" href="$classbertini_1_1tracking_1_1correct_1_1NewtonCorrector.html" title="/class NewtonCorrector" alt="" coords="30,229,214,274"/>
+<area shape="poly" id="edge6_Node000003_Node000007" title=" " alt="" coords="229,230,336,210,363,206,358,208,337,215,230,235"/>
+<area shape="rect" id="Node000008" href="$structbertini_1_1tracking_1_1StepMetadata.html" title="Metadata produced by a single predict or correct step." alt="" coords="56,298,188,343"/>
+<area shape="poly" id="edge7_Node000003_Node000008" title=" " alt="" coords="202,294,238,283,288,270,336,254,417,214,423,212,338,259,289,275,239,288,204,299"/>
+</map>

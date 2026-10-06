@@ -1,0 +1,9 @@
+﻿bertini.random
+==============
+.. automodule:: bertini.random
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+
+

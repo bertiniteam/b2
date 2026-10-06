@@ -1,0 +1,11 @@
+<map id="bertini::endgame::CauchyEndgame&lt; PrecT &gt;" name="bertini::endgame::CauchyEndgame&lt; PrecT &gt;">
+<area shape="rect" id="Node000001" title="Class used to finish tracking paths during Homotopy Continuation." alt="" coords="150,208,338,252"/>
+<area shape="rect" id="Node000002" href="$classbertini_1_1endgame_1_1EndgameBase.html" title=" " alt="" coords="130,98,358,160"/>
+<area shape="poly" id="edge1_Node000001_Node000002" title=" " alt="" coords="246,174,246,209,242,206,242,177"/>
+<area shape="rect" id="Node000003" href="$structbertini_1_1detail_1_1Configured.html" title="This templated struct allows one to provide a variable typelist of config structs (or anything else f..." alt="" coords="5,5,192,50"/>
+<area shape="poly" id="edge2_Node000002_Node000003" title=" " alt="" coords="143,56,202,97,197,98,143,62"/>
+<area shape="rect" id="Node000004" title=" " alt="" coords="215,14,272,42"/>
+<area shape="poly" id="edge3_Node000002_Node000004" title=" " alt="" coords="245,55,246,99,241,97,242,59"/>
+<area shape="rect" id="Node000005" href="$classbertini_1_1Observable.html" title="An abstract observable type, maintaining a list of observers, who can be notified in case of Events." alt="" coords="296,14,442,42"/>
+<area shape="poly" id="edge4_Node000002_Node000005" title=" " alt="" coords="343,50,283,100,280,95,339,52"/>
+</map>

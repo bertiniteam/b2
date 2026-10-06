@@ -1,0 +1,7 @@
+<map id="bertini::start_system::TotalDegreeLinearProduct" name="bertini::start_system::TotalDegreeLinearProduct">
+<area shape="rect" id="Node000001" title="Total degree start system for 1&#45;homogeneous polynomial systems, built from random linear products." alt="" coords="5,174,202,218"/>
+<area shape="rect" id="Node000002" href="$classbertini_1_1start__system_1_1StartSystem.html" title="Abstract base class for other start systems." alt="" coords="25,81,182,126"/>
+<area shape="poly" id="edge1_Node000001_Node000002" title=" " alt="" coords="105,139,106,174,101,173,102,143"/>
+<area shape="rect" id="Node000003" href="$classbertini_1_1System.html" title="The fundamental polynomial system class for Bertini2." alt="" coords="43,5,164,33"/>
+<area shape="poly" id="edge2_Node000002_Node000003" title=" " alt="" coords="104,46,106,81,101,80,103,51"/>
+</map>

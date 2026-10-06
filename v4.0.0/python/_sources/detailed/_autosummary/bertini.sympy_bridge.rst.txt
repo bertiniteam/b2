@@ -1,0 +1,9 @@
+﻿bertini.sympy\_bridge
+=====================
+.. automodule:: bertini.sympy_bridge
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+
+

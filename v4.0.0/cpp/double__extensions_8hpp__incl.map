@@ -1,0 +1,9 @@
+<map id="core/include/bertini2/double_extensions.hpp" name="core/include/bertini2/double_extensions.hpp">
+<area shape="rect" id="Node000001" title="Provides bertini extensions to the double and complex&lt;double&gt; types." alt="" coords="93,5,269,50"/>
+<area shape="rect" id="Node000002" title=" " alt="" coords="5,106,77,134"/>
+<area shape="poly" id="edge1_Node000001_Node000002" title=" " alt="" coords="149,53,75,100,73,96,146,48"/>
+<area shape="rect" id="Node000003" href="$draw__functions_8hpp.html" title="Dependency&#45;free declarations of the pinned draw primitives (ADR&#45;0044)." alt="" coords="101,98,261,143"/>
+<area shape="poly" id="edge2_Node000001_Node000003" title=" " alt="" coords="183,48,183,84,179,81,179,52"/>
+<area shape="rect" id="Node000004" title=" " alt="" coords="285,106,362,134"/>
+<area shape="poly" id="edge3_Node000001_Node000004" title=" " alt="" coords="216,48,293,98,288,98,214,53"/>
+</map>

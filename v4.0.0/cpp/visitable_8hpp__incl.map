@@ -1,0 +1,10 @@
+<map id="core/include/bertini2/detail/visitable.hpp" name="core/include/bertini2/detail/visitable.hpp">
+<area shape="rect" id="Node000001" title="Contains the visitable base types." alt="" coords="126,5,280,50"/>
+<area shape="rect" id="Node000002" href="$visitor_8hpp.html" title="Contains the visitor base types." alt="" coords="5,98,190,126"/>
+<area shape="poly" id="edge1_Node000001_Node000002" title=" " alt="" coords="173,52,128,90,125,86,177,49"/>
+<area shape="rect" id="Node000004" href="$detail_2events_8hpp.html" title="Contains the detail/events base types." alt="" coords="214,98,402,126"/>
+<area shape="poly" id="edge3_Node000001_Node000004" title=" " alt="" coords="231,48,282,88,277,88,230,53"/>
+<area shape="rect" id="Node000003" title=" " alt="" coords="122,174,284,201"/>
+<area shape="poly" id="edge2_Node000002_Node000003" title=" " alt="" coords="117,124,175,164,169,165,116,129"/>
+<area shape="poly" id="edge4_Node000004_Node000003" title=" " alt="" coords="292,125,235,167,233,162,287,127"/>
+</map>

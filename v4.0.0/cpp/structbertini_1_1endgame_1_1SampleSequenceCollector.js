@@ -1,0 +1,25 @@
+var structbertini_1_1endgame_1_1SampleSequenceCollector =
+[
+    [ "BCT", "structbertini_1_1endgame_1_1SampleSequenceCollector.html#a628e56d2860a1665f4098838f688f666", null ],
+    [ "EmitterT", "structbertini_1_1endgame_1_1SampleSequenceCollector.html#a8bccb672ff9a56caefcfc1519e30a6e9", null ],
+    [ "Clear", "structbertini_1_1endgame_1_1SampleSequenceCollector.html#ac3c7036500d7a8f06ab5bec16ecf1f49", null ],
+    [ "NumRuns", "structbertini_1_1endgame_1_1SampleSequenceCollector.html#a0b06f9b6232a59333820e35a0a7004d4", null ],
+    [ "NumSamples", "structbertini_1_1endgame_1_1SampleSequenceCollector.html#af439951932b4e2cfd91d822067f9b19c", null ],
+    [ "Observe", "structbertini_1_1endgame_1_1SampleSequenceCollector.html#aeb540c0434941128c430525706751ffc", null ],
+    [ "ObservedKind", "structbertini_1_1endgame_1_1SampleSequenceCollector.html#a8817a2d91362f2cf65214278bb3b85b7", null ],
+    [ "SubscribedEventTypes", "structbertini_1_1endgame_1_1SampleSequenceCollector.html#a7080bbb9152afe5e720a7fa76c57c783", null ],
+    [ "SubscribedEventTypes", "structbertini_1_1endgame_1_1SampleSequenceCollector.html#a7080bbb9152afe5e720a7fa76c57c783", null ],
+    [ "advance_times", "structbertini_1_1endgame_1_1SampleSequenceCollector.html#a8532ed7f754e31d6931503b71af97a7e", null ],
+    [ "approximation_errors", "structbertini_1_1endgame_1_1SampleSequenceCollector.html#ac43b0cbde60e7321416dc27e400f9764", null ],
+    [ "approximation_times", "structbertini_1_1endgame_1_1SampleSequenceCollector.html#ab8419b82e67e6db2035a1fffe4e7a629", null ],
+    [ "approximations", "structbertini_1_1endgame_1_1SampleSequenceCollector.html#a281be2d47a65b5bd0be2c272ef276cd8", null ],
+    [ "circle_samples", "structbertini_1_1endgame_1_1SampleSequenceCollector.html#af1c715818408bb0d65ebb46030ff82d0", null ],
+    [ "circle_times", "structbertini_1_1endgame_1_1SampleSequenceCollector.html#a50960f6854f8f729c9ed2d831a01cde9", null ],
+    [ "cycle_numbers", "structbertini_1_1endgame_1_1SampleSequenceCollector.html#aac8cc1587340126dfc3828db78268fa9", null ],
+    [ "num_precision_increases", "structbertini_1_1endgame_1_1SampleSequenceCollector.html#aa666db07790ca60c54a9965cb2e407f4", null ],
+    [ "path_samples", "structbertini_1_1endgame_1_1SampleSequenceCollector.html#ab11eb99afeaa54f1b1909835f950f338", null ],
+    [ "path_times", "structbertini_1_1endgame_1_1SampleSequenceCollector.html#a4775674ddc8e186bd1974856fd7997f6", null ],
+    [ "run_approx_starts", "structbertini_1_1endgame_1_1SampleSequenceCollector.html#ae5855d5f1d9b78253bf2790a0cd28b6e", null ],
+    [ "run_circle_starts", "structbertini_1_1endgame_1_1SampleSequenceCollector.html#a145d1c372302627dd34b8f6cffabffc3", null ],
+    [ "run_path_starts", "structbertini_1_1endgame_1_1SampleSequenceCollector.html#af4836a1e28ffda0276b7d4ce8cabc1fb", null ]
+];

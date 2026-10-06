@@ -1,0 +1,9 @@
+<map id="bertini::tracking::FixedPrecisionTracker&lt; DerivedT &gt;" name="bertini::tracking::FixedPrecisionTracker&lt; DerivedT &gt;">
+<area shape="rect" id="Node000001" title="CRTP base for trackers that work at a single fixed precision (double or fixed multiple)." alt="" coords="92,208,253,269"/>
+<area shape="rect" id="Node000002" href="$classbertini_1_1tracking_1_1Tracker.html" title=" " alt="" coords="62,98,283,160"/>
+<area shape="poly" id="edge1_Node000001_Node000002" title=" " alt="" coords="174,173,175,208,170,206,171,177"/>
+<area shape="rect" id="Node000003" href="$classbertini_1_1Observable.html" title="An abstract observable type, maintaining a list of observers, who can be notified in case of Events." alt="" coords="5,14,151,42"/>
+<area shape="poly" id="edge2_Node000002_Node000003" title=" " alt="" coords="101,50,147,97,141,98,100,55"/>
+<area shape="rect" id="Node000004" href="$structbertini_1_1detail_1_1Configured.html" title="This templated struct allows one to provide a variable typelist of config structs (or anything else f..." alt="" coords="174,5,360,50"/>
+<area shape="poly" id="edge3_Node000002_Node000004" title=" " alt="" coords="238,60,203,99,200,96,234,63"/>
+</map>

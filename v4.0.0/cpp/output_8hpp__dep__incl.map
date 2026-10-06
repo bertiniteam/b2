@@ -1,0 +1,11 @@
+<map id="core/include/bertini2/nag_algorithms/output.hpp" name="core/include/bertini2/nag_algorithms/output.hpp">
+<area shape="rect" id="Node000001" title="Provides some outputting classes for printing results of running algorithms." alt="" coords="99,5,300,50"/>
+<area shape="rect" id="Node000002" href="$zero__dim__solve_8hpp.html" title="Provides the algorithm for computing all zero&#45;dimensional solutions for an algberaic system." alt="" coords="120,98,278,160"/>
+<area shape="poly" id="edge1_Node000001_Node000002" title=" " alt="" coords="192,63,194,98,188,97,190,68"/>
+<area shape="poly" id="edge5_Node000002_Node000001" title=" " alt="" coords="206,82,206,53,208,48,211,83"/>
+<area shape="rect" id="Node000003" href="$switches__zerodim_8hpp.html" title="A sequence of switches for getting a particular instantiation of a ZeroDim algorithm,..." alt="" coords="5,208,239,252"/>
+<area shape="poly" id="edge2_Node000002_Node000003" title=" " alt="" coords="168,170,141,209,137,205,165,174"/>
+<area shape="rect" id="Node000004" href="$user__homotopy_8hpp.html" title=" " alt="" coords="92,300,307,345"/>
+<area shape="poly" id="edge4_Node000002_Node000004" title=" " alt="" coords="235,170,254,207,259,230,254,253,241,280,223,302,220,298,236,277,249,251,253,230,249,209,233,175"/>
+<area shape="poly" id="edge3_Node000003_Node000004" title=" " alt="" coords="151,262,184,300,178,300,149,267"/>
+</map>

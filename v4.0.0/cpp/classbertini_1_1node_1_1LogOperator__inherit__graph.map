@@ -1,0 +1,13 @@
+<map id="bertini::node::LogOperator" name="bertini::node::LogOperator">
+<area shape="rect" id="Node000001" title="represents the natural logarithm function" alt="" coords="80,325,272,353"/>
+<area shape="rect" id="Node000002" href="$classbertini_1_1node_1_1UnaryOperator.html" title="Interface for all unary Operator types." alt="" coords="72,249,280,277"/>
+<area shape="poly" id="edge1_Node000001_Node000002" title=" " alt="" coords="178,291,178,326,174,323,174,295"/>
+<area shape="rect" id="Node000003" href="$classbertini_1_1node_1_1Operator.html" title="Abstract Node type from which all Operators inherit." alt="" coords="92,174,260,201"/>
+<area shape="poly" id="edge2_Node000002_Node000003" title=" " alt="" coords="178,215,179,250,174,248,175,219"/>
+<area shape="rect" id="Node000004" href="$classbertini_1_1node_1_1Node.html" title="An interface for all nodes in a function tree, and for a function object as well." alt="" coords="104,98,249,126"/>
+<area shape="poly" id="edge3_Node000003_Node000004" title=" " alt="" coords="177,139,179,174,174,172,175,144"/>
+<area shape="rect" id="Node000005" href="$classbertini_1_1VisitableBase.html" title="The base class for visitable types." alt="" coords="5,5,166,50"/>
+<area shape="poly" id="edge4_Node000004_Node000005" title=" " alt="" coords="120,58,164,97,159,98,121,63"/>
+<area shape="rect" id="Node000006" title=" " alt="" coords="190,5,344,50"/>
+<area shape="poly" id="edge5_Node000004_Node000006" title=" " alt="" coords="230,62,193,99,189,96,234,58"/>
+</map>

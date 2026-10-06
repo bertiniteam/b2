@@ -1,0 +1,9 @@
+<map id="bertini::tracking::PrecisionChanged&lt; ObservedT &gt;" name="bertini::tracking::PrecisionChanged&lt; ObservedT &gt;">
+<area shape="rect" id="Node000001" title="Event emitted when the tracker&#39;s working precision changes." alt="" coords="271,56,508,101"/>
+<area shape="rect" id="Node000003" href="$classbertini_1_1tracking_1_1PrecisionDecreased.html" title="Precision decreased during tracking." alt="" coords="556,5,716,67"/>
+<area shape="poly" id="edge2_Node000001_Node000003" title=" " alt="" coords="523,53,558,50,553,50,524,58"/>
+<area shape="rect" id="Node000004" href="$classbertini_1_1tracking_1_1PrecisionIncreased.html" title="Precision increased during tracking." alt="" coords="559,91,713,152"/>
+<area shape="poly" id="edge3_Node000001_Node000004" title=" " alt="" coords="524,99,561,108,556,108,523,105"/>
+<area shape="rect" id="Node000002" title=" " alt="" coords="5,65,223,93"/>
+<area shape="poly" id="edge1_Node000001_Node000002" title=" " alt="" coords="238,76,273,78,268,79,238,81"/>
+</map>

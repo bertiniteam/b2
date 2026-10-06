@@ -1,0 +1,10 @@
+<map id="core/include/bertini2/system/precon.hpp" name="core/include/bertini2/system/precon.hpp">
+<area shape="rect" id="Node000001" title="Provides preconstructed systems for use around the home and office." alt="" coords="122,5,276,50"/>
+<area shape="rect" id="Node000002" href="$system_8hpp.html" title="Collects the various header files which define the Bertini2 systems." alt="" coords="122,98,276,143"/>
+<area shape="poly" id="edge1_Node000001_Node000002" title=" " alt="" coords="200,63,202,99,197,97,198,68"/>
+<area shape="rect" id="Node000003" href="$switches__zerodim_8hpp.html" title="A sequence of switches for getting a particular instantiation of a ZeroDim algorithm,..." alt="" coords="5,191,239,235"/>
+<area shape="poly" id="edge2_Node000002_Node000003" title=" " alt="" coords="173,153,142,192,138,189,169,156"/>
+<area shape="rect" id="Node000004" href="$user__homotopy_8hpp.html" title=" " alt="" coords="92,283,307,328"/>
+<area shape="poly" id="edge4_Node000002_Node000004" title=" " alt="" coords="232,152,254,190,259,213,254,236,241,263,223,285,220,281,236,260,249,234,253,213,249,192,230,157"/>
+<area shape="poly" id="edge3_Node000003_Node000004" title=" " alt="" coords="151,245,184,283,178,283,149,250"/>
+</map>

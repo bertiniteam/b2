@@ -1,0 +1,4 @@
+var structbertini_1_1parsing_1_1classic_1_1ConfigSettingParser_3_01Iterator_00_01algorithm_1_1ZeroDimConfig_00_01Skipper_01_4 =
+[
+    [ "ConfigSettingParser", "structbertini_1_1parsing_1_1classic_1_1ConfigSettingParser_3_01Iterator_00_01algorithm_1_1ZeroDimConfig_00_01Skipper_01_4.html#a91db8d8281a4d1515d0f2ed366f2e3a1", null ]
+];

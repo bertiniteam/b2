@@ -1,0 +1,11 @@
+<map id="Graphical Class Hierarchy" name="Graphical Class Hierarchy">
+<area shape="rect" id="Node000000" title=" " alt="" coords="5,226,123,254"/>
+<area shape="rect" id="Node000001" href="$structbertini_1_1blocks_1_1is__block_3_01B_00_01std_1_1void__t_3_01decltype_07std_1_1declval_3_04eeea1a2c1148e1db140f14baa4bf64f.html" title=" " alt="" coords="171,74,716,578"/>
+<area shape="poly" id="edge182_Node000000_Node000001" title=" " alt="" coords="137,254,173,262,168,265,139,259"/>
+<area shape="rect" id="Node000004" href="$structbertini_1_1blocks_1_1is__block.html" title="Detection trait: does B satisfy the evaluation&#45;block contract?" alt="" coords="327,5,560,50"/>
+<area shape="poly" id="edge183_Node000000_Node000004" title=" " alt="" coords="71,211,84,175,104,134,133,93,169,60,206,41,246,28,286,21,328,19,324,22,287,26,247,34,208,46,172,65,137,97,109,136,89,177,76,212"/>
+<area shape="rect" id="Node000002" title=" " alt="" coords="8,400,120,428"/>
+<area shape="poly" id="edge184_Node000002_Node000001" title=" " alt="" coords="134,396,172,388,168,392,136,400"/>
+<area shape="rect" id="Node000003" href="$structbertini_1_1detail_1_1AreValidArguments_3_01true_01_4.html" title=" " alt="" coords="358,603,528,647"/>
+<area shape="poly" id="edge185_Node000002_Node000003" title=" " alt="" coords="74,440,89,477,109,517,137,556,172,588,216,610,264,623,312,629,360,632,355,633,312,634,263,628,214,615,169,593,133,560,105,520,84,479,73,446"/>
+</map>

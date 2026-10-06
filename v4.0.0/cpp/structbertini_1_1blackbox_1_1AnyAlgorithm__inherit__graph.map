@@ -1,0 +1,17 @@
+<map id="bertini::blackbox::AnyAlgorithm" name="bertini::blackbox::AnyAlgorithm">
+<area shape="rect" id="Node000001" title="Type&#45;erased base for all nag algorithms, exposing a single Run() entry point." alt="" coords="199,64,337,109"/>
+<area shape="rect" id="Node000003" href="$structbertini_1_1algorithm_1_1AnyNID.html" title="Type&#45;erased base for the Numerical Irreducible Decomposition algorithm." alt="" coords="385,22,519,66"/>
+<area shape="poly" id="edge2_Node000001_Node000003" title=" " alt="" coords="351,65,387,59,382,61,353,70"/>
+<area shape="rect" id="Node000005" href="$structbertini_1_1algorithm_1_1AnyZeroDim.html" title="Type&#45;erased base for a zero&#45;dimensional solve, exposing output and config entry points." alt="" coords="385,99,519,144"/>
+<area shape="poly" id="edge4_Node000001_Node000005" title=" " alt="" coords="352,100,387,109,382,109,352,105"/>
+<area shape="rect" id="Node000002" href="$classbertini_1_1Observable.html" title="An abstract observable type, maintaining a list of observers, who can be notified in case of Events." alt="" coords="5,73,151,101"/>
+<area shape="poly" id="edge1_Node000001_Node000002" title=" " alt="" coords="165,84,201,86,196,88,167,89"/>
+<area shape="rect" id="Node000004" href="$structbertini_1_1algorithm_1_1NumericalIrreducibleDecomposition.html" title="forward declare of the NumericalIrreducibleDecomposition algorithm." alt="" coords="567,5,881,67"/>
+<area shape="poly" id="edge3_Node000003_Node000004" title=" " alt="" coords="534,39,570,40,564,41,535,44"/>
+<area shape="rect" id="Node000006" href="$structbertini_1_1algorithm_1_1HomotopySolver.html" title=" " alt="" coords="641,91,807,152"/>
+<area shape="poly" id="edge5_Node000005_Node000006" title=" " alt="" coords="534,119,643,121,638,122,535,124"/>
+<area shape="rect" id="Node000007" href="$structbertini_1_1algorithm_1_1HomotopySolver.html" title="The continuation primitive: given a homotopy + a source of start points, track each path through the ..." alt="" coords="607,176,841,238"/>
+<area shape="poly" id="edge6_Node000005_Node000007" title=" " alt="" coords="526,147,568,162,610,176,604,176,567,167,525,152"/>
+<area shape="rect" id="Node000008" href="$structbertini_1_1algorithm_1_1ZeroDimSolver.html" title="The zero&#45;dimensional solve algorithm: given a polynomial system, form a start system and a homotopy,..." alt="" coords="929,176,1151,238"/>
+<area shape="poly" id="edge7_Node000007_Node000008" title=" " alt="" coords="856,204,931,207,926,207,856,209"/>
+</map>

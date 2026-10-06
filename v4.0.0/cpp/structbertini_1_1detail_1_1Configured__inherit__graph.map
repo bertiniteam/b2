@@ -1,0 +1,21 @@
+<map id="bertini::detail::Configured&lt; Ts &gt;" name="bertini::detail::Configured&lt; Ts &gt;">
+<area shape="rect" id="Node000001" title="This templated struct allows one to provide a variable typelist of config structs (or anything else f..." alt="" coords="5,184,192,229"/>
+<area shape="rect" id="Node000002" href="$structbertini_1_1algorithm_1_1HomotopySolver.html" title=" " alt="" coords="271,5,437,67"/>
+<area shape="poly" id="edge1_Node000001_Node000002" title=" " alt="" coords="128,171,177,123,238,77,272,61,268,65,241,81,180,127,132,175"/>
+<area shape="rect" id="Node000003" href="$classbertini_1_1endgame_1_1EndgameBase.html" title=" " alt="" coords="240,91,468,152"/>
+<area shape="poly" id="edge2_Node000001_Node000003" title=" " alt="" coords="181,177,261,151,257,155,183,181"/>
+<area shape="rect" id="Node000005" href="$classbertini_1_1endgame_1_1EndgameBase.html" title=" " alt="" coords="249,176,458,238"/>
+<area shape="poly" id="edge4_Node000001_Node000005" title=" " alt="" coords="207,204,251,206,247,208,208,209"/>
+<area shape="rect" id="Node000007" href="$classbertini_1_1tracking_1_1Tracker.html" title=" " alt="" coords="268,262,440,306"/>
+<area shape="poly" id="edge6_Node000001_Node000007" title=" " alt="" coords="189,232,280,260,275,262,189,237"/>
+<area shape="rect" id="Node000009" href="$classbertini_1_1tracking_1_1Tracker.html" title=" " alt="" coords="243,331,464,392"/>
+<area shape="poly" id="edge8_Node000001_Node000009" title=" " alt="" coords="135,237,184,278,241,317,265,330,259,330,238,321,181,282,134,242"/>
+<area shape="rect" id="Node000004" href="$classbertini_1_1endgame_1_1CauchyEndgame.html" title="Class used to finish tracking paths during Homotopy Continuation." alt="" coords="532,99,720,144"/>
+<area shape="poly" id="edge3_Node000003_Node000004" title=" " alt="" coords="483,119,534,121,529,122,484,124"/>
+<area shape="rect" id="Node000006" href="$classbertini_1_1endgame_1_1PowerSeriesEndgame.html" title="class used to finish tracking paths during Homotopy Continuation" alt="" coords="516,184,736,229"/>
+<area shape="poly" id="edge5_Node000005_Node000006" title=" " alt="" coords="474,204,518,206,513,207,474,209"/>
+<area shape="rect" id="Node000008" href="$classbertini_1_1tracking_1_1AMPTracker.html" title="Functor&#45;like class for tracking paths on a system." alt="" coords="560,262,692,306"/>
+<area shape="poly" id="edge7_Node000007_Node000008" title=" " alt="" coords="455,282,562,284,557,285,456,287"/>
+<area shape="rect" id="Node000010" href="$classbertini_1_1tracking_1_1FixedPrecisionTracker.html" title="CRTP base for trackers that work at a single fixed precision (double or fixed multiple)." alt="" coords="546,331,706,392"/>
+<area shape="poly" id="edge9_Node000009_Node000010" title=" " alt="" coords="480,359,548,361,543,362,480,364"/>
+</map>

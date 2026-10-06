@@ -1,0 +1,5 @@
+<map id="bertini::algorithm::AnyAlgorithm" name="bertini::algorithm::AnyAlgorithm">
+<area shape="rect" id="Node000001" title="Type&#45;erased base for all nag algorithms, exposing a single Run() entry point." alt="" coords="11,81,145,126"/>
+<area shape="rect" id="Node000002" href="$classbertini_1_1Observable.html" title="An abstract observable type, maintaining a list of observers, who can be notified in case of Events." alt="" coords="5,5,151,33"/>
+<area shape="poly" id="edge1_Node000001_Node000002" title=" " alt="" coords="80,47,81,81,75,80,76,51"/>
+</map>

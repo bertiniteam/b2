@@ -1,0 +1,7 @@
+<map id="Graphical Class Hierarchy" name="Graphical Class Hierarchy">
+<area shape="rect" id="Node000000" href="$classbertini_1_1AnyEvent.html" title="Strawman Event type, enabling polymorphism." alt="" coords="5,48,139,76"/>
+<area shape="rect" id="Node000001" href="$classbertini_1_1Event_3_01ObsT_00_01false_01_4.html" title="For emission of events from observables." alt="" coords="187,5,347,50"/>
+<area shape="poly" id="edge4_Node000000_Node000001" title=" " alt="" coords="153,45,189,41,184,43,155,50"/>
+<area shape="rect" id="Node000002" href="$classbertini_1_1Event_3_01ObsT_00_01true_01_4.html" title="For emission of events from observables." alt="" coords="187,75,347,119"/>
+<area shape="poly" id="edge5_Node000000_Node000002" title=" " alt="" coords="154,74,189,82,184,83,154,80"/>
+</map>

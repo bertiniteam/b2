@@ -1,0 +1,7 @@
+<map id="bertini::algorithm::AnyNID" name="bertini::algorithm::AnyNID">
+<area shape="rect" id="Node000001" title="Type&#45;erased base for the Numerical Irreducible Decomposition algorithm." alt="" coords="11,174,145,218"/>
+<area shape="rect" id="Node000002" href="$structbertini_1_1algorithm_1_1AnyAlgorithm.html" title="Type&#45;erased base for all nag algorithms, exposing a single Run() entry point." alt="" coords="11,81,145,126"/>
+<area shape="poly" id="edge1_Node000001_Node000002" title=" " alt="" coords="80,139,81,174,75,173,76,143"/>
+<area shape="rect" id="Node000003" href="$classbertini_1_1Observable.html" title="An abstract observable type, maintaining a list of observers, who can be notified in case of Events." alt="" coords="5,5,151,33"/>
+<area shape="poly" id="edge2_Node000002_Node000003" title=" " alt="" coords="79,46,81,81,75,80,77,51"/>
+</map>

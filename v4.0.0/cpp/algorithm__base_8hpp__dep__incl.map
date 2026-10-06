@@ -1,0 +1,17 @@
+<map id="core/include/bertini2/nag_algorithms/common/algorithm_base.hpp" name="core/include/bertini2/nag_algorithms/common/algorithm_base.hpp">
+<area shape="rect" id="Node000001" title="provides a common base type for algorithms to inherit from, for the abstraction layer above for calli..." alt="" coords="280,5,468,67"/>
+<area shape="rect" id="Node000002" href="$algorithm__builder_8hpp.html" title="A type which determines which algorithms etc, to run, and sets them up." alt="" coords="5,124,236,168"/>
+<area shape="poly" id="edge1_Node000001_Node000002" title=" " alt="" coords="287,76,173,125,170,121,290,71"/>
+<area shape="rect" id="Node000003" href="$nag__algorithms_2numerical__irreducible__decomposition_8hpp.html" title="Provides the NID algorithms for Bertini2." alt="" coords="260,115,488,177"/>
+<area shape="poly" id="edge2_Node000001_Node000003" title=" " alt="" coords="375,80,376,116,371,113,373,85"/>
+<area shape="rect" id="Node000004" href="$zero__dim__solve_8hpp.html" title="Provides the algorithm for computing all zero&#45;dimensional solutions for an algberaic system." alt="" coords="512,115,670,177"/>
+<area shape="poly" id="edge3_Node000001_Node000004" title=" " alt="" coords="449,72,533,114,527,115,448,77"/>
+<area shape="rect" id="Node000005" href="$switches__zerodim_8hpp.html" title="A sequence of switches for getting a particular instantiation of a ZeroDim algorithm,..." alt="" coords="250,225,484,269"/>
+<area shape="poly" id="edge4_Node000004_Node000005" title=" " alt="" coords="511,182,417,227,415,222,506,184"/>
+<area shape="rect" id="Node000006" href="$user__homotopy_8hpp.html" title=" " alt="" coords="337,317,552,362"/>
+<area shape="poly" id="edge6_Node000004_Node000006" title=" " alt="" coords="561,188,463,319,459,315,556,190"/>
+<area shape="rect" id="Node000007" href="$output_8hpp.html" title="Provides some outputting classes for printing results of running algorithms." alt="" coords="559,225,759,269"/>
+<area shape="poly" id="edge7_Node000004_Node000007" title=" " alt="" coords="613,187,639,225,634,223,611,192"/>
+<area shape="poly" id="edge5_Node000005_Node000006" title=" " alt="" coords="396,279,429,318,424,316,394,284"/>
+<area shape="poly" id="edge8_Node000007_Node000004" title=" " alt="" coords="642,211,619,180,621,175,647,212"/>
+</map>

@@ -1,0 +1,7 @@
+<map id="bertini::endgame::FixedPrecEndgame&lt; TrackerT &gt;" name="bertini::endgame::FixedPrecEndgame&lt; TrackerT &gt;">
+<area shape="rect" id="Node000001" title="Fixed&#45;precision endgame precision policy (refines and ensures precision at a single working precision..." alt="" coords="6,174,209,218"/>
+<area shape="rect" id="Node000002" href="$classbertini_1_1endgame_1_1EndgamePrecPolicyBase.html" title="A common base type for various precision types, fixed and adaptive." alt="" coords="5,81,210,126"/>
+<area shape="poly" id="edge1_Node000001_Node000002" title=" " alt="" coords="109,139,110,174,105,173,106,143"/>
+<area shape="rect" id="Node000003" href="$classbertini_1_1Observable.html" title="An abstract observable type, maintaining a list of observers, who can be notified in case of Events." alt="" coords="35,5,180,33"/>
+<area shape="poly" id="edge2_Node000002_Node000003" title=" " alt="" coords="108,46,110,81,105,80,107,51"/>
+</map>

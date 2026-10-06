@@ -1,0 +1,5 @@
+<map id="bertini::algorithm::HomotopySolver&lt; TrackerType, EndgameType, SystemType &gt;::ScopedSessionState" name="bertini::algorithm::HomotopySolver&lt; TrackerType, EndgameType, SystemType &gt;::ScopedSessionState">
+<area shape="rect" id="Node000001" title="Restores the ambient session state a solve may perturb: &quot;a solveleaves the session as it found it&quot;." alt="" coords="5,106,239,185"/>
+<area shape="rect" id="Node000002" href="$classbertini_1_1records_1_1DrawStream.html" title="A deterministic, fully&#45;specified random stream (SHA&#45;256 counter mode)." alt="" coords="18,5,226,33"/>
+<area shape="poly" id="edge1_Node000001_Node000002" title=" " alt="" coords="124,46,125,106,119,105,120,50"/>
+</map>

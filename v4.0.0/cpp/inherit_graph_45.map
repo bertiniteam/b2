@@ -1,0 +1,87 @@
+<map id="Graphical Class Hierarchy" name="Graphical Class Hierarchy">
+<area shape="rect" id="Node000000" href="$structbertini_1_1detail_1_1Configured.html" title="This templated struct allows one to provide a variable typelist of config structs (or anything else f..." alt="" coords="51,138,238,183"/>
+<area shape="rect" id="Node000001" href="$structbertini_1_1algorithm_1_1HomotopySolver.html" title=" " alt="" coords="1043,193,1209,254"/>
+<area shape="poly" id="edge32_Node000000_Node000001" title=" " alt="" coords="187,128,253,90,291,72,331,60,496,21,564,9,629,3,693,5,761,14,836,32,922,60,976,85,1026,120,1068,157,1101,192,1095,192,1064,161,1022,124,974,90,920,65,835,37,760,19,693,10,629,9,565,14,497,26,332,65,293,77,256,94,191,131"/>
+<area shape="rect" id="Node000012" href="$classbertini_1_1endgame_1_1EndgameBase.html" title=" " alt="" coords="332,74,560,136"/>
+<area shape="poly" id="edge33_Node000000_Node000012" title=" " alt="" coords="251,139,333,124,330,128,255,143"/>
+<area shape="rect" id="Node000015" href="$classbertini_1_1endgame_1_1EndgameBase.html" title=" " alt="" coords="341,159,550,221"/>
+<area shape="poly" id="edge35_Node000000_Node000015" title=" " alt="" coords="252,169,343,178,338,182,255,174"/>
+<area shape="rect" id="Node000023" href="$classbertini_1_1tracking_1_1Tracker.html" title=" " alt="" coords="360,330,532,375"/>
+<area shape="poly" id="edge37_Node000000_Node000023" title=" " alt="" coords="251,174,285,193,299,209,306,225,311,256,315,287,321,302,333,316,362,335,357,337,330,320,317,304,310,288,305,257,301,226,294,212,282,198,253,179"/>
+<area shape="rect" id="Node000025" href="$classbertini_1_1tracking_1_1Tracker.html" title=" " alt="" coords="335,245,556,306"/>
+<area shape="poly" id="edge39_Node000000_Node000025" title=" " alt="" coords="252,181,285,193,310,212,333,231,357,243,352,245,330,235,306,216,282,198,254,185"/>
+<area shape="rect" id="Node000013" href="$classbertini_1_1endgame_1_1CauchyEndgame.html" title="Class used to finish tracking paths during Homotopy Continuation." alt="" coords="670,74,859,119"/>
+<area shape="poly" id="edge34_Node000012_Node000013" title=" " alt="" coords="574,99,672,98,668,101,577,104"/>
+<area shape="rect" id="Node000016" href="$classbertini_1_1endgame_1_1PowerSeriesEndgame.html" title="class used to finish tracking paths during Homotopy Continuation" alt="" coords="654,144,875,188"/>
+<area shape="poly" id="edge36_Node000015_Node000016" title=" " alt="" coords="565,179,656,173,652,176,568,183"/>
+<area shape="rect" id="Node000024" href="$classbertini_1_1tracking_1_1AMPTracker.html" title="Functor&#45;like class for tracking paths on a system." alt="" coords="698,298,831,343"/>
+<area shape="poly" id="edge38_Node000023_Node000024" title=" " alt="" coords="546,340,700,326,696,329,549,345"/>
+<area shape="rect" id="Node000026" href="$classbertini_1_1tracking_1_1FixedPrecisionTracker.html" title="CRTP base for trackers that work at a single fixed precision (double or fixed multiple)." alt="" coords="684,213,845,274"/>
+<area shape="poly" id="edge40_Node000025_Node000026" title=" " alt="" coords="570,261,686,250,682,253,573,265"/>
+<area shape="rect" id="Node000020" href="$structbertini_1_1detail_1_1Configured.html" title=" " alt="" coords="51,391,238,453"/>
+<area shape="rect" id="Node000017" href="$classbertini_1_1endgame_1_1EndgameBase.html" title="Base endgame class for all endgames offered in Bertini2." alt="" coords="345,400,546,444"/>
+<area shape="poly" id="edge41_Node000020_Node000017" title=" " alt="" coords="252,420,347,420,343,424,255,424"/>
+<area shape="rect" id="Node000018" href="$classbertini_1_1endgame_1_1CauchyEndgame.html" title=" " alt="" coords="670,368,859,412"/>
+<area shape="poly" id="edge42_Node000017_Node000018" title=" " alt="" coords="561,408,672,398,668,401,563,413"/>
+<area shape="rect" id="Node000019" href="$classbertini_1_1endgame_1_1PowerSeriesEndgame.html" title=" " alt="" coords="654,437,875,482"/>
+<area shape="poly" id="edge43_Node000017_Node000019" title=" " alt="" coords="561,433,657,445,652,448,563,438"/>
+<area shape="rect" id="Node000006" href="$structbertini_1_1detail_1_1Configured.html" title=" " alt="" coords="637,625,892,704"/>
+<area shape="rect" id="Node000003" href="$structbertini_1_1algorithm_1_1HomotopySolver.html" title="The continuation primitive: given a homotopy + a source of start points, track each path through the ..." alt="" coords="1009,591,1243,653"/>
+<area shape="poly" id="edge44_Node000006_Node000003" title=" " alt="" coords="907,645,1012,635,1007,637,909,650"/>
+<area shape="rect" id="Node000004" href="$structbertini_1_1algorithm_1_1ZeroDimSolver.html" title="The zero&#45;dimensional solve algorithm: given a polynomial system, form a start system and a homotopy,..." alt="" coords="1331,549,1553,610"/>
+<area shape="poly" id="edge45_Node000003_Node000004" title=" " alt="" coords="1257,602,1333,594,1328,595,1259,607"/>
+<area shape="rect" id="Node000010" href="$structbertini_1_1detail_1_1Configured.html" title=" " alt="" coords="608,865,921,944"/>
+<area shape="rect" id="Node000009" href="$structbertini_1_1algorithm_1_1NumericalIrreducibleDecomposition.html" title="forward declare of the NumericalIrreducibleDecomposition algorithm." alt="" coords="969,797,1283,858"/>
+<area shape="poly" id="edge46_Node000010_Node000009" title=" " alt="" coords="936,866,981,858,976,860,937,871"/>
+<area shape="rect" id="Node000039" href="$structbertini_1_1detail_1_1Configured.html" title=" " alt="" coords="5,1093,284,1138"/>
+<area shape="rect" id="Node000036" href="$classbertini_1_1tracking_1_1Tracker.html" title="Base tracker class for trackers offered in Bertini2." alt="" coords="380,1093,512,1138"/>
+<area shape="poly" id="edge47_Node000039_Node000036" title=" " alt="" coords="299,1113,382,1114,377,1117,300,1118"/>
+<area shape="rect" id="Node000037" href="$classbertini_1_1tracking_1_1FixedPrecisionTracker.html" title=" " alt="" coords="660,1225,869,1286"/>
+<area shape="poly" id="edge48_Node000036_Node000037" title=" " alt="" coords="492,1144,547,1179,609,1210,662,1231,657,1231,607,1215,545,1183,491,1150"/>
+<area shape="rect" id="Node000038" href="$classbertini_1_1tracking_1_1MultiplePrecisionTracker.html" title="A tracker that works at a fixed multiprecision (set from the default precision at construction)." alt="" coords="1036,1233,1216,1278"/>
+<area shape="poly" id="edge49_Node000037_Node000038" title=" " alt="" coords="885,1253,1038,1255,1033,1256,885,1258"/>
+<area shape="rect" id="Node000030" href="$structbertini_1_1detail_1_1Configured.html" title=" " alt="" coords="28,1255,261,1333"/>
+<area shape="rect" id="Node000027" href="$classbertini_1_1tracking_1_1Tracker.html" title=" " alt="" coords="335,1263,556,1325"/>
+<area shape="poly" id="edge50_Node000030_Node000027" title=" " alt="" coords="277,1291,337,1294,332,1295,277,1297"/>
+<area shape="rect" id="Node000028" href="$classbertini_1_1tracking_1_1FixedPrecisionTracker.html" title=" " alt="" coords="664,1310,866,1372"/>
+<area shape="poly" id="edge51_Node000027_Node000028" title=" " alt="" coords="572,1310,666,1326,660,1326,572,1315"/>
+<area shape="rect" id="Node000029" href="$classbertini_1_1tracking_1_1DoublePrecisionTracker.html" title="A tracker that works entirely in hardware double precision." alt="" coords="1040,1318,1212,1363"/>
+<area shape="poly" id="edge52_Node000028_Node000029" title=" " alt="" coords="881,1338,1042,1341,1037,1341,881,1343"/>
+<area shape="rect" id="Node000011" href="$classbertini_1_1Observable.html" title="An abstract observable type, maintaining a list of observers, who can be notified in case of Events." alt="" coords="72,483,217,511"/>
+<area shape="poly" id="edge53_Node000011_Node000012" title=" " alt="" coords="230,491,259,480,282,463,297,444,307,425,317,386,315,348,308,309,300,269,297,229,305,188,315,167,330,146,345,134,342,138,334,149,320,169,310,189,303,229,305,269,313,308,320,347,322,387,312,427,301,447,286,467,261,485,234,495"/>
+<area shape="poly" id="edge54_Node000011_Node000015" title=" " alt="" coords="230,490,259,480,282,463,302,435,310,408,310,380,307,351,303,322,303,292,311,262,330,231,345,219,342,224,334,234,315,264,308,293,308,321,312,350,316,379,315,408,306,438,286,467,261,484,234,494"/>
+<area shape="poly" id="edge57_Node000011_Node000023" title=" " alt="" coords="230,486,258,476,282,463,298,445,305,426,313,405,330,385,361,370,358,374,333,390,318,408,310,427,303,448,285,467,260,481,234,490"/>
+<area shape="poly" id="edge58_Node000011_Node000025" title=" " alt="" coords="231,489,259,478,282,463,296,446,303,429,306,393,309,355,316,336,330,316,347,304,344,309,334,320,320,338,314,356,312,393,308,430,301,449,285,467,261,483,234,493"/>
+<area shape="poly" id="edge66_Node000011_Node000017" title=" " alt="" coords="223,477,283,462,362,443,358,447,284,467,226,481"/>
+<area shape="poly" id="edge72_Node000011_Node000036" title=" " alt="" coords="150,523,168,618,201,749,225,822,255,895,291,967,334,1032,366,1065,403,1092,398,1093,363,1069,330,1036,286,969,250,898,220,824,196,750,163,619,149,529"/>
+<area shape="poly" id="edge59_Node000011_Node000027" title=" " alt="" coords="150,523,171,631,206,789,230,878,260,970,294,1062,334,1149,374,1211,417,1263,411,1263,369,1214,329,1151,289,1064,255,972,225,880,201,790,166,632,150,529"/>
+<area shape="rect" id="Node000021" href="$classbertini_1_1endgame_1_1EndgamePrecPolicyBase.html" title=" " alt="" coords="345,470,546,532"/>
+<area shape="poly" id="edge55_Node000011_Node000021" title=" " alt="" coords="232,496,347,498,343,501,234,500"/>
+<area shape="rect" id="Node000007" href="$structbertini_1_1algorithm_1_1AnyAlgorithm.html" title="Type&#45;erased base for all nag algorithms, exposing a single Run() entry point." alt="" coords="379,557,513,602"/>
+<area shape="poly" id="edge60_Node000011_Node000007" title=" " alt="" coords="212,513,380,560,376,563,214,518"/>
+<area shape="rect" id="Node000031" href="$classbertini_1_1endgame_1_1EndgamePrecPolicyBase.html" title="A common base type for various precision types, fixed and adaptive." alt="" coords="344,977,548,1022"/>
+<area shape="poly" id="edge67_Node000011_Node000031" title=" " alt="" coords="163,521,434,976,428,978,160,526"/>
+<area shape="rect" id="Node000022" href="$classbertini_1_1endgame_1_1AMPEndgame.html" title="Specifies some necessaries for AMP style endgame implementations, which differ from the fixed precisi..." alt="" coords="650,506,880,533"/>
+<area shape="poly" id="edge56_Node000021_Node000022" title=" " alt="" coords="561,505,652,511,647,514,563,510"/>
+<area shape="rect" id="Node000008" href="$structbertini_1_1algorithm_1_1AnyNID.html" title="Type&#45;erased base for the Numerical Irreducible Decomposition algorithm." alt="" coords="698,728,832,772"/>
+<area shape="poly" id="edge61_Node000007_Node000008" title=" " alt="" coords="477,610,536,664,572,691,609,713,653,730,700,742,695,743,651,735,607,718,569,695,533,668,477,616"/>
+<area shape="rect" id="Node000002" href="$structbertini_1_1algorithm_1_1AnyZeroDim.html" title="Type&#45;erased base for a zero&#45;dimensional solve, exposing output and config entry points." alt="" coords="698,557,832,602"/>
+<area shape="poly" id="edge63_Node000007_Node000002" title=" " alt="" coords="528,577,699,578,695,581,529,582"/>
+<area shape="poly" id="edge62_Node000008_Node000009" title=" " alt="" coords="846,765,982,795,976,797,847,770"/>
+<area shape="poly" id="edge64_Node000002_Node000001" title=" " alt="" coords="846,571,885,561,920,543,942,522,966,492,1019,411,1107,257,1111,253,1024,414,971,495,945,526,923,547,887,566,848,576"/>
+<area shape="poly" id="edge65_Node000002_Node000003" title=" " alt="" coords="847,587,1011,607,1006,609,848,592"/>
+<area shape="rect" id="Node000032" href="$classbertini_1_1endgame_1_1FixedPrecEndgame.html" title=" " alt="" coords="633,969,896,1030"/>
+<area shape="poly" id="edge68_Node000031_Node000032" title=" " alt="" coords="563,997,635,999,630,1000,564,1002"/>
+<area shape="rect" id="Node000033" href="$classbertini_1_1endgame_1_1FixedPrecEndgame.html" title=" " alt="" coords="630,1054,900,1116"/>
+<area shape="poly" id="edge69_Node000031_Node000033" title=" " alt="" coords="547,1024,650,1053,645,1054,547,1029"/>
+<area shape="rect" id="Node000034" href="$classbertini_1_1endgame_1_1FixedPrecEndgame.html" title=" " alt="" coords="639,1139,890,1201"/>
+<area shape="poly" id="edge70_Node000031_Node000034" title=" " alt="" coords="494,1028,562,1079,585,1104,595,1115,609,1125,641,1142,636,1142,607,1130,591,1119,581,1108,558,1083,494,1034"/>
+<area shape="rect" id="Node000035" href="$classbertini_1_1endgame_1_1FixedPrecEndgame.html" title="Fixed&#45;precision endgame precision policy (refines and ensures precision at a single working precision..." alt="" coords="664,797,866,842"/>
+<area shape="poly" id="edge71_Node000031_Node000035" title=" " alt="" coords="473,963,531,905,567,875,607,850,665,832,661,834,609,855,570,879,534,909,477,967"/>
+<area shape="rect" id="Node000005" href="$structbertini_1_1algorithm_1_1zero__dim__detail_1_1OwnedHomotopy.html" title="Owns and builds the target / start system / homotopy for a zero&#45;dim solve." alt="" coords="999,506,1253,568"/>
+<area shape="poly" id="edge73_Node000005_Node000004" title=" " alt="" coords="1268,553,1333,564,1328,565,1269,559"/>
+<area shape="rect" id="Node000014" title=" " alt="" coords="116,207,173,235"/>
+<area shape="poly" id="edge74_Node000014_Node000012" title=" " alt="" coords="187,218,235,210,282,193,297,182,306,171,315,158,330,145,353,134,350,138,333,150,319,162,310,174,301,186,285,198,237,215,191,221"/>
+<area shape="poly" id="edge75_Node000014_Node000015" title=" " alt="" coords="187,214,343,199,339,203,190,219"/>
+<area shape="poly" id="edge76_Node000014_Node000017" title=" " alt="" coords="167,244,238,314,284,352,333,385,359,398,354,400,330,390,281,357,235,318,169,249"/>
+</map>

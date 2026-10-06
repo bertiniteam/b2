@@ -1,0 +1,20 @@
+<map id="core/include/bertini2/parallel/path_result.hpp" name="core/include/bertini2/parallel/path_result.hpp">
+<area shape="rect" id="Node000001" title="Result struct used in the manager&#45;worker MPI protocol for ZeroDim." alt="" coords="166,5,345,50"/>
+<area shape="rect" id="Node000002" href="$parallel_8hpp.html" title="Collective include file for parallelism in Bertini2." alt="" coords="74,98,228,143"/>
+<area shape="poly" id="edge1_Node000001_Node000002" title=" " alt="" coords="218,62,178,99,174,96,221,58"/>
+<area shape="rect" id="Node000008" href="$solver__recording_8hpp.html" title="FullPathResult &lt;&#45;&gt; track&#45;record serialization (b2rec/1; the arc&#39;s rung 4)." alt="" coords="253,98,466,143"/>
+<area shape="poly" id="edge9_Node000001_Node000008" title=" " alt="" coords="291,58,337,97,332,98,291,63"/>
+<area shape="rect" id="Node000003" href="$bertini_8hpp.html" title="The main file for including the entirety of Bertini&#39;s header files." alt="" coords="74,199,228,244"/>
+<area shape="poly" id="edge2_Node000002_Node000003" title=" " alt="" coords="152,156,154,199,149,198,151,161"/>
+<area shape="rect" id="Node000004" href="$zero__dim__solve_8hpp.html" title="Provides the algorithm for computing all zero&#45;dimensional solutions for an algberaic system." alt="" coords="266,191,424,252"/>
+<area shape="poly" id="edge3_Node000002_Node000004" title=" " alt="" coords="207,147,288,189,283,191,207,153"/>
+<area shape="rect" id="Node000005" href="$switches__zerodim_8hpp.html" title="A sequence of switches for getting a particular instantiation of a ZeroDim algorithm,..." alt="" coords="5,300,239,345"/>
+<area shape="poly" id="edge4_Node000004_Node000005" title=" " alt="" coords="261,261,172,302,170,297,265,257"/>
+<area shape="rect" id="Node000006" href="$user__homotopy_8hpp.html" title=" " alt="" coords="92,393,307,438"/>
+<area shape="poly" id="edge6_Node000004_Node000006" title=" " alt="" coords="315,264,217,395,214,391,310,265"/>
+<area shape="rect" id="Node000007" href="$output_8hpp.html" title="Provides some outputting classes for printing results of running algorithms." alt="" coords="314,300,514,345"/>
+<area shape="poly" id="edge7_Node000004_Node000007" title=" " alt="" coords="367,263,394,300,389,299,365,268"/>
+<area shape="poly" id="edge5_Node000005_Node000006" title=" " alt="" coords="151,354,184,393,178,393,149,359"/>
+<area shape="poly" id="edge8_Node000007_Node000004" title=" " alt="" coords="396,287,373,255,375,250,401,288"/>
+<area shape="poly" id="edge10_Node000008_Node000004" title=" " alt="" coords="355,156,351,192,347,189,352,160"/>
+</map>

@@ -1,0 +1,5 @@
+<map id="bertini::algorithm::SolveReport" name="bertini::algorithm::SolveReport">
+<area shape="rect" id="Node000001" title="A concise, human&#45;readable summary of a zero&#45;dimensional solve: how every path ended up,..." alt="" coords="21,123,155,168"/>
+<area shape="rect" id="Node000002" href="$structbertini_1_1algorithm_1_1MidpathCheckReport.html" title="Summary of what the midpath (path&#45;crossing) check found at the endgame boundary, and what the algorit..." alt="" coords="5,5,171,50"/>
+<area shape="poly" id="edge1_Node000001_Node000002" title=" " alt="" coords="90,64,91,123,85,122,86,68"/>
+</map>

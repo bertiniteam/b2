@@ -1,0 +1,13 @@
+<map id="bertini::tracking::Tracker&lt; D &gt;" name="bertini::tracking::Tracker&lt; D &gt;">
+<area shape="rect" id="Node000001" title="Base tracker class for trackers offered in Bertini2." alt="" coords="406,126,538,171"/>
+<area shape="rect" id="Node000002" href="$classbertini_1_1Observable.html" title="An abstract observable type, maintaining a list of observers, who can be notified in case of Events." alt="" coords="72,5,217,33"/>
+<area shape="poly" id="edge1_Node000001_Node000002" title=" " alt="" coords="232,29,284,42,335,62,383,89,440,126,435,126,380,93,333,67,283,47,233,34"/>
+<area shape="rect" id="Node000003" href="$structbertini_1_1detail_1_1Configured.html" title=" " alt="" coords="5,57,284,102"/>
+<area shape="poly" id="edge2_Node000001_Node000003" title=" " alt="" coords="298,98,382,115,411,125,406,126,381,120,299,103"/>
+<area shape="rect" id="Node000004" href="$classbertini_1_1tracking_1_1predict_1_1ExplicitRKPredictor.html" title="A class which stores all the explicit single&#45;step multi&#45;stage ODE predictor methods." alt="" coords="45,126,244,171"/>
+<area shape="poly" id="edge3_Node000001_Node000004" title=" " alt="" coords="259,146,408,147,403,150,259,151"/>
+<area shape="rect" id="Node000005" href="$classbertini_1_1tracking_1_1correct_1_1NewtonCorrector.html" title="/class NewtonCorrector" alt="" coords="52,196,237,240"/>
+<area shape="poly" id="edge4_Node000001_Node000005" title=" " alt="" coords="251,202,381,176,410,171,405,172,382,181,253,207"/>
+<area shape="rect" id="Node000006" href="$structbertini_1_1tracking_1_1StepMetadata.html" title="Metadata produced by a single predict or correct step." alt="" coords="78,265,211,310"/>
+<area shape="poly" id="edge5_Node000001_Node000006" title=" " alt="" coords="225,273,303,254,343,239,380,222,417,197,447,173,451,170,420,201,383,226,345,244,304,259,226,278"/>
+</map>

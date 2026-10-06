@@ -1,0 +1,49 @@
+<map id="Graphical Class Hierarchy" name="Graphical Class Hierarchy">
+<area shape="rect" id="Node000000" href="$classbertini_1_1Visitor.html" title=" " alt="" coords="19,5,179,50"/>
+<area shape="rect" id="Node000001" href="$classbertini_1_1SLPCompiler.html" title="Compiles a System (or polynomial block) into a StraightLineProgram by visiting its function&#45;tree node..." alt="" coords="241,776,394,804"/>
+<area shape="poly" id="edge85_Node000000_Node000001" title=" " alt="" coords="190,58,195,61,212,87,228,121,254,209,275,314,291,427,311,642,318,776,313,776,305,642,286,428,270,315,249,210,223,123,207,90,191,64,192,63"/>
+<area shape="rect" id="Node000002" href="$classbertini_1_1Visitor.html" title=" " alt="" coords="19,75,179,119"/>
+<area shape="poly" id="edge86_Node000002_Node000001" title=" " alt="" coords="190,127,195,130,211,154,225,184,250,263,271,358,287,460,309,653,318,776,313,776,303,654,282,461,266,359,245,264,220,186,206,156,191,133,192,133"/>
+<area shape="rect" id="Node000003" href="$classbertini_1_1Visitor.html" title=" " alt="" coords="19,144,179,189"/>
+<area shape="poly" id="edge87_Node000003_Node000001" title=" " alt="" coords="190,196,195,199,209,220,223,248,246,317,267,401,283,492,307,665,318,776,312,776,301,665,278,493,261,402,241,319,218,250,205,223,191,203,192,201"/>
+<area shape="rect" id="Node000004" href="$classbertini_1_1Visitor.html" title=" " alt="" coords="19,213,179,258"/>
+<area shape="poly" id="edge88_Node000004_Node000001" title=" " alt="" coords="190,266,195,269,220,311,243,371,262,445,279,524,304,676,317,776,312,776,299,676,274,525,257,446,237,373,215,313,191,272,192,271"/>
+<area shape="rect" id="Node000005" href="$classbertini_1_1Visitor.html" title=" " alt="" coords="19,283,179,327"/>
+<area shape="poly" id="edge89_Node000005_Node000001" title=" " alt="" coords="190,335,195,338,235,393,266,455,288,520,303,584,313,646,317,701,319,776,314,776,312,701,307,647,298,585,283,521,261,457,231,396,191,341,192,340"/>
+<area shape="rect" id="Node000006" href="$classbertini_1_1Visitor.html" title=" " alt="" coords="19,352,179,397"/>
+<area shape="poly" id="edge90_Node000006_Node000001" title=" " alt="" coords="189,404,195,407,230,453,258,504,280,558,295,613,313,711,318,776,313,776,308,711,290,614,275,560,254,506,226,456,191,411,191,409"/>
+<area shape="rect" id="Node000007" href="$classbertini_1_1Visitor.html" title=" " alt="" coords="19,421,179,466"/>
+<area shape="poly" id="edge91_Node000007_Node000001" title=" " alt="" coords="189,473,195,476,226,513,251,554,271,597,287,641,308,721,317,776,312,776,303,722,282,643,266,599,246,556,221,516,191,480,190,478"/>
+<area shape="rect" id="Node000008" href="$classbertini_1_1Visitor.html" title=" " alt="" coords="19,491,179,535"/>
+<area shape="poly" id="edge92_Node000008_Node000001" title=" " alt="" coords="188,542,194,546,221,573,243,604,279,670,302,731,315,776,310,776,297,733,274,672,239,607,217,576,191,550,190,547"/>
+<area shape="rect" id="Node000009" href="$classbertini_1_1Visitor.html" title=" " alt="" coords="5,560,193,605"/>
+<area shape="poly" id="edge93_Node000009_Node000001" title=" " alt="" coords="186,611,194,615,236,655,270,700,312,776,307,776,265,703,232,658,191,619,188,616"/>
+<area shape="rect" id="Node000010" href="$classbertini_1_1Visitor.html" title=" " alt="" coords="19,629,179,674"/>
+<area shape="poly" id="edge94_Node000010_Node000001" title=" " alt="" coords="182,678,194,684,258,731,305,775,300,777,254,735,191,689,184,683"/>
+<area shape="rect" id="Node000011" href="$classbertini_1_1Visitor.html" title=" " alt="" coords="19,699,179,743"/>
+<area shape="poly" id="edge95_Node000011_Node000001" title=" " alt="" coords="185,746,273,775,269,777,187,751"/>
+<area shape="rect" id="Node000012" href="$classbertini_1_1Visitor.html" title=" " alt="" coords="18,768,180,813"/>
+<area shape="poly" id="edge96_Node000012_Node000001" title=" " alt="" coords="194,788,242,789,238,792,197,793"/>
+<area shape="rect" id="Node000013" href="$classbertini_1_1Visitor.html" title=" " alt="" coords="19,837,179,882"/>
+<area shape="poly" id="edge97_Node000013_Node000001" title=" " alt="" coords="184,830,273,803,270,807,188,834"/>
+<area shape="rect" id="Node000014" href="$classbertini_1_1Visitor.html" title=" " alt="" coords="19,907,179,951"/>
+<area shape="poly" id="edge98_Node000014_Node000001" title=" " alt="" coords="181,898,191,892,254,846,304,802,301,807,258,850,194,897,185,901"/>
+<area shape="rect" id="Node000015" href="$classbertini_1_1Visitor.html" title=" " alt="" coords="19,976,179,1021"/>
+<area shape="poly" id="edge99_Node000015_Node000001" title=" " alt="" coords="185,966,191,962,232,923,265,878,311,802,308,807,270,881,236,926,194,966,189,969"/>
+<area shape="rect" id="Node000016" href="$classbertini_1_1Visitor.html" title=" " alt="" coords="19,1045,179,1090"/>
+<area shape="poly" id="edge100_Node000016_Node000001" title=" " alt="" coords="187,1035,191,1031,217,1004,239,974,274,908,297,848,312,807,314,802,302,849,279,911,243,977,221,1008,194,1035,191,1038"/>
+<area shape="rect" id="Node000017" href="$classbertini_1_1Visitor.html" title=" " alt="" coords="17,1115,181,1159"/>
+<area shape="poly" id="edge101_Node000017_Node000001" title=" " alt="" coords="187,1104,191,1100,221,1065,246,1024,266,981,282,938,303,859,314,807,315,802,308,860,287,940,271,983,251,1027,226,1068,195,1104,192,1107"/>
+<area shape="rect" id="Node000018" href="$classbertini_1_1Visitor.html" title=" " alt="" coords="15,1184,183,1229"/>
+<area shape="poly" id="edge102_Node000018_Node000001" title=" " alt="" coords="188,1173,191,1170,226,1125,254,1074,275,1021,290,967,308,869,315,807,316,802,313,870,295,968,280,1022,258,1077,230,1128,195,1173,192,1176"/>
+<area shape="rect" id="Node000019" href="$classbertini_1_1Visitor.html" title=" " alt="" coords="19,1253,179,1298"/>
+<area shape="poly" id="edge103_Node000019_Node000001" title=" " alt="" coords="189,1241,191,1239,231,1185,261,1124,283,1060,298,995,307,934,312,880,316,807,317,802,317,880,313,935,303,996,288,1061,266,1126,235,1188,195,1243,193,1245"/>
+<area shape="rect" id="Node000020" href="$classbertini_1_1Visitor.html" title=" " alt="" coords="19,1323,179,1367"/>
+<area shape="poly" id="edge104_Node000020_Node000001" title=" " alt="" coords="189,1311,191,1309,215,1268,237,1208,257,1135,274,1056,299,904,314,807,315,802,304,905,279,1057,262,1136,243,1209,220,1270,195,1312,193,1314"/>
+<area shape="rect" id="Node000021" href="$classbertini_1_1Visitor.html" title=" " alt="" coords="19,1392,179,1437"/>
+<area shape="poly" id="edge105_Node000021_Node000001" title=" " alt="" coords="189,1380,191,1378,205,1358,218,1331,241,1262,261,1178,278,1088,301,915,314,807,316,802,307,916,283,1089,267,1179,246,1263,223,1333,209,1360,195,1381,193,1384"/>
+<area shape="rect" id="Node000022" href="$classbertini_1_1Visitor.html" title=" " alt="" coords="19,1461,179,1506"/>
+<area shape="poly" id="edge106_Node000022_Node000001" title=" " alt="" coords="190,1449,191,1447,206,1424,220,1394,245,1316,266,1222,282,1120,303,927,314,807,316,802,309,927,287,1121,271,1223,250,1318,225,1396,211,1427,195,1451,193,1453"/>
+<area shape="rect" id="Node000023" href="$classbertini_1_1VisitorBase.html" title="A strawman class for implementing the visitor pattern." alt="" coords="26,1530,172,1558"/>
+<area shape="poly" id="edge107_Node000023_Node000001" title=" " alt="" coords="184,1523,191,1517,208,1492,224,1459,251,1373,272,1268,288,1155,307,940,315,807,316,802,312,940,293,1155,277,1269,256,1374,229,1461,213,1494,195,1520,186,1528"/>
+</map>

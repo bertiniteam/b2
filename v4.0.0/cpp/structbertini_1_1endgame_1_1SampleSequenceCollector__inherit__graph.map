@@ -1,0 +1,7 @@
+<map id="bertini::endgame::SampleSequenceCollector&lt; EndgameT &gt;" name="bertini::endgame::SampleSequenceCollector&lt; EndgameT &gt;">
+<area shape="rect" id="Node000001" title="Collects an endgame&#39;s approach to the root as a time&#45;indexed sequence, for callers that need to watch..." alt="" coords="5,174,247,218"/>
+<area shape="rect" id="Node000002" href="$classbertini_1_1Observer.html" title=" " alt="" coords="55,81,197,126"/>
+<area shape="poly" id="edge1_Node000001_Node000002" title=" " alt="" coords="128,139,128,175,124,172,124,143"/>
+<area shape="rect" id="Node000003" href="$classbertini_1_1AnyObserver.html" title="Strawman base class for Observer objects." alt="" coords="48,5,204,33"/>
+<area shape="poly" id="edge2_Node000002_Node000003" title=" " alt="" coords="127,46,129,81,123,80,125,51"/>
+</map>

@@ -1,0 +1,11 @@
+<map id="core/include/bertini2/system/slice.hpp" name="core/include/bertini2/system/slice.hpp">
+<area shape="rect" id="Node000001" title="Provides the bertini::Slice class – a linear slice of affine or projective space." alt="" coords="140,5,294,50"/>
+<area shape="rect" id="Node000002" href="$witness__set_8hpp.html" title="Provides the witness set data type for Bertini2." alt="" coords="129,98,305,160"/>
+<area shape="poly" id="edge1_Node000001_Node000002" title=" " alt="" coords="218,63,220,98,214,97,216,68"/>
+<area shape="rect" id="Node000003" href="$trace_8hpp.html" title="Provides methods for computing traces." alt="" coords="5,216,197,261"/>
+<area shape="poly" id="edge2_Node000002_Node000003" title=" " alt="" coords="172,172,126,218,122,214,175,168"/>
+<area shape="rect" id="Node000004" href="$nag__datatypes_2numerical__irreducible__decomposition_8hpp.html" title="Provides the NumericalIrreducibleDecomposition data type for Bertini2." alt="" coords="220,208,448,269"/>
+<area shape="poly" id="edge3_Node000002_Node000004" title=" " alt="" coords="261,167,304,207,299,207,260,173"/>
+<area shape="rect" id="Node000005" href="$nag__algorithms_2numerical__irreducible__decomposition_8hpp.html" title="Provides the NID algorithms for Bertini2." alt="" coords="220,317,448,379"/>
+<area shape="poly" id="edge4_Node000004_Node000005" title=" " alt="" coords="336,283,337,318,332,315,333,287"/>
+</map>

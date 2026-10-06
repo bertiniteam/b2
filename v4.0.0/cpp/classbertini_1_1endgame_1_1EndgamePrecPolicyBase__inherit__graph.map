@@ -1,0 +1,13 @@
+<map id="bertini::endgame::EndgamePrecPolicyBase&lt; TrackerT &gt;" name="bertini::endgame::EndgamePrecPolicyBase&lt; TrackerT &gt;">
+<area shape="rect" id="Node000001" title="A common base type for various precision types, fixed and adaptive." alt="" coords="199,142,403,186"/>
+<area shape="rect" id="Node000003" href="$classbertini_1_1endgame_1_1FixedPrecEndgame.html" title=" " alt="" coords="454,5,718,67"/>
+<area shape="poly" id="edge2_Node000001_Node000003" title=" " alt="" coords="349,131,397,103,450,76,481,67,476,69,452,81,399,108,351,136"/>
+<area shape="rect" id="Node000004" href="$classbertini_1_1endgame_1_1FixedPrecEndgame.html" title=" " alt="" coords="451,91,721,152"/>
+<area shape="poly" id="edge3_Node000001_Node000004" title=" " alt="" coords="418,144,453,141,448,142,419,149"/>
+<area shape="rect" id="Node000005" href="$classbertini_1_1endgame_1_1FixedPrecEndgame.html" title=" " alt="" coords="460,176,712,238"/>
+<area shape="poly" id="edge4_Node000001_Node000005" title=" " alt="" coords="418,179,463,188,457,188,418,184"/>
+<area shape="rect" id="Node000006" href="$classbertini_1_1endgame_1_1FixedPrecEndgame.html" title="Fixed&#45;precision endgame precision policy (refines and ensures precision at a single working precision..." alt="" coords="485,262,687,306"/>
+<area shape="poly" id="edge5_Node000001_Node000006" title=" " alt="" coords="349,192,398,221,452,247,487,262,482,261,450,252,396,226,348,198"/>
+<area shape="rect" id="Node000002" href="$classbertini_1_1Observable.html" title="An abstract observable type, maintaining a list of observers, who can be notified in case of Events." alt="" coords="5,150,151,178"/>
+<area shape="poly" id="edge1_Node000001_Node000002" title=" " alt="" coords="165,162,201,163,196,165,167,167"/>
+</map>

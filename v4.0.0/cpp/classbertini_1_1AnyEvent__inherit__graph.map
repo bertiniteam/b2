@@ -1,0 +1,7 @@
+<map id="bertini::AnyEvent" name="bertini::AnyEvent">
+<area shape="rect" id="Node000001" title="Strawman Event type, enabling polymorphism." alt="" coords="111,5,244,33"/>
+<area shape="rect" id="Node000002" href="$classbertini_1_1Event_3_01ObsT_00_01false_01_4.html" title="For emission of events from observables." alt="" coords="5,81,166,126"/>
+<area shape="poly" id="edge1_Node000001_Node000002" title=" " alt="" coords="154,43,112,82,108,78,149,45"/>
+<area shape="rect" id="Node000003" href="$classbertini_1_1Event_3_01ObsT_00_01true_01_4.html" title="For emission of events from observables." alt="" coords="189,81,350,126"/>
+<area shape="poly" id="edge2_Node000001_Node000003" title=" " alt="" coords="205,41,248,80,242,80,203,46"/>
+</map>

@@ -1,0 +1,15 @@
+<map id="bertini::algorithm::ZeroDimSolver&lt; TrackerType, EndgameType, SystemType &gt;" name="bertini::algorithm::ZeroDimSolver&lt; TrackerType, EndgameType, SystemType &gt;">
+<area shape="rect" id="Node000001" title="The zero&#45;dimensional solve algorithm: given a polynomial system, form a start system and a homotopy,..." alt="" coords="987,48,1209,110"/>
+<area shape="rect" id="Node000002" href="$structbertini_1_1algorithm_1_1zero__dim__detail_1_1OwnedHomotopy.html" title="Owns and builds the target / start system / homotopy for a zero&#45;dim solve." alt="" coords="684,5,939,67"/>
+<area shape="poly" id="edge1_Node000001_Node000002" title=" " alt="" coords="954,55,989,62,984,62,954,60"/>
+<area shape="rect" id="Node000003" href="$structbertini_1_1algorithm_1_1HomotopySolver.html" title="The continuation primitive: given a homotopy + a source of start points, track each path through the ..." alt="" coords="695,91,928,152"/>
+<area shape="poly" id="edge2_Node000001_Node000003" title=" " alt="" coords="943,99,983,96,989,95,944,105"/>
+<area shape="rect" id="Node000004" href="$structbertini_1_1algorithm_1_1AnyZeroDim.html" title="Type&#45;erased base for a zero&#45;dimensional solve, exposing output and config entry points." alt="" coords="442,56,576,101"/>
+<area shape="poly" id="edge3_Node000003_Node000004" title=" " alt="" coords="591,88,697,105,692,105,591,93"/>
+<area shape="rect" id="Node000005" href="$structbertini_1_1algorithm_1_1AnyAlgorithm.html" title="Type&#45;erased base for all nag algorithms, exposing a single Run() entry point." alt="" coords="199,56,333,101"/>
+<area shape="poly" id="edge4_Node000004_Node000005" title=" " alt="" coords="348,76,443,78,438,79,349,81"/>
+<area shape="rect" id="Node000006" href="$classbertini_1_1Observable.html" title="An abstract observable type, maintaining a list of observers, who can be notified in case of Events." alt="" coords="5,65,151,93"/>
+<area shape="poly" id="edge5_Node000005_Node000006" title=" " alt="" coords="166,76,201,78,196,80,167,81"/>
+<area shape="rect" id="Node000007" href="$structbertini_1_1detail_1_1Configured.html" title=" " alt="" coords="381,125,636,204"/>
+<area shape="poly" id="edge6_Node000003_Node000007" title=" " alt="" coords="651,141,692,138,697,138,652,147"/>
+</map>

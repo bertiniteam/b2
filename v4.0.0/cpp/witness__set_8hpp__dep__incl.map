@@ -1,0 +1,9 @@
+<map id="core/include/bertini2/nag_datatypes/witness_set.hpp" name="core/include/bertini2/nag_datatypes/witness_set.hpp">
+<area shape="rect" id="Node000001" title="Provides the witness set data type for Bertini2." alt="" coords="129,5,305,67"/>
+<area shape="rect" id="Node000002" href="$trace_8hpp.html" title="Provides methods for computing traces." alt="" coords="5,124,197,168"/>
+<area shape="poly" id="edge1_Node000001_Node000002" title=" " alt="" coords="172,80,126,125,122,121,175,76"/>
+<area shape="rect" id="Node000003" href="$nag__datatypes_2numerical__irreducible__decomposition_8hpp.html" title="Provides the NumericalIrreducibleDecomposition data type for Bertini2." alt="" coords="220,115,448,177"/>
+<area shape="poly" id="edge2_Node000001_Node000003" title=" " alt="" coords="261,75,304,114,299,115,260,80"/>
+<area shape="rect" id="Node000004" href="$nag__algorithms_2numerical__irreducible__decomposition_8hpp.html" title="Provides the NID algorithms for Bertini2." alt="" coords="220,225,448,286"/>
+<area shape="poly" id="edge3_Node000003_Node000004" title=" " alt="" coords="336,190,337,226,332,223,333,194"/>
+</map>

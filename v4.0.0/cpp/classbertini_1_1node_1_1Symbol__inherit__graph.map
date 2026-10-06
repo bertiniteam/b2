@@ -1,0 +1,29 @@
+<map id="bertini::node::Symbol" name="bertini::node::Symbol">
+<area shape="rect" id="Node000001" title="Abstract symbol class." alt="" coords="407,187,567,214"/>
+<area shape="rect" id="Node000005" href="$classbertini_1_1node_1_1NamedSymbol.html" title="Symbols which have names are named symbols." alt="" coords="615,84,823,112"/>
+<area shape="poly" id="edge4_Node000001_Node000005" title=" " alt="" coords="533,177,688,111,683,113,536,182"/>
+<area shape="rect" id="Node000009" href="$classbertini_1_1node_1_1Number.html" title="Abstract Number type from which other Numbers derive." alt="" coords="637,239,801,266"/>
+<area shape="poly" id="edge8_Node000001_Node000009" title=" " alt="" coords="567,216,656,238,651,238,567,221"/>
+<area shape="rect" id="Node000002" href="$classbertini_1_1node_1_1Node.html" title="An interface for all nodes in a function tree, and for a function object as well." alt="" coords="214,187,359,214"/>
+<area shape="poly" id="edge1_Node000001_Node000002" title=" " alt="" coords="374,198,409,200,404,201,375,203"/>
+<area shape="rect" id="Node000003" href="$classbertini_1_1VisitableBase.html" title="The base class for visitable types." alt="" coords="5,144,166,188"/>
+<area shape="poly" id="edge2_Node000002_Node000003" title=" " alt="" coords="181,180,216,187,211,189,182,185"/>
+<area shape="rect" id="Node000004" title=" " alt="" coords="8,213,163,258"/>
+<area shape="poly" id="edge3_Node000002_Node000004" title=" " alt="" coords="177,217,216,212,211,214,179,222"/>
+<area shape="rect" id="Node000006" href="$classbertini_1_1node_1_1Differential.html" title="Provides the differential type for differentiation of expression trees." alt="" coords="893,5,1078,33"/>
+<area shape="poly" id="edge5_Node000005_Node000006" title=" " alt="" coords="772,76,870,43,920,33,915,34,871,48,774,81"/>
+<area shape="rect" id="Node000007" href="$classbertini_1_1node_1_1NamedExpression.html" title="A user&#45;named expression — the surviving, immutable entry point into a subtree." alt="" coords="871,57,1100,85"/>
+<area shape="poly" id="edge6_Node000005_Node000007" title=" " alt="" coords="837,83,873,82,868,83,839,89"/>
+<area shape="rect" id="Node000008" href="$classbertini_1_1node_1_1Variable.html" title="Represents variable leaves in the function tree." alt="" coords="903,109,1068,137"/>
+<area shape="poly" id="edge7_Node000005_Node000008" title=" " alt="" coords="838,106,905,115,900,116,838,112"/>
+<area shape="rect" id="Node000010" href="$classbertini_1_1node_1_1Complex.html" title="A complex&#45;number literal node in an expression tree." alt="" coords="901,161,1070,189"/>
+<area shape="poly" id="edge9_Node000009_Node000010" title=" " alt="" coords="773,231,870,199,920,189,915,190,871,204,775,236"/>
+<area shape="rect" id="Node000011" href="$classbertini_1_1node_1_1Integer.html" title="Signed real Integer storage in an expression tree." alt="" coords="907,213,1064,241"/>
+<area shape="poly" id="edge10_Node000009_Node000011" title=" " alt="" coords="816,241,909,234,904,235,817,246"/>
+<area shape="rect" id="Node000012" href="$classbertini_1_1node_1_1Rational.html" title="The Rational number type for Bertini2 expression trees." alt="" coords="903,265,1068,293"/>
+<area shape="poly" id="edge11_Node000009_Node000012" title=" " alt="" coords="816,260,905,271,900,271,816,265"/>
+<area shape="rect" id="Node000013" href="$classbertini_1_1node_1_1special__number_1_1E.html" title="The number ." alt="" coords="907,317,1064,362"/>
+<area shape="poly" id="edge12_Node000009_Node000013" title=" " alt="" coords="775,269,871,302,910,316,905,316,870,307,774,274"/>
+<area shape="rect" id="Node000014" href="$classbertini_1_1node_1_1special__number_1_1Pi.html" title="The number ." alt="" coords="907,386,1064,431"/>
+<area shape="poly" id="edge13_Node000009_Node000014" title=" " alt="" coords="746,275,802,324,836,349,872,371,909,389,904,389,869,376,833,354,798,328,744,280"/>
+</map>

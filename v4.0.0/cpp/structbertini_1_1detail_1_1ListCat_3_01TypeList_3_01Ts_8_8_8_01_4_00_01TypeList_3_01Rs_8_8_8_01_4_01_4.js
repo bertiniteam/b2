@@ -1,0 +1,4 @@
+var structbertini_1_1detail_1_1ListCat_3_01TypeList_3_01Ts_8_8_8_01_4_00_01TypeList_3_01Rs_8_8_8_01_4_01_4 =
+[
+    [ "type", "structbertini_1_1detail_1_1ListCat_3_01TypeList_3_01Ts_8_8_8_01_4_00_01TypeList_3_01Rs_8_8_8_01_4_01_4.html#a04499ffafdb441b28e80ff038d0daedb", null ]
+];

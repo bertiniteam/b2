@@ -1,0 +1,9 @@
+<map id="Graphical Class Hierarchy" name="Graphical Class Hierarchy">
+<area shape="rect" id="Node000000" title=" " alt="" coords="5,65,123,93"/>
+<area shape="rect" id="Node000001" href="$classbertini_1_1tracking_1_1PrecisionChanged.html" title="Event emitted when the tracker&#39;s working precision changes." alt="" coords="171,56,408,101"/>
+<area shape="poly" id="edge115_Node000000_Node000001" title=" " alt="" coords="138,76,173,78,168,80,139,81"/>
+<area shape="rect" id="Node000002" href="$classbertini_1_1tracking_1_1PrecisionDecreased.html" title="Precision decreased during tracking." alt="" coords="456,5,616,67"/>
+<area shape="poly" id="edge116_Node000001_Node000002" title=" " alt="" coords="423,53,458,49,453,51,424,58"/>
+<area shape="rect" id="Node000003" href="$classbertini_1_1tracking_1_1PrecisionIncreased.html" title="Precision increased during tracking." alt="" coords="459,91,613,152"/>
+<area shape="poly" id="edge117_Node000001_Node000003" title=" " alt="" coords="424,99,461,108,456,108,423,105"/>
+</map>

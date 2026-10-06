@@ -1,0 +1,6 @@
+<map id="bertini::parsing::classic::ConfigSettingParser&lt; Iterator, algorithm::RecordsConfig, Skipper &gt;" name="bertini::parsing::classic::ConfigSettingParser&lt; Iterator, algorithm::RecordsConfig, Skipper &gt;">
+<area shape="rect" id="Node000001" title="Parser for RecordsConfig: the classic input format has no keyword for it, so this consumes the config..." alt="" coords="5,115,255,194"/>
+<area shape="rect" id="Node000002" title=" " alt="" coords="35,5,225,67"/>
+<area shape="poly" id="edge1_Node000001_Node000002" title=" " alt="" coords="123,80,124,116,119,114,120,84"/>
+<area shape="poly" id="edge2_Node000001_Node000002" title=" " alt="" coords="140,80,141,116,136,114,137,84"/>
+</map>

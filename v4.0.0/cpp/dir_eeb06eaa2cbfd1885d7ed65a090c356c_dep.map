@@ -1,0 +1,31 @@
+<map id="core/include/bertini2/io" name="core/include/bertini2/io">
+<area shape="rect" id="node1" href="dir_29fc315985550cc000f5f725c91a4430.html" title="function_tree" alt="" coords="466,216,574,244"/>
+<area shape="rect" id="node2" href="dir_c22ec688145a255f1940a8081b99823e.html" title="system" alt="" coords="597,216,667,244"/>
+<area shape="rect" id="node3" href="dir_fe9020351dc0a1d6973af0bc5a11dcef.html" title="trackers" alt="" coords="369,216,442,244"/>
+<area shape="rect" id="node4" href="dir_e0c8a34964e69a3fee23a631877a9b3d.html" title="detail" alt="" coords="27,216,85,244"/>
+<area shape="rect" id="node5" href="dir_e82fb32a341758d643a58d08f4821b0e.html" title="nag_algorithms" alt="" coords="110,216,232,244"/>
+<area shape="rect" id="node6" href="dir_2788546c9fa25838298dbb513d5fd248.html" title="endgames" alt="" coords="255,216,345,244"/>
+<area shape="poly" id="edge1" href="dir_000011_000009.html" alt="" coords="431,90,506,204,500,203,428,95"/>
+<area shape="rect" id="edge1-headlabel" href="dir_000011_000009.html" title="8" alt="" coords="505,188,513,205"/>
+<area shape="poly" id="edge3" href="dir_000011_000025.html" alt="" coords="440,90,604,207,599,207,438,95"/>
+<area shape="rect" id="edge3-headlabel" href="dir_000011_000025.html" title="3" alt="" coords="599,190,607,207"/>
+<area shape="poly" id="edge4" href="dir_000011_000026.html" alt="" coords="432,90,453,131,458,155,454,180,435,208,432,203,450,178,453,155,448,132,429,95"/>
+<area shape="rect" id="edge4-headlabel" href="dir_000011_000026.html" title="2" alt="" coords="438,201,446,218"/>
+<area shape="rect" id="node8" href="dir_666e2a2d33c382a4eb40145fc9276736.html" title="parsing" alt="" coords="371,141,440,168"/>
+<area shape="poly" id="edge2" href="dir_000011_000017.html" alt="" coords="421,90,414,127,409,124,417,94"/>
+<area shape="rect" id="edge2-headlabel" href="dir_000011_000017.html" title="9" alt="" coords="416,116,424,133"/>
+<area shape="poly" id="edge5" href="dir_000017_000009.html" alt="" coords="427,166,490,208,484,208,425,171"/>
+<area shape="rect" id="edge5-headlabel" href="dir_000017_000009.html" title="6" alt="" coords="485,191,493,208"/>
+<area shape="poly" id="edge6" href="dir_000017_000025.html" alt="" coords="426,166,446,177,512,198,585,216,579,216,511,203,444,181,425,172"/>
+<area shape="rect" id="edge6-headlabel" href="dir_000017_000025.html" title="1" alt="" coords="577,198,585,215"/>
+<area shape="poly" id="edge10" href="dir_000017_000026.html" alt="" coords="407,167,407,202,403,199,404,171"/>
+<area shape="rect" id="edge10-headlabel" href="dir_000017_000026.html" title="1" alt="" coords="410,189,418,206"/>
+<area shape="poly" id="edge7" href="dir_000017_000007.html" alt="" coords="368,162,255,185,101,218,100,213,254,180,373,161"/>
+<area shape="rect" id="edge7-headlabel" href="dir_000017_000007.html" title="1" alt="" coords="101,215,109,232"/>
+<area shape="poly" id="edge8" href="dir_000017_000013.html" alt="" coords="373,166,228,214,226,209,368,167"/>
+<area shape="rect" id="edge8-headlabel" href="dir_000017_000013.html" title="2" alt="" coords="229,210,237,227"/>
+<area shape="poly" id="edge9" href="dir_000017_000008.html" alt="" coords="389,168,332,210,330,205,384,170"/>
+<area shape="rect" id="edge9-headlabel" href="dir_000017_000008.html" title="1" alt="" coords="334,204,342,221"/>
+<area shape="rect" id="clust2" href="dir_eeb06eaa2cbfd1885d7ed65a090c356c.html" alt="" coords="360,54,451,179"/>
+<area shape="rect" id="clust1" href="dir_64c64ac462d39cd1bd558f48af1e44d4.html" title="bertini2" alt="" coords="16,16,677,255"/>
+</map>

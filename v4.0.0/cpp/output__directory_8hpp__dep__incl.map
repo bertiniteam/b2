@@ -1,0 +1,15 @@
+<map id="core/include/bertini2/records/output_directory.hpp" name="core/include/bertini2/records/output_directory.hpp">
+<area shape="rect" id="Node000001" title="The structured output directory: durable, self&#45;documenting records of computations (b2rec/1; ADR&#45;0045..." alt="" coords="338,5,548,50"/>
+<area shape="rect" id="Node000002" href="$zero__dim__solve_8hpp.html" title="Provides the algorithm for computing all zero&#45;dimensional solutions for an algberaic system." alt="" coords="266,98,424,160"/>
+<area shape="poly" id="edge1_Node000001_Node000002" title=" " alt="" coords="413,59,376,100,373,96,409,63"/>
+<area shape="rect" id="Node000006" href="$load__system_8hpp.html" title="Reloading an archived system from a records directory by its content digest." alt="" coords="448,106,636,151"/>
+<area shape="poly" id="edge7_Node000001_Node000006" title=" " alt="" coords="476,59,523,106,518,106,475,64"/>
+<area shape="rect" id="Node000003" href="$switches__zerodim_8hpp.html" title="A sequence of switches for getting a particular instantiation of a ZeroDim algorithm,..." alt="" coords="5,208,239,252"/>
+<area shape="poly" id="edge2_Node000002_Node000003" title=" " alt="" coords="261,168,172,209,170,205,265,165"/>
+<area shape="rect" id="Node000004" href="$user__homotopy_8hpp.html" title=" " alt="" coords="92,300,307,345"/>
+<area shape="poly" id="edge4_Node000002_Node000004" title=" " alt="" coords="315,172,217,302,214,298,310,173"/>
+<area shape="rect" id="Node000005" href="$output_8hpp.html" title="Provides some outputting classes for printing results of running algorithms." alt="" coords="314,208,514,252"/>
+<area shape="poly" id="edge5_Node000002_Node000005" title=" " alt="" coords="367,170,394,208,389,207,365,175"/>
+<area shape="poly" id="edge3_Node000003_Node000004" title=" " alt="" coords="151,262,184,300,178,300,149,267"/>
+<area shape="poly" id="edge6_Node000005_Node000002" title=" " alt="" coords="396,194,373,163,375,158,401,195"/>
+</map>

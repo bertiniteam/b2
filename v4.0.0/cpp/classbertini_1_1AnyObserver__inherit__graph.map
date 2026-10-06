@@ -1,0 +1,49 @@
+<map id="bertini::AnyObserver" name="bertini::AnyObserver">
+<area shape="rect" id="Node000001" title="Strawman base class for Observer objects." alt="" coords="5,936,161,964"/>
+<area shape="rect" id="Node000002" href="$classbertini_1_1Observer.html" title=" " alt="" coords="209,109,350,154"/>
+<area shape="poly" id="edge1_Node000001_Node000002" title=" " alt="" coords="89,921,270,154,275,155,94,922"/>
+<area shape="rect" id="Node000006" href="$classbertini_1_1Observer.html" title=" " alt="" coords="209,820,350,865"/>
+<area shape="poly" id="edge5_Node000001_Node000006" title=" " alt="" coords="121,927,238,863,236,868,125,931"/>
+<area shape="rect" id="Node000019" href="$classbertini_1_1Observer.html" title=" " alt="" coords="209,1073,350,1118"/>
+<area shape="poly" id="edge18_Node000001_Node000019" title=" " alt="" coords="116,971,250,1071,245,1074,116,977"/>
+<area shape="rect" id="Node000022" href="$classbertini_1_1Observer.html" title="Actual observer type, which you should derive from to extract custom information from observable type..." alt="" coords="209,1291,350,1335"/>
+<area shape="poly" id="edge21_Node000001_Node000022" title=" " alt="" coords="101,976,268,1289,263,1291,97,980"/>
+<area shape="rect" id="Node000003" href="$structbertini_1_1endgame_1_1EventRecorder.html" title="Counts endgame events and captures their payloads, for tests and diagnostics." alt="" coords="478,5,713,50"/>
+<area shape="poly" id="edge2_Node000002_Node000003" title=" " alt="" coords="322,99,358,78,397,60,479,39,475,43,399,65,361,82,327,102"/>
+<area shape="rect" id="Node000004" href="$structbertini_1_1endgame_1_1GoryDetailLogger.html" title="Logs the endgame run, with gory detail." alt="" coords="490,75,700,119"/>
+<area shape="poly" id="edge3_Node000002_Node000004" title=" " alt="" coords="364,120,492,107,488,110,367,124"/>
+<area shape="rect" id="Node000005" href="$structbertini_1_1endgame_1_1SampleSequenceCollector.html" title="Collects an endgame&#39;s approach to the root as a time&#45;indexed sequence, for callers that need to watch..." alt="" coords="474,144,716,189"/>
+<area shape="poly" id="edge4_Node000002_Node000005" title=" " alt="" coords="364,139,476,152,472,155,367,143"/>
+<area shape="rect" id="Node000007" href="$classbertini_1_1TypedObserver.html" title=" " alt="" coords="493,213,697,325"/>
+<area shape="poly" id="edge6_Node000006_Node000007" title=" " alt="" coords="282,804,296,697,320,558,335,488,353,425,373,373,396,337,417,318,440,303,494,283,491,286,443,307,420,322,400,340,378,375,358,427,340,490,325,559,301,698,287,805"/>
+<area shape="rect" id="Node000009" href="$classbertini_1_1TypedObserver.html" title=" " alt="" coords="412,350,779,514"/>
+<area shape="poly" id="edge8_Node000006_Node000009" title=" " alt="" coords="283,804,294,745,315,670,348,593,370,556,396,523,412,510,409,514,400,527,374,559,353,595,320,672,299,746,288,806"/>
+<area shape="rect" id="Node000011" href="$classbertini_1_1TypedObserver.html" title=" " alt="" coords="398,537,792,684"/>
+<area shape="poly" id="edge10_Node000006_Node000011" title=" " alt="" coords="300,805,341,749,367,720,396,694,416,682,412,686,400,698,371,723,345,752,304,808"/>
+<area shape="rect" id="Node000013" href="$classbertini_1_1TypedObserver.html" title=" " alt="" coords="466,708,724,838"/>
+<area shape="poly" id="edge12_Node000006_Node000013" title=" " alt="" coords="364,821,468,800,464,803,367,826"/>
+<area shape="rect" id="Node000015" href="$classbertini_1_1TypedObserver.html" title=" " alt="" coords="466,862,724,958"/>
+<area shape="poly" id="edge14_Node000006_Node000015" title=" " alt="" coords="365,858,468,881,463,884,366,863"/>
+<area shape="rect" id="Node000017" href="$classbertini_1_1tracking_1_1GoryDetailLogger.html" title="Observer that logs verbose (&quot;gory detail&quot;) diagnostics for every tracking event." alt="" coords="486,983,705,1027"/>
+<area shape="poly" id="edge16_Node000006_Node000017" title=" " alt="" coords="303,875,345,925,371,949,399,968,441,985,487,998,482,999,439,990,397,973,367,953,341,929,303,880"/>
+<area shape="rect" id="Node000018" href="$classbertini_1_1tracking_1_1PrecisionAccumulator.html" title="Observer that collects the precision at every tracking event into a vector." alt="" coords="514,1052,676,1113"/>
+<area shape="poly" id="edge17_Node000006_Node000018" title=" " alt="" coords="292,876,310,916,333,960,362,1002,400,1038,426,1053,455,1064,516,1079,511,1080,453,1069,424,1058,396,1042,358,1006,328,962,305,918,292,881"/>
+<area shape="rect" id="Node000008" href="$classbertini_1_1tracking_1_1AMPPathAccumulator.html" title="Example usage: PathAccumulator&lt;AMPTracker&gt; path_accumulator;." alt="" coords="850,238,1021,300"/>
+<area shape="poly" id="edge7_Node000007_Node000008" title=" " alt="" coords="712,267,852,268,847,270,714,271"/>
+<area shape="rect" id="Node000010" href="$classbertini_1_1tracking_1_1FirstPrecisionRecorder.html" title="Observer that records the starting precision and the first precision increase of each track: each cal..." alt="" coords="852,401,1019,462"/>
+<area shape="poly" id="edge9_Node000009_Node000010" title=" " alt="" coords="793,429,854,430,850,433,795,434"/>
+<area shape="rect" id="Node000012" href="$classbertini_1_1tracking_1_1MinMaxPrecisionRecorder.html" title="Observer that records the minimum and maximum precision of each track: each call to TrackPath,..." alt="" coords="840,580,1031,641"/>
+<area shape="poly" id="edge11_Node000011_Node000012" title=" " alt="" coords="807,608,842,609,838,611,809,613"/>
+<area shape="rect" id="Node000014" href="$classbertini_1_1tracking_1_1PathPrecisionRecorder.html" title="Observer that records the precision a whole path used, across every call to TrackPath that tracks it:..." alt="" coords="852,742,1019,804"/>
+<area shape="poly" id="edge13_Node000013_Node000014" title=" " alt="" coords="739,770,855,772,850,774,741,776"/>
+<area shape="rect" id="Node000016" href="$classbertini_1_1tracking_1_1StepFailScreenPrinter.html" title="Observer that prints a message to standard out whenever a step fails." alt="" coords="856,880,1015,941"/>
+<area shape="poly" id="edge15_Node000015_Node000016" title=" " alt="" coords="739,908,858,909,853,911,740,913"/>
+<area shape="rect" id="Node000020" href="$classbertini_1_1TypedObserver.html" title=" " alt="" coords="455,1138,735,1267"/>
+<area shape="poly" id="edge19_Node000019_Node000020" title=" " alt="" coords="362,1121,457,1154,452,1156,362,1126"/>
+<area shape="rect" id="Node000021" href="$classbertini_1_1tracking_1_1PathPrecisionRecorder.html" title=" " alt="" coords="852,1172,1019,1233"/>
+<area shape="poly" id="edge20_Node000020_Node000021" title=" " alt="" coords="751,1200,854,1202,849,1203,751,1205"/>
+<area shape="rect" id="Node000023" href="$classbertini_1_1MultiObserver.html" title="A class which can glob together observer types into a new, single observer type." alt="" coords="482,1291,708,1335"/>
+<area shape="poly" id="edge22_Node000022_Node000023" title=" " alt="" coords="365,1310,485,1312,480,1314,366,1316"/>
+<area shape="rect" id="Node000024" href="$classbertini_1_1TypedObserver.html" title="CRTP base that turns an observer into a set of typed Observe() overloads." alt="" coords="510,1360,680,1421"/>
+<area shape="poly" id="edge23_Node000022_Node000024" title=" " alt="" coords="365,1336,399,1345,513,1373,507,1374,397,1350,365,1341"/>
+</map>

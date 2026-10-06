@@ -1,0 +1,714 @@
+
+<!doctype html>
+<html class="no-js" lang="en" data-content_root="../../../">
+  <head><meta charset="utf-8">
+    <meta name="viewport" content="width=device-width,initial-scale=1">
+    <meta name="color-scheme" content="light dark"><meta name="viewport" content="width=device-width, initial-scale=1" />
+<link rel="index" title="Index" href="../../../genindex.html"><link rel="search" title="Search" href="../../../search.html"><link rel="next" title="Parallelism in Python" href="../../parallelism/index.html"><link rel="prev" title="🔬 Precision models: double, multiple, adaptive" href="../precision_models/index.html">
+        <link rel="prefetch" href="../../../_static/bpy_icon_.svg" as="image">
+
+    <!-- Generated with Sphinx 9.0.4 and Furo 2025.12.19 -->
+        <title>⏱️ Stopping a solve, and using a wall-clock budget - Bertini 4.0.0 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=03e43079" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/styles/furo.css?v=7bdb33bb" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/styles/furo-extensions.css?v=8dab3a3b" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/custom.css?v=4805ae4f" />
+    
+    
+
+
+<style>
+  body {
+    --color-code-background: #eeffcc;
+  --color-code-foreground: black;
+  
+  }
+  @media not print {
+    body[data-theme="dark"] {
+      --color-code-background: #202020;
+  --color-code-foreground: #d0d0d0;
+  
+    }
+    @media (prefers-color-scheme: dark) {
+      body:not([data-theme="light"]) {
+        --color-code-background: #202020;
+  --color-code-foreground: #d0d0d0;
+  
+      }
+    }
+  }
+</style></head>
+  <body>
+    
+    <script>
+      document.body.dataset.theme = localStorage.getItem("theme") || "auto";
+    </script>
+    
+
+<svg xmlns="http://www.w3.org/2000/svg" style="display: none;">
+  <symbol id="svg-toc" viewBox="0 0 24 24">
+    <title>Contents</title>
+    <svg stroke="currentColor" fill="currentColor" stroke-width="0" viewBox="0 0 1024 1024">
+      <path d="M408 442h480c4.4 0 8-3.6 8-8v-56c0-4.4-3.6-8-8-8H408c-4.4 0-8 3.6-8 8v56c0 4.4 3.6 8 8 8zm-8 204c0 4.4 3.6 8 8 8h480c4.4 0 8-3.6 8-8v-56c0-4.4-3.6-8-8-8H408c-4.4 0-8 3.6-8 8v56zm504-486H120c-4.4 0-8 3.6-8 8v56c0 4.4 3.6 8 8 8h784c4.4 0 8-3.6 8-8v-56c0-4.4-3.6-8-8-8zm0 632H120c-4.4 0-8 3.6-8 8v56c0 4.4 3.6 8 8 8h784c4.4 0 8-3.6 8-8v-56c0-4.4-3.6-8-8-8zM115.4 518.9L271.7 642c5.8 4.6 14.4.5 14.4-6.9V388.9c0-7.4-8.5-11.5-14.4-6.9L115.4 505.1a8.74 8.74 0 0 0 0 13.8z"/>
+    </svg>
+  </symbol>
+  <symbol id="svg-menu" viewBox="0 0 24 24">
+    <title>Menu</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather-menu">
+      <line x1="3" y1="12" x2="21" y2="12"></line>
+      <line x1="3" y1="6" x2="21" y2="6"></line>
+      <line x1="3" y1="18" x2="21" y2="18"></line>
+    </svg>
+  </symbol>
+  <symbol id="svg-arrow-right" viewBox="0 0 24 24">
+    <title>Expand</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather-chevron-right">
+      <polyline points="9 18 15 12 9 6"></polyline>
+    </svg>
+  </symbol>
+  <symbol id="svg-sun" viewBox="0 0 24 24">
+    <title>Light mode</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1" stroke-linecap="round" stroke-linejoin="round" class="feather-sun">
+      <circle cx="12" cy="12" r="5"></circle>
+      <line x1="12" y1="1" x2="12" y2="3"></line>
+      <line x1="12" y1="21" x2="12" y2="23"></line>
+      <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
+      <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
+      <line x1="1" y1="12" x2="3" y2="12"></line>
+      <line x1="21" y1="12" x2="23" y2="12"></line>
+      <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
+      <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
+    </svg>
+  </symbol>
+  <symbol id="svg-moon" viewBox="0 0 24 24">
+    <title>Dark mode</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1" stroke-linecap="round" stroke-linejoin="round" class="icon-tabler-moon">
+      <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+      <path d="M12 3c.132 0 .263 0 .393 0a7.5 7.5 0 0 0 7.92 12.446a9 9 0 1 1 -8.313 -12.454z" />
+    </svg>
+  </symbol>
+  <symbol id="svg-sun-with-moon" viewBox="0 0 24 24">
+    <title>Auto light/dark, in light mode</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1" stroke-linecap="round" stroke-linejoin="round"
+      class="icon-custom-derived-from-feather-sun-and-tabler-moon">
+      <path style="opacity: 50%" d="M 5.411 14.504 C 5.471 14.504 5.532 14.504 5.591 14.504 C 3.639 16.319 4.383 19.569 6.931 20.352 C 7.693 20.586 8.512 20.551 9.25 20.252 C 8.023 23.207 4.056 23.725 2.11 21.184 C 0.166 18.642 1.702 14.949 4.874 14.536 C 5.051 14.512 5.231 14.5 5.411 14.5 L 5.411 14.504 Z"/>
+      <line x1="14.5" y1="3.25" x2="14.5" y2="1.25"/>
+      <line x1="14.5" y1="15.85" x2="14.5" y2="17.85"/>
+      <line x1="10.044" y1="5.094" x2="8.63" y2="3.68"/>
+      <line x1="19" y1="14.05" x2="20.414" y2="15.464"/>
+      <line x1="8.2" y1="9.55" x2="6.2" y2="9.55"/>
+      <line x1="20.8" y1="9.55" x2="22.8" y2="9.55"/>
+      <line x1="10.044" y1="14.006" x2="8.63" y2="15.42"/>
+      <line x1="19" y1="5.05" x2="20.414" y2="3.636"/>
+      <circle cx="14.5" cy="9.55" r="3.6"/>
+    </svg>
+  </symbol>
+  <symbol id="svg-moon-with-sun" viewBox="0 0 24 24">
+    <title>Auto light/dark, in dark mode</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1" stroke-linecap="round" stroke-linejoin="round"
+      class="icon-custom-derived-from-feather-sun-and-tabler-moon">
+      <path d="M 8.282 7.007 C 8.385 7.007 8.494 7.007 8.595 7.007 C 5.18 10.184 6.481 15.869 10.942 17.24 C 12.275 17.648 13.706 17.589 15 17.066 C 12.851 22.236 5.91 23.143 2.505 18.696 C -0.897 14.249 1.791 7.786 7.342 7.063 C 7.652 7.021 7.965 7 8.282 7 L 8.282 7.007 Z"/>
+      <line style="opacity: 50%" x1="18" y1="3.705" x2="18" y2="2.5"/>
+      <line style="opacity: 50%" x1="18" y1="11.295" x2="18" y2="12.5"/>
+      <line style="opacity: 50%" x1="15.316" y1="4.816" x2="14.464" y2="3.964"/>
+      <line style="opacity: 50%" x1="20.711" y1="10.212" x2="21.563" y2="11.063"/>
+      <line style="opacity: 50%" x1="14.205" y1="7.5" x2="13.001" y2="7.5"/>
+      <line style="opacity: 50%" x1="21.795" y1="7.5" x2="23" y2="7.5"/>
+      <line style="opacity: 50%" x1="15.316" y1="10.184" x2="14.464" y2="11.036"/>
+      <line style="opacity: 50%" x1="20.711" y1="4.789" x2="21.563" y2="3.937"/>
+      <circle style="opacity: 50%" cx="18" cy="7.5" r="2.169"/>
+    </svg>
+  </symbol>
+  <symbol id="svg-pencil" viewBox="0 0 24 24">
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1" stroke-linecap="round" stroke-linejoin="round" class="icon-tabler-pencil-code">
+      <path d="M4 20h4l10.5 -10.5a2.828 2.828 0 1 0 -4 -4l-10.5 10.5v4" />
+      <path d="M13.5 6.5l4 4" />
+      <path d="M20 21l2 -2l-2 -2" />
+      <path d="M17 17l-2 2l2 2" />
+    </svg>
+  </symbol>
+  <symbol id="svg-eye" viewBox="0 0 24 24">
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1" stroke-linecap="round" stroke-linejoin="round" class="icon-tabler-eye-code">
+      <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+      <path d="M10 12a2 2 0 1 0 4 0a2 2 0 0 0 -4 0" />
+      <path
+        d="M11.11 17.958c-3.209 -.307 -5.91 -2.293 -8.11 -5.958c2.4 -4 5.4 -6 9 -6c3.6 0 6.6 2 9 6c-.21 .352 -.427 .688 -.647 1.008" />
+      <path d="M20 21l2 -2l-2 -2" />
+      <path d="M17 17l-2 2l2 2" />
+    </svg>
+  </symbol>
+</svg>
+
+<input type="checkbox" class="sidebar-toggle" name="__navigation" id="__navigation" aria-label="Toggle site navigation sidebar">
+<input type="checkbox" class="sidebar-toggle" name="__toc" id="__toc" aria-label="Toggle table of contents sidebar">
+<label class="overlay sidebar-overlay" for="__navigation"></label>
+<label class="overlay toc-overlay" for="__toc"></label>
+
+<a class="skip-to-content muted-link" href="#furo-main-content">Skip to content</a>
+
+
+
+<div class="page">
+  <header class="mobile-header">
+    <div class="header-left">
+      <label class="nav-overlay-icon" for="__navigation">
+        <span class="icon"><svg><use href="#svg-menu"></use></svg></span>
+      </label>
+    </div>
+    <div class="header-center">
+      <a href="../../../index.html"><div class="brand">Bertini 4.0.0 documentation</div></a>
+    </div>
+    <div class="header-right">
+      <div class="theme-toggle-container theme-toggle-header">
+        <button class="theme-toggle" aria-label="Toggle Light / Dark / Auto color theme">
+          <svg class="theme-icon-when-auto-light"><use href="#svg-sun-with-moon"></use></svg>
+          <svg class="theme-icon-when-auto-dark"><use href="#svg-moon-with-sun"></use></svg>
+          <svg class="theme-icon-when-dark"><use href="#svg-moon"></use></svg>
+          <svg class="theme-icon-when-light"><use href="#svg-sun"></use></svg>
+        </button>
+      </div>
+      <label class="toc-overlay-icon toc-header-icon" for="__toc">
+        <span class="icon"><svg><use href="#svg-toc"></use></svg></span>
+      </label>
+    </div>
+  </header>
+  <aside class="sidebar-drawer">
+    <div class="sidebar-container">
+      
+      <div class="sidebar-sticky"><a class="sidebar-brand" href="../../../index.html">
+  <div class="sidebar-logo-container">
+    <img class="sidebar-logo" src="../../../_static/bpy_icon_.svg" alt="Logo"/>
+  </div>
+  
+  <span class="sidebar-brand-text">Bertini 4.0.0 documentation</span>
+  
+</a><form class="sidebar-search-container" method="get" action="../../../search.html" role="search">
+  <input class="sidebar-search" placeholder="Search" name="q" aria-label="Search">
+  <input type="hidden" name="check_keywords" value="yes">
+  <input type="hidden" name="area" value="default">
+</form>
+<div id="searchbox"></div><div class="sidebar-scroll"><div class="sidebar-tree">
+  <ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../../../welcome.html">👋 Welcome to Bertini 2</a></li>
+<li class="toctree-l1 current has-children"><a class="reference internal" href="../../tutorials.html">🔦 Tutorials</a><input aria-label="Toggle navigation of 🔦 Tutorials" checked="" class="toctree-checkbox" id="toctree-checkbox-1" name="toctree-checkbox-1" role="switch" type="checkbox"/><label for="toctree-checkbox-1"><span class="icon"><svg><use href="#svg-arrow-right"></use></svg></span></label><ul class="current">
+<li class="toctree-l2 has-children"><a class="reference internal" href="../../formulating_and_solving/index.html">Formulating and solving systems</a><input aria-label="Toggle navigation of Formulating and solving systems" class="toctree-checkbox" id="toctree-checkbox-2" name="toctree-checkbox-2" role="switch" type="checkbox"/><label for="toctree-checkbox-2"><span class="icon"><svg><use href="#svg-arrow-right"></use></svg></span></label><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../formulating_and_solving/all_solutions/index.html">🌐 Finding <em>all</em> the solutions</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../formulating_and_solving/zerodim_solver/index.html">🎯 Solving a system with ZeroDimSolver</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../formulating_and_solving/real_points/index.html">📍 A real point on every component (the Trott curve)</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../formulating_and_solving/critical_points/index.html">🎯 Critical points by rank deficiency</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../formulating_and_solving/eigenvalues_by_homotopy/index.html">🧮 Eigenvalues by homotopy continuation</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../formulating_and_solving/parameter_homotopy/index.html">🔁 Parameter homotopy</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../formulating_and_solving/concatenate_systems/index.html">🧱 Build a system in pieces with clone and concatenate</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../formulating_and_solving/randomize/index.html">🎲 Randomize an overdetermined system</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../formulating_and_solving/user_product_of_linears/index.html">🪢 Author your own start system: a product of linears</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../formulating_and_solving/canonical_ordering/index.html">🧮 Canonical monomial ordering, and opting out</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../formulating_and_solving/solution_dataframe/index.html">🗃️ A dataframe of solutions: filtering and plotting with pandas</a></li>
+</ul>
+</li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="../../manipulating_solutions/index.html">Manipulating solutions</a><input aria-label="Toggle navigation of Manipulating solutions" class="toctree-checkbox" id="toctree-checkbox-3" name="toctree-checkbox-3" role="switch" type="checkbox"/><label for="toctree-checkbox-3"><span class="icon"><svg><use href="#svg-arrow-right"></use></svg></span></label><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../manipulating_solutions/intro_to_slices/index.html">✂️ Intro to slices</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../manipulating_solutions/moving_slice/index.html">🛷 Move a slice, hold the system fixed</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../manipulating_solutions/plotting/index.html">📈 Plotting solutions and paths</a></li>
+</ul>
+</li>
+<li class="toctree-l2 current has-children"><a class="reference internal" href="../index.html">Solver settings &amp; multiprecision</a><input aria-label="Toggle navigation of Solver settings &amp; multiprecision" checked="" class="toctree-checkbox" id="toctree-checkbox-4" name="toctree-checkbox-4" role="switch" type="checkbox"/><label for="toctree-checkbox-4"><span class="icon"><svg><use href="#svg-arrow-right"></use></svg></span></label><ul class="current">
+<li class="toctree-l3"><a class="reference internal" href="../auxiliary_coordinates/index.html">Auxiliary coordinates</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../carrying_settings/index.html">⚙️ Carrying settings across related solves</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../crossed_paths/index.html">🪢 Crossed paths: when two paths (accidentally) become one</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../precision_matters/index.html">🎚️ When double precision is not enough</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../precision_models/index.html">🔬 Precision models: double, multiple, adaptive</a></li>
+<li class="toctree-l3 current current-page"><a class="current reference internal" href="#">⏱️ Stopping a solve, and using a wall-clock budget</a></li>
+</ul>
+</li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="../../parallelism/index.html">Parallelism in Python</a><input aria-label="Toggle navigation of Parallelism in Python" class="toctree-checkbox" id="toctree-checkbox-5" name="toctree-checkbox-5" role="switch" type="checkbox"/><label for="toctree-checkbox-5"><span class="icon"><svg><use href="#svg-arrow-right"></use></svg></span></label><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../parallelism/solving_at_scale/index.html">🚀 Solving at scale: many cores, many machines</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../parallelism/parallel_parameter_homotopy/index.html">⚗️ Parameter homotopy in parallel</a></li>
+</ul>
+</li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="../../observing_metadata_more/index.html">Observing, metadata, and more</a><input aria-label="Toggle navigation of Observing, metadata, and more" class="toctree-checkbox" id="toctree-checkbox-6" name="toctree-checkbox-6" role="switch" type="checkbox"/><label for="toctree-checkbox-6"><span class="icon"><svg><use href="#svg-arrow-right"></use></svg></span></label><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../observing_metadata_more/observers_and_path_data/index.html">👀 Watching paths: observers and path data</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../observing_metadata_more/seeing_precision_change/index.html">🎨 Seeing precision change</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../observing_metadata_more/classic_continuation_cartoon/index.html">🖼️ The classic continuation cartoon, from real data</a></li>
+</ul>
+</li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="../../performance_benchmarking/index.html">Performance and benchmarking</a><input aria-label="Toggle navigation of Performance and benchmarking" class="toctree-checkbox" id="toctree-checkbox-7" name="toctree-checkbox-7" role="switch" type="checkbox"/><label for="toctree-checkbox-7"><span class="icon"><svg><use href="#svg-arrow-right"></use></svg></span></label><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../performance_benchmarking/bertini1_vs_bertini2_timing/index.html">⏱️ Timing Bertini 1 vs Bertini 2</a></li>
+</ul>
+</li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="../../record_keeping/index.html">The record-keeping system</a><input aria-label="Toggle navigation of The record-keeping system" class="toctree-checkbox" id="toctree-checkbox-8" name="toctree-checkbox-8" role="switch" type="checkbox"/><label for="toctree-checkbox-8"><span class="icon"><svg><use href="#svg-arrow-right"></use></svg></span></label><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../record_keeping/automatic_record_keeping/index.html">Automatic record keeping</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../record_keeping/chained_homotopies/index.html">Chained homotopies: provenance all the way back</a></li>
+</ul>
+</li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="../../doing_things_manually/index.html">Doing things manually</a><input aria-label="Toggle navigation of Doing things manually" class="toctree-checkbox" id="toctree-checkbox-9" name="toctree-checkbox-9" role="switch" type="checkbox"/><label for="toctree-checkbox-9"><span class="icon"><svg><use href="#svg-arrow-right"></use></svg></span></label><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../doing_things_manually/evaluation_cyclic/index.html">♻️ Evaluation of cyclic-<span class="math notranslate nohighlight">\(n\)</span> polynomials</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../doing_things_manually/manual_endgame_usage/index.html">🎮 Using an endgame to compute singular endpoints</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../doing_things_manually/tracking_nonsingular/index.html">🛤 Tracking to nonsingular endpoints</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../doing_things_manually/tracking_analytic/index.html">〰️ Tracking an analytic homotopy</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../detailed/everyday.html">🌟 Everyday API</a></li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="../../../showpieces/index.html">✨ Showpieces</a><input aria-label="Toggle navigation of ✨ Showpieces" class="toctree-checkbox" id="toctree-checkbox-10" name="toctree-checkbox-10" role="switch" type="checkbox"/><label for="toctree-checkbox-10"><span class="icon"><svg><use href="#svg-arrow-right"></use></svg></span></label><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../../showpieces/monodromy_loom/index.html">🧬 The Monodromy Loom</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../showpieces/flight_recorder/index.html">✈️ The Flight Recorder</a></li>
+</ul>
+</li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../detailed/configuration.html">⚙️ Configuration reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../numpy.html">Multiprecision numbers and NumPy</a></li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="../../../detailed/api.html">🔎 Full API reference</a><input aria-label="Toggle navigation of 🔎 Full API reference" class="toctree-checkbox" id="toctree-checkbox-11" name="toctree-checkbox-11" role="switch" type="checkbox"/><label for="toctree-checkbox-11"><span class="icon"><svg><use href="#svg-arrow-right"></use></svg></span></label><ul>
+<li class="toctree-l2 has-children"><a class="reference internal" href="../../../detailed/_autosummary/bertini.algorithms.html">bertini.algorithms</a><input aria-label="Toggle navigation of bertini.algorithms" class="toctree-checkbox" id="toctree-checkbox-12" name="toctree-checkbox-12" role="switch" type="checkbox"/><label for="toctree-checkbox-12"><span class="icon"><svg><use href="#svg-arrow-right"></use></svg></span></label><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../../detailed/_autosummary/bertini.algorithms.zerodim.html">bertini.algorithms.zerodim</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../../detailed/_autosummary/bertini.config.html">bertini.config</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../detailed/_autosummary/bertini.endgame.html">bertini.endgame</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../detailed/_autosummary/bertini.logging.html">bertini.logging</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../detailed/_autosummary/bertini.multiprec.html">bertini.multiprec</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../detailed/_autosummary/bertini.nag_algorithm.html">bertini.nag_algorithm</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../detailed/_autosummary/bertini.operators.html">bertini.operators</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../detailed/_autosummary/bertini.parallel.html">bertini.parallel</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../detailed/_autosummary/bertini.parse.html">bertini.parse</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../detailed/_autosummary/bertini.random.html">bertini.random</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../detailed/_autosummary/bertini.records.html">bertini.records</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../detailed/_autosummary/bertini.symbolics.html">bertini.symbolics</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../detailed/_autosummary/bertini.sympy_bridge.html">bertini.sympy_bridge</a></li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="../../../detailed/_autosummary/bertini.system.html">bertini.system</a><input aria-label="Toggle navigation of bertini.system" class="toctree-checkbox" id="toctree-checkbox-13" name="toctree-checkbox-13" role="switch" type="checkbox"/><label for="toctree-checkbox-13"><span class="icon"><svg><use href="#svg-arrow-right"></use></svg></span></label><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../../detailed/_autosummary/bertini.system.start_system.html">bertini.system.start_system</a></li>
+</ul>
+</li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="../../../detailed/_autosummary/bertini.tracking.html">bertini.tracking</a><input aria-label="Toggle navigation of bertini.tracking" class="toctree-checkbox" id="toctree-checkbox-14" name="toctree-checkbox-14" role="switch" type="checkbox"/><label for="toctree-checkbox-14"><span class="icon"><svg><use href="#svg-arrow-right"></use></svg></span></label><ul>
+<li class="toctree-l3 has-children"><a class="reference internal" href="../../../detailed/_autosummary/bertini.tracking.observers.html">bertini.tracking.observers</a><input aria-label="Toggle navigation of bertini.tracking.observers" class="toctree-checkbox" id="toctree-checkbox-15" name="toctree-checkbox-15" role="switch" type="checkbox"/><label for="toctree-checkbox-15"><span class="icon"><svg><use href="#svg-arrow-right"></use></svg></span></label><ul>
+<li class="toctree-l4"><a class="reference internal" href="../../../detailed/_autosummary/bertini.tracking.observers.amp.html">bertini.tracking.observers.amp</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../detailed/_autosummary/bertini.tracking.observers.double.html">bertini.tracking.observers.double</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../detailed/_autosummary/bertini.tracking.observers.multiple.html">bertini.tracking.observers.multiple</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../zbib.html">📚 Bibliography</a></li>
+</ul>
+
+</div>
+</div>
+
+      </div>
+      
+    </div>
+  </aside>
+  <div class="main">
+    <div class="content">
+      <div class="article-container">
+        <a href="#" class="back-to-top muted-link">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+            <path d="M13 20h-2V8l-5.5 5.5-1.42-1.42L12 4.16l7.92 7.92-1.42 1.42L13 8v12z"></path>
+          </svg>
+          <span>Back to top</span>
+        </a>
+        <div class="content-icon-container">
+          <div class="view-this-page">
+  <a class="muted-link" href="../../../_sources/tutorials/settings_and_precision/stopping_and_budgets/index.rst.txt" title="View this page">
+    <svg><use href="#svg-eye"></use></svg>
+    <span class="visually-hidden">View this page</span>
+  </a>
+</div>
+<div class="theme-toggle-container theme-toggle-content">
+            <button class="theme-toggle" aria-label="Toggle Light / Dark / Auto color theme">
+              <svg class="theme-icon-when-auto-light"><use href="#svg-sun-with-moon"></use></svg>
+              <svg class="theme-icon-when-auto-dark"><use href="#svg-moon-with-sun"></use></svg>
+              <svg class="theme-icon-when-dark"><use href="#svg-moon"></use></svg>
+              <svg class="theme-icon-when-light"><use href="#svg-sun"></use></svg>
+            </button>
+          </div>
+          <label class="toc-overlay-icon toc-content-icon" for="__toc">
+            <span class="icon"><svg><use href="#svg-toc"></use></svg></span>
+          </label>
+        </div>
+        <article role="main" id="furo-main-content">
+          <section id="stopping-a-solve-and-using-a-wall-clock-budget">
+<h1>⏱️ Stopping a solve, and using a wall-clock budget<a class="headerlink" href="#stopping-a-solve-and-using-a-wall-clock-budget" title="Link to this heading">¶</a></h1>
+<p>Path costs vary widely.  In a sweep of tens of thousands of paths a few may cost a thousand
+times the median, and those few set the wall-clock time of the whole sweep.  This page covers
+stopping a solve, giving paths a wall-clock budget, and what a path records when it is
+abandoned.</p>
+<p>The mechanism is the same throughout: a path can be stopped between steps.  At the top of
+every predictor-corrector step the tracker checks whether a stop has been requested and
+whether its wall-clock deadline has passed, and if so returns there with its position intact.
+The overrun is at most the step in flight.</p>
+<section id="seeing-that-it-is-stuck">
+<h2>Seeing that it is stuck<a class="headerlink" href="#seeing-that-it-is-stuck" title="Link to this heading">¶</a></h2>
+<p>A solve reports how far it has got, so the pathological path is visible rather than inferred
+from an absence of output:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>paths:  61%|██████     | 39/64 [00:41&lt;00:26]  37 ok, 2 diverged
+</pre></div>
+</div>
+<p>This is on by default and shows itself only when it would help: nothing is drawn until the
+solve has been running a few seconds, and nothing at all when stderr is not a terminal, so
+scripts, pipelines, notebooks-as-jobs and test runs are unaffected.  Pass
+<code class="docutils literal notranslate"><span class="pre">show_progress=False</span></code> to any <code class="docutils literal notranslate"><span class="pre">solve</span></code> to be certain of silence.</p>
+<p>A bar that stops advancing is the symptom the rest of this page is about: one path is not
+finishing.  <code class="docutils literal notranslate"><span class="pre">max_path_wall_clock_duration</span></code> below is what gets the solve past it.</p>
+<p>Recalled paths are reported separately, because a solve that finds its answers in the records
+tracks nothing and so has no progress to show:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">recalled</span> <span class="mi">64</span> <span class="n">of</span> <span class="mi">64</span> <span class="n">paths</span> <span class="kn">from</span><span class="w"> </span><span class="nn">the</span> <span class="n">records</span>
+</pre></div>
+</div>
+<p>At very large path counts, the display redraws every-so-many paths rather than on each one.
+By default, it’s often enough for a couple of hundred updates across the whole solve.  To set the
+interval yourself, or to watch a solver you are driving directly, attach a
+<code class="xref py py-class docutils literal notranslate"><span class="pre">bertini.ProgressReport</span></code>:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">report</span> <span class="o">=</span> <span class="n">bertini</span><span class="o">.</span><span class="n">ProgressReport</span><span class="p">(</span><span class="n">solver</span><span class="p">,</span> <span class="n">every</span><span class="o">=</span><span class="mi">1000</span><span class="p">)</span>
+<span class="n">solver</span><span class="o">.</span><span class="n">add_observer</span><span class="p">(</span><span class="n">report</span><span class="p">)</span>
+<span class="n">solver</span><span class="o">.</span><span class="n">solve</span><span class="p">(</span><span class="n">show_progress</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>      <span class="c1"># the one being watched is yours</span>
+<span class="n">solver</span><span class="o">.</span><span class="n">remove_observer</span><span class="p">(</span><span class="n">report</span><span class="p">)</span>
+
+<span class="n">report</span><span class="o">.</span><span class="n">tally_text</span><span class="p">()</span>        <span class="c1"># '37 ok, 2 diverged'</span>
+</pre></div>
+</div>
+</section>
+<section id="ctrl-c-works">
+<h2>Ctrl-C works<a class="headerlink" href="#ctrl-c-works" title="Link to this heading">¶</a></h2>
+<p>Press Ctrl-C during a solve and it stops at its next step.  You get a <code class="docutils literal notranslate"><span class="pre">KeyboardInterrupt</span></code>,
+as you would from any Python call, and the solver is left exactly as the stop found it:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">solver</span> <span class="o">=</span> <span class="n">bertini</span><span class="o">.</span><span class="n">ZeroDimSolver</span><span class="p">(</span><span class="n">sys</span><span class="p">)</span>
+<span class="k">try</span><span class="p">:</span>
+    <span class="n">solver</span><span class="o">.</span><span class="n">solve</span><span class="p">()</span>
+<span class="k">except</span> <span class="ne">KeyboardInterrupt</span><span class="p">:</span>
+    <span class="k">pass</span>
+<span class="n">solver</span><span class="o">.</span><span class="n">was_stopped_early</span><span class="p">()</span>          <span class="c1"># True</span>
+<span class="n">solver</span><span class="o">.</span><span class="n">all_solutions</span><span class="p">()</span>              <span class="c1"># what finished, one entry per path</span>
+<span class="n">solver</span><span class="o">.</span><span class="n">solution_metadata</span><span class="p">()</span>          <span class="c1"># which paths succeeded, were stopped, or never began</span>
+<span class="n">solver</span><span class="o">.</span><span class="n">solve</span><span class="p">()</span>                      <span class="c1"># resumes: finished paths recalled, the rest tracked</span>
+</pre></div>
+</div>
+<p>Nothing is destroyed by the exception.  The paths that finished are readable, the paths that
+were in flight are marked <code class="docutils literal notranslate"><span class="pre">ExternallyTerminated</span></code>, and the paths not yet begun stay
+<code class="docutils literal notranslate"><span class="pre">NeverStarted</span></code>.  Because every finished path is on record (see
+<a class="reference internal" href="../../record_keeping/automatic_record_keeping/index.html"><span class="doc">Automatic record keeping</span></a>), solving again picks up where you
+left off.</p>
+<p>The same stop can be requested from code.  <code class="xref py py-func docutils literal notranslate"><span class="pre">bertini.request_stop()</span></code> sets the flag that
+Ctrl-C sets, and the solve returns normally instead of raising.  A signal cannot be delivered
+from inside a tutorial, so here the request comes from an observer that fires once two paths
+have completed:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">bertini</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">pb</span>
+
+<span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">z</span> <span class="o">=</span> <span class="n">pb</span><span class="o">.</span><span class="n">Variable</span><span class="p">(</span><span class="s1">'x'</span><span class="p">),</span> <span class="n">pb</span><span class="o">.</span><span class="n">Variable</span><span class="p">(</span><span class="s1">'y'</span><span class="p">),</span> <span class="n">pb</span><span class="o">.</span><span class="n">Variable</span><span class="p">(</span><span class="s1">'z'</span><span class="p">)</span>
+
+<span class="c1"># a system with enough paths (64) that a stop lands while paths remain</span>
+<span class="n">big</span> <span class="o">=</span> <span class="n">pb</span><span class="o">.</span><span class="n">System</span><span class="p">()</span>
+<span class="n">big</span><span class="o">.</span><span class="n">add_variable_group</span><span class="p">(</span><span class="n">pb</span><span class="o">.</span><span class="n">VariableGroup</span><span class="p">([</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">z</span><span class="p">]))</span>
+<span class="n">big</span><span class="o">.</span><span class="n">add_function</span><span class="p">(</span><span class="n">x</span><span class="o">**</span><span class="mi">4</span> <span class="o">+</span> <span class="n">y</span><span class="o">**</span><span class="mi">4</span> <span class="o">+</span> <span class="n">z</span><span class="o">**</span><span class="mi">4</span> <span class="o">+</span> <span class="n">x</span><span class="o">*</span><span class="n">y</span><span class="o">*</span><span class="n">z</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)</span>
+<span class="n">big</span><span class="o">.</span><span class="n">add_function</span><span class="p">(</span><span class="n">x</span><span class="o">**</span><span class="mi">4</span> <span class="o">-</span> <span class="mi">2</span><span class="o">*</span><span class="n">y</span><span class="o">**</span><span class="mi">4</span> <span class="o">+</span> <span class="n">z</span><span class="o">**</span><span class="mi">3</span> <span class="o">+</span> <span class="n">x</span><span class="o">*</span><span class="n">y</span> <span class="o">-</span> <span class="mi">3</span><span class="p">)</span>
+<span class="n">big</span><span class="o">.</span><span class="n">add_function</span><span class="p">(</span><span class="n">x</span><span class="o">**</span><span class="mi">3</span><span class="o">*</span><span class="n">z</span> <span class="o">+</span> <span class="n">y</span><span class="o">**</span><span class="mi">4</span> <span class="o">-</span> <span class="n">z</span><span class="o">**</span><span class="mi">4</span> <span class="o">+</span> <span class="n">x</span> <span class="o">+</span> <span class="mi">2</span><span class="o">*</span><span class="n">y</span> <span class="o">-</span> <span class="mi">5</span><span class="p">)</span>
+
+<span class="k">class</span><span class="w"> </span><span class="nc">StopAfter</span><span class="p">(</span><span class="n">pb</span><span class="o">.</span><span class="n">nag_algorithm</span><span class="o">.</span><span class="n">observers</span><span class="o">.</span><span class="n">CustomObserver</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">n</span><span class="p">):</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">n</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">completed</span> <span class="o">=</span> <span class="n">n</span><span class="p">,</span> <span class="mi">0</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">Observe</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">event</span><span class="p">):</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">event</span><span class="p">,</span> <span class="n">pb</span><span class="o">.</span><span class="n">nag_algorithm</span><span class="o">.</span><span class="n">observers</span><span class="o">.</span><span class="n">PathComplete</span><span class="p">):</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">completed</span> <span class="o">+=</span> <span class="mi">1</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">completed</span> <span class="o">==</span> <span class="bp">self</span><span class="o">.</span><span class="n">n</span><span class="p">:</span>
+                <span class="n">pb</span><span class="o">.</span><span class="n">request_stop</span><span class="p">()</span>
+
+<span class="n">solver</span> <span class="o">=</span> <span class="n">pb</span><span class="o">.</span><span class="n">ZeroDimSolver</span><span class="p">(</span><span class="n">big</span><span class="p">)</span>
+<span class="n">trigger</span> <span class="o">=</span> <span class="n">StopAfter</span><span class="p">(</span><span class="mi">2</span><span class="p">)</span>
+<span class="n">solver</span><span class="o">.</span><span class="n">add_observer</span><span class="p">(</span><span class="n">trigger</span><span class="p">)</span>
+<span class="n">solver</span><span class="o">.</span><span class="n">solve</span><span class="p">()</span>
+
+<span class="n">codes</span> <span class="o">=</span> <span class="p">[</span><span class="n">m</span><span class="o">.</span><span class="n">pre_endgame_success_code</span> <span class="k">for</span> <span class="n">m</span> <span class="ow">in</span> <span class="n">solver</span><span class="o">.</span><span class="n">solution_metadata</span><span class="p">()]</span>
+<span class="nb">print</span><span class="p">(</span><span class="s1">'stopped early:'</span><span class="p">,</span> <span class="n">solver</span><span class="o">.</span><span class="n">was_stopped_early</span><span class="p">())</span>
+<span class="nb">print</span><span class="p">(</span><span class="s1">'never started:'</span><span class="p">,</span> <span class="n">solver</span><span class="o">.</span><span class="n">num_paths_never_started</span><span class="p">()</span> <span class="o">==</span> <span class="n">codes</span><span class="o">.</span><span class="n">count</span><span class="p">(</span><span class="n">pb</span><span class="o">.</span><span class="n">SuccessCode</span><span class="o">.</span><span class="n">NeverStarted</span><span class="p">))</span>
+<span class="nb">print</span><span class="p">(</span><span class="s1">'every path accounted for:'</span><span class="p">,</span>
+      <span class="n">codes</span><span class="o">.</span><span class="n">count</span><span class="p">(</span><span class="n">pb</span><span class="o">.</span><span class="n">SuccessCode</span><span class="o">.</span><span class="n">Success</span><span class="p">)</span>
+      <span class="o">+</span> <span class="n">codes</span><span class="o">.</span><span class="n">count</span><span class="p">(</span><span class="n">pb</span><span class="o">.</span><span class="n">SuccessCode</span><span class="o">.</span><span class="n">ExternallyTerminated</span><span class="p">)</span>
+      <span class="o">+</span> <span class="n">codes</span><span class="o">.</span><span class="n">count</span><span class="p">(</span><span class="n">pb</span><span class="o">.</span><span class="n">SuccessCode</span><span class="o">.</span><span class="n">NeverStarted</span><span class="p">)</span> <span class="o">==</span> <span class="nb">len</span><span class="p">(</span><span class="n">codes</span><span class="p">))</span>
+</pre></div>
+</div>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>stopped early: True
+never started: True
+every path accounted for: True
+</pre></div>
+</div>
+<p>How many paths were in flight when the stop landed, versus not yet begun, depends on how many
+threads were running, which is why the tutorial prints the invariants and not the counts.
+Being stopped is not sticky.  Take the observer off and solve again, and the same solver runs
+to completion:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">solver</span><span class="o">.</span><span class="n">remove_observer</span><span class="p">(</span><span class="n">trigger</span><span class="p">)</span>
+<span class="n">solver</span><span class="o">.</span><span class="n">solve</span><span class="p">()</span>
+<span class="nb">print</span><span class="p">(</span><span class="s1">'stopped early:'</span><span class="p">,</span> <span class="n">solver</span><span class="o">.</span><span class="n">was_stopped_early</span><span class="p">(),</span>
+      <span class="s1">'  never started:'</span><span class="p">,</span> <span class="n">solver</span><span class="o">.</span><span class="n">num_paths_never_started</span><span class="p">())</span>
+</pre></div>
+</div>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>stopped early: False   never started: 0
+</pre></div>
+</div>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>Silviana says: I 100% used Claude to implement the control-c behaviour, and I’m
+pretty happy with the result.  I want to do math, not mess with signals.  AI coding
+agents are solid with this kind of thing.</p>
+</div>
+</section>
+<section id="an-interrupted-or-truncated-path-leaves-a-useful-record">
+<h2>An interrupted or truncated path leaves a useful record<a class="headerlink" href="#an-interrupted-or-truncated-path-leaves-a-useful-record" title="Link to this heading">¶</a></h2>
+<p>A path that did not succeed – whatever the reason – says where it got to.  Its metadata
+carries <code class="docutils literal notranslate"><span class="pre">final_time_used</span></code>, the time it reached; <code class="docutils literal notranslate"><span class="pre">latest_path_point</span></code>, the point it was at, in the
+solver’s internal coordinates; <code class="docutils literal notranslate"><span class="pre">num_successful_steps</span></code> and <code class="docutils literal notranslate"><span class="pre">num_failed_steps</span></code>, the
+predictor-corrector steps over the whole path; and <code class="docutils literal notranslate"><span class="pre">max_precision_used</span></code>.  A successful
+path carries the same fields except <code class="docutils literal notranslate"><span class="pre">latest_path_point</span></code>, which is empty: its endpoint is the
+solution itself.</p>
+<p>To see the stamp on a path that got partway, give the tracker a budget of five steps.  The
+system from here on is two quadrics with four well-separated roots, so four paths:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">s</span> <span class="o">=</span> <span class="n">pb</span><span class="o">.</span><span class="n">System</span><span class="p">()</span>
+<span class="n">s</span><span class="o">.</span><span class="n">add_variable_group</span><span class="p">(</span><span class="n">pb</span><span class="o">.</span><span class="n">VariableGroup</span><span class="p">([</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">]))</span>
+<span class="n">s</span><span class="o">.</span><span class="n">add_function</span><span class="p">(</span><span class="n">x</span><span class="o">**</span><span class="mi">2</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)</span>
+<span class="n">s</span><span class="o">.</span><span class="n">add_function</span><span class="p">(</span><span class="n">y</span><span class="o">**</span><span class="mi">2</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)</span>
+
+<span class="n">solver</span> <span class="o">=</span> <span class="n">pb</span><span class="o">.</span><span class="n">ZeroDimSolver</span><span class="p">(</span><span class="n">s</span><span class="p">)</span>
+<span class="n">solver</span><span class="o">.</span><span class="n">get_tracker</span><span class="p">()</span><span class="o">.</span><span class="n">get_stepping</span><span class="p">()</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">max_num_steps</span><span class="o">=</span><span class="mi">5</span><span class="p">)</span>
+<span class="n">solver</span><span class="o">.</span><span class="n">solve</span><span class="p">()</span>
+
+<span class="n">m</span> <span class="o">=</span> <span class="n">solver</span><span class="o">.</span><span class="n">solution_metadata</span><span class="p">()[</span><span class="mi">0</span><span class="p">]</span>
+<span class="nb">print</span><span class="p">(</span><span class="n">m</span><span class="o">.</span><span class="n">pre_endgame_success_code</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="s1">'steps taken:'</span><span class="p">,</span> <span class="n">m</span><span class="o">.</span><span class="n">num_successful_steps</span> <span class="o">+</span> <span class="n">m</span><span class="o">.</span><span class="n">num_failed_steps</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="s1">'stopped short of the start at t=1:'</span><span class="p">,</span> <span class="mi">0</span> <span class="o">&lt;</span> <span class="nb">abs</span><span class="p">(</span><span class="n">m</span><span class="o">.</span><span class="n">final_time_used</span><span class="p">)</span> <span class="o">&lt;</span> <span class="mi">1</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="s1">'coordinates in the last point:'</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">m</span><span class="o">.</span><span class="n">latest_path_point</span><span class="p">))</span>
+</pre></div>
+</div>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>MaxNumStepsTaken
+steps taken: 5
+stopped short of the start at t=1: True
+coordinates in the last point: 3
+</pre></div>
+</div>
+<p>The last point has three coordinates, not two: the solver tracks in homogeneous coordinates,
+so the point is the two variables plus the homogenizing coordinate.  A solution’s coordinates
+are dehomogenized for you; a last point is left as the tracker had it.</p>
+<p>The stamp is recorded with the path.  The time reached, the steps taken and the precision
+describe how far a path got and what it cost in terms that do not depend on the machine.</p>
+</section>
+<section id="a-wall-clock-budget-per-path">
+<h2>A wall-clock budget per-path<a class="headerlink" href="#a-wall-clock-budget-per-path" title="Link to this heading">¶</a></h2>
+<p><code class="docutils literal notranslate"><span class="pre">max_path_wall_clock_duration</span></code>, in seconds, gives every path a wall-clock budget.  A path
+that has not finished when its budget runs out is abandoned between steps with
+<code class="docutils literal notranslate"><span class="pre">WallClockLimitReached</span></code>, stamped as above, and recorded with the budget that stopped it.
+The budget spans the whole path, pre-endgame tracking and endgame together.</p>
+<p>A tutorial has to be the same on every machine, so the budgets below are either a nanosecond,
+which is gone before the first step anywhere, or an hour, which is never reached.  In real
+use you would pick something like “ten times your median path time”.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">solver</span> <span class="o">=</span> <span class="n">pb</span><span class="o">.</span><span class="n">ZeroDimSolver</span><span class="p">(</span><span class="n">s</span><span class="p">)</span>
+<span class="n">solver</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">max_path_wall_clock_duration</span><span class="o">=</span><span class="mf">1e-9</span><span class="p">)</span>
+<span class="n">solver</span><span class="o">.</span><span class="n">solve</span><span class="p">()</span>
+
+<span class="nb">print</span><span class="p">({</span><span class="n">m</span><span class="o">.</span><span class="n">pre_endgame_success_code</span><span class="o">.</span><span class="n">name</span> <span class="k">for</span> <span class="n">m</span> <span class="ow">in</span> <span class="n">solver</span><span class="o">.</span><span class="n">solution_metadata</span><span class="p">()})</span>
+<span class="nb">print</span><span class="p">(</span><span class="s1">'budget recorded with each path:'</span><span class="p">,</span>
+      <span class="nb">all</span><span class="p">(</span><span class="n">m</span><span class="o">.</span><span class="n">wall_clock_limit_seconds</span> <span class="o">==</span> <span class="mf">1e-9</span> <span class="k">for</span> <span class="n">m</span> <span class="ow">in</span> <span class="n">solver</span><span class="o">.</span><span class="n">solution_metadata</span><span class="p">()))</span>
+<span class="nb">print</span><span class="p">(</span><span class="s1">'stopped early:'</span><span class="p">,</span> <span class="n">solver</span><span class="o">.</span><span class="n">was_stopped_early</span><span class="p">())</span>
+</pre></div>
+</div>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>{'WallClockLimitReached'}
+budget recorded with each path: True
+stopped early: False
+</pre></div>
+</div>
+<p>Running out of a per-path budget does not count as being stopped early: the solve was not
+interrupted, each path used up its own allowance, and every path was asked.  With a larger
+budget the same paths finish:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">solver</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">max_path_wall_clock_duration</span><span class="o">=</span><span class="mi">3600</span><span class="p">)</span>
+<span class="n">solver</span><span class="o">.</span><span class="n">solve</span><span class="p">()</span>
+<span class="nb">print</span><span class="p">({</span><span class="n">m</span><span class="o">.</span><span class="n">endgame_success_code</span><span class="o">.</span><span class="n">name</span> <span class="k">for</span> <span class="n">m</span> <span class="ow">in</span> <span class="n">solver</span><span class="o">.</span><span class="n">solution_metadata</span><span class="p">()})</span>
+</pre></div>
+</div>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>{'Success'}
+</pre></div>
+</div>
+<p>A bare tracker can be limited on its own, with no solver anywhere:
+<code class="docutils literal notranslate"><span class="pre">tracker.set_max_wall_clock_duration(seconds)</span></code> arms a deadline that holds across
+<code class="docutils literal notranslate"><span class="pre">track_path</span></code> calls until <code class="docutils literal notranslate"><span class="pre">tracker.clear_max_wall_clock_time()</span></code>.  It is a deadline rather
+than a duration because an endgame issues hundreds of tracking calls for one path, and a
+budget that restarted with each call would never bite.</p>
+</section>
+<section id="a-wall-clock-budget-for-the-whole-solve">
+<h2>A wall-clock budget for the whole solve<a class="headerlink" href="#a-wall-clock-budget-for-the-whole-solve" title="Link to this heading">¶</a></h2>
+<p><code class="docutils literal notranslate"><span class="pre">max_solve_wall_clock_duration</span></code> budgets the whole <code class="docutils literal notranslate"><span class="pre">solve()</span></code> call instead.  Once it runs out
+no further path is started and any path in flight is abandoned, and the solve reads exactly as
+if you had pressed Ctrl-C:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">solver</span> <span class="o">=</span> <span class="n">pb</span><span class="o">.</span><span class="n">ZeroDimSolver</span><span class="p">(</span><span class="n">s</span><span class="p">)</span>
+<span class="n">solver</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">max_solve_wall_clock_duration</span><span class="o">=</span><span class="mf">1e-9</span><span class="p">)</span>
+<span class="n">solver</span><span class="o">.</span><span class="n">solve</span><span class="p">()</span>
+<span class="nb">print</span><span class="p">(</span><span class="s1">'stopped early:'</span><span class="p">,</span> <span class="n">solver</span><span class="o">.</span><span class="n">was_stopped_early</span><span class="p">(),</span>
+      <span class="s1">'  never started:'</span><span class="p">,</span> <span class="n">solver</span><span class="o">.</span><span class="n">num_paths_never_started</span><span class="p">())</span>
+</pre></div>
+</div>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>stopped early: True   never started: 4
+</pre></div>
+</div>
+<p>The per-path budget is the finer tool: it guarantees progress path by path, and a path it
+abandons is a fact about that path.  The whole-solve budget is for thinking in terms of the
+call, and a path it abandons is treated as interrupted, because the reason had nothing to do
+with the path.</p>
+</section>
+<section id="budgets-records-and-what-counts-as-answered">
+<h2>Budgets, records, and what counts as answered<a class="headerlink" href="#budgets-records-and-what-counts-as-answered" title="Link to this heading">¶</a></h2>
+<p>Neither budget is part of a run’s identity.  A budget says how long to wait for an answer,
+not what the answer is, so a sixty-second run and a sixty-one-second run are the same ask and
+share their records.  That raises a question the records system has to answer: when a path
+was abandoned last time, may its record stand in for tracking it this time?</p>
+<p>The rule is that a record is reusable when the run that would reuse it asks no more of that
+path than the run that produced it.  A path that completed – succeeded, diverged, or failed
+under settings that are part of the ask – always qualifies.  An abandoned path was ended for
+a reason kept out of the ask, so whether to reuse it is your call, made through
+<code class="docutils literal notranslate"><span class="pre">RecordsConfig.recall</span></code>:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">RecallPolicy.Completed</span></code> (the default) reuses completed paths and re-tracks abandoned
+ones, with one refinement: a path a per-path budget cut off is reused while the current
+budget is no larger than the one that abandoned it, and re-tracked once the budget is
+raised.  An interrupted path is always re-tracked.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">RecallPolicy.Everything</span></code> reuses every recorded outcome as recorded, abandonments
+included.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">RecallPolicy.Nothing</span></code> tracks every path fresh, records or not: for observers,
+benchmarking, and re-verification.  <code class="docutils literal notranslate"><span class="pre">recall=False</span></code> means the same thing.</p></li>
+</ul>
+<p>The default, with the seed fixed so that every solve below is the same ask:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">tempfile</span><span class="o">,</span><span class="w"> </span><span class="nn">os</span>
+<span class="n">where</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">tempfile</span><span class="o">.</span><span class="n">mkdtemp</span><span class="p">(),</span> <span class="s1">'records'</span><span class="p">)</span>
+
+<span class="k">def</span><span class="w"> </span><span class="nf">solve_with</span><span class="p">(</span><span class="n">path_budget</span><span class="p">):</span>
+    <span class="n">pb</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">set_random_seed</span><span class="p">(</span><span class="mi">42</span><span class="p">)</span>
+    <span class="n">solver</span> <span class="o">=</span> <span class="n">pb</span><span class="o">.</span><span class="n">ZeroDimSolver</span><span class="p">(</span><span class="n">s</span><span class="p">)</span>
+    <span class="n">solver</span><span class="o">.</span><span class="n">record_to</span><span class="p">(</span><span class="n">where</span><span class="p">)</span>
+    <span class="n">solver</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">max_path_wall_clock_duration</span><span class="o">=</span><span class="n">path_budget</span><span class="p">)</span>
+    <span class="n">solver</span><span class="o">.</span><span class="n">solve</span><span class="p">()</span>
+    <span class="k">return</span> <span class="n">solver</span>
+
+<span class="n">first</span> <span class="o">=</span> <span class="n">solve_with</span><span class="p">(</span><span class="mf">1e-9</span><span class="p">)</span>                  <span class="c1"># four abandonments, recorded with their budget</span>
+<span class="nb">print</span><span class="p">(</span><span class="s1">'recalled'</span><span class="p">,</span> <span class="n">first</span><span class="o">.</span><span class="n">num_paths_recalled</span><span class="p">())</span>
+
+<span class="n">same</span> <span class="o">=</span> <span class="n">solve_with</span><span class="p">(</span><span class="mf">1e-9</span><span class="p">)</span>                   <span class="c1"># same patience asked: the abandonments stand in</span>
+<span class="nb">print</span><span class="p">(</span><span class="s1">'recalled'</span><span class="p">,</span> <span class="n">same</span><span class="o">.</span><span class="n">num_paths_recalled</span><span class="p">())</span>
+
+<span class="n">more</span> <span class="o">=</span> <span class="n">solve_with</span><span class="p">(</span><span class="mi">3600</span><span class="p">)</span>                   <span class="c1"># more patience: re-tracked, and they finish</span>
+<span class="nb">print</span><span class="p">(</span><span class="s1">'recalled'</span><span class="p">,</span> <span class="n">more</span><span class="o">.</span><span class="n">num_paths_recalled</span><span class="p">(),</span>
+      <span class="s1">' finished'</span><span class="p">,</span> <span class="nb">sum</span><span class="p">(</span><span class="n">m</span><span class="o">.</span><span class="n">endgame_success_code</span> <span class="o">==</span> <span class="n">pb</span><span class="o">.</span><span class="n">SuccessCode</span><span class="o">.</span><span class="n">Success</span>
+                       <span class="k">for</span> <span class="n">m</span> <span class="ow">in</span> <span class="n">more</span><span class="o">.</span><span class="n">solution_metadata</span><span class="p">()))</span>
+
+<span class="n">again</span> <span class="o">=</span> <span class="n">solve_with</span><span class="p">(</span><span class="mi">3600</span><span class="p">)</span>                  <span class="c1"># now they are completed paths: reused</span>
+<span class="nb">print</span><span class="p">(</span><span class="s1">'recalled'</span><span class="p">,</span> <span class="n">again</span><span class="o">.</span><span class="n">num_paths_recalled</span><span class="p">())</span>
+</pre></div>
+</div>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>recalled 0
+recalled 4
+recalled 0  finished 4
+recalled 4
+</pre></div>
+</div>
+<p>Each of those runs recorded its paths, abandonments included.  The record of an abandoned
+path holds its code, where it got to, and the budget it ran under; the policy decides how a
+later run uses it.</p>
+<p>A wall clock is machine dependent, so the same budget means the same amount of work only on
+the same machine.  The comparison above is exact on one machine and approximate across
+machines.  The steps, precision and time reached in the stamp do not depend on the machine.</p>
+</section>
+</section>
+
+        </article>
+      </div>
+      <footer>
+        
+  
+        <div class="related-pages">
+          <a class="next-page" href="../../parallelism/index.html">
+              <div class="page-info">
+                <div class="context">
+                  <span>Next</span>
+                </div>
+                <div class="title">Parallelism in Python</div>
+              </div>
+              <svg class="furo-related-icon"><use href="#svg-arrow-right"></use></svg>
+            </a>
+          <a class="prev-page" href="../precision_models/index.html">
+              <svg class="furo-related-icon"><use href="#svg-arrow-right"></use></svg>
+              <div class="page-info">
+                <div class="context">
+                  <span>Previous</span>
+                </div>
+                
+                <div class="title">🔬 Precision models: double, multiple, adaptive</div>
+                
+              </div>
+            </a>
+        </div>
+        <div class="bottom-of-page">
+          <div class="left-details">
+            <div class="copyright">
+                Copyright &#169; 2015-2026, Bertini Team
+            </div>
+            Made with <a href="https://www.sphinx-doc.org/">Sphinx</a> and <a class="muted-link" href="https://pradyunsg.me">@pradyunsg</a>'s
+            
+            <a href="https://github.com/pradyunsg/furo">Furo</a>
+            
+          </div>
+          <div class="right-details">
+            
+          </div>
+        </div>
+        
+  
+  <div class="build-info" style="margin-top: 0.75rem; font-size: var(--font-size--small); color: var(--color-foreground-muted);">
+    Built from
+    <a href="https://github.com/bertiniteam/b2/commit/d882924a2d85c3dc994e1a3871d85672db111dab"><code>d882924</code></a> on 2026-10-06 20:10 UTC.
+  </div>
+  
+
+      </footer>
+    </div>
+    <aside class="toc-drawer">
+      
+      
+      <div class="toc-sticky toc-scroll">
+        <div class="toc-title-container">
+          <span class="toc-title">
+            On this page
+          </span>
+        </div>
+        <div class="toc-tree-container">
+          <div class="toc-tree">
+            <ul>
+<li><a class="reference internal" href="#">⏱️ Stopping a solve, and using a wall-clock budget</a><ul>
+<li><a class="reference internal" href="#seeing-that-it-is-stuck">Seeing that it is stuck</a></li>
+<li><a class="reference internal" href="#ctrl-c-works">Ctrl-C works</a></li>
+<li><a class="reference internal" href="#an-interrupted-or-truncated-path-leaves-a-useful-record">An interrupted or truncated path leaves a useful record</a></li>
+<li><a class="reference internal" href="#a-wall-clock-budget-per-path">A wall-clock budget per-path</a></li>
+<li><a class="reference internal" href="#a-wall-clock-budget-for-the-whole-solve">A wall-clock budget for the whole solve</a></li>
+<li><a class="reference internal" href="#budgets-records-and-what-counts-as-answered">Budgets, records, and what counts as answered</a></li>
+</ul>
+</li>
+</ul>
+
+          </div>
+        </div>
+      </div>
+      
+      
+    </aside>
+  </div>
+</div><script src="../../../_static/documentation_options.js?v=3304f9e4"></script>
+    <script src="../../../_static/doctools.js?v=fd6eb6e6"></script>
+    <script src="../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
+    <script src="../../../_static/scripts/furo.js?v=46bd48cc"></script>
+    </body>
+</html>

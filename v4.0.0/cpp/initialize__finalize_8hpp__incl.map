@@ -1,0 +1,37 @@
+<map id="core/include/bertini2/parallel/initialize_finalize.hpp" name="core/include/bertini2/parallel/initialize_finalize.hpp">
+<area shape="rect" id="Node000001" title="Provides the free initialization and finalization routines for Bertini2." alt="" coords="740,5,894,67"/>
+<area shape="rect" id="Node000002" title=" " alt="" coords="638,115,717,143"/>
+<area shape="poly" id="edge1_Node000001_Node000002" title=" " alt="" coords="773,67,711,109,709,104,768,68"/>
+<area shape="rect" id="Node000003" href="$logging_8hpp.html" title="Logging in Bertini using Boost.Log." alt="" coords="742,115,893,143"/>
+<area shape="poly" id="edge2_Node000001_Node000003" title=" " alt="" coords="819,65,819,101,815,98,816,69"/>
+<area shape="rect" id="Node000012" href="$splash_8hpp.html" title="Provides the splash screens for bertini2." alt="" coords="1782,115,1943,143"/>
+<area shape="poly" id="edge11_Node000001_Node000012" title=" " alt="" coords="895,42,1769,118,1765,121,895,47"/>
+<area shape="rect" id="Node000004" title=" " alt="" coords="5,199,147,227"/>
+<area shape="poly" id="edge3_Node000003_Node000004" title=" " alt="" coords="738,142,730,145,569,159,443,164,318,172,159,193,137,198,136,192,158,188,318,167,443,159,569,154,729,140,744,141"/>
+<area shape="rect" id="Node000005" title=" " alt="" coords="171,199,322,227"/>
+<area shape="poly" id="edge4_Node000003_Node000005" title=" " alt="" coords="744,141,730,145,532,166,445,176,335,193,312,198,311,193,334,188,445,171,531,161,729,140,738,141"/>
+<area shape="rect" id="Node000006" title=" " alt="" coords="347,199,538,227"/>
+<area shape="poly" id="edge5_Node000003_Node000006" title=" " alt="" coords="760,143,518,198,517,193,754,143"/>
+<area shape="rect" id="Node000007" title=" " alt="" coords="563,191,712,235"/>
+<area shape="poly" id="edge6_Node000003_Node000007" title=" " alt="" coords="791,143,700,186,698,181,786,144"/>
+<area shape="rect" id="Node000008" title=" " alt="" coords="736,191,899,235"/>
+<area shape="poly" id="edge7_Node000003_Node000008" title=" " alt="" coords="819,141,819,176,815,173,815,145"/>
+<area shape="rect" id="Node000009" title=" " alt="" coords="923,191,1104,235"/>
+<area shape="poly" id="edge8_Node000003_Node000009" title=" " alt="" coords="849,141,950,185,945,184,848,146"/>
+<area shape="rect" id="Node000010" title=" " alt="" coords="1128,191,1320,235"/>
+<area shape="poly" id="edge9_Node000003_Node000010" title=" " alt="" coords="883,141,1115,189,1110,189,882,146"/>
+<area shape="rect" id="Node000011" title=" " alt="" coords="1344,191,1525,235"/>
+<area shape="poly" id="edge10_Node000003_Node000011" title=" " alt="" coords="894,134,1087,155,1332,190,1327,190,1087,160,893,140"/>
+<area shape="rect" id="Node000013" title=" " alt="" coords="1549,199,1691,227"/>
+<area shape="poly" id="edge12_Node000012_Node000013" title=" " alt="" coords="1826,143,1673,197,1672,191,1821,144"/>
+<area shape="rect" id="Node000014" title=" " alt="" coords="1716,199,1807,227"/>
+<area shape="poly" id="edge13_Node000012_Node000014" title=" " alt="" coords="1849,142,1790,192,1788,187,1844,144"/>
+<area shape="rect" id="Node000015" title=" " alt="" coords="1832,199,1894,227"/>
+<area shape="poly" id="edge14_Node000012_Node000015" title=" " alt="" coords="1865,141,1865,186,1861,182,1861,145"/>
+<area shape="rect" id="Node000016" title=" " alt="" coords="1918,199,1981,227"/>
+<area shape="poly" id="edge15_Node000012_Node000016" title=" " alt="" coords="1878,141,1927,189,1922,188,1876,146"/>
+<area shape="rect" id="Node000017" title=" " alt="" coords="2005,199,2142,227"/>
+<area shape="poly" id="edge16_Node000012_Node000017" title=" " alt="" coords="1897,141,2028,193,2023,193,1896,146"/>
+<area shape="rect" id="Node000018" title=" " alt="" coords="2166,199,2240,227"/>
+<area shape="poly" id="edge17_Node000012_Node000018" title=" " alt="" coords="1944,140,2046,159,2155,188,2165,194,2159,193,2154,193,2045,164,1944,145"/>
+</map>

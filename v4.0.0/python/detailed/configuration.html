@@ -1,0 +1,1190 @@
+
+<!doctype html>
+<html class="no-js" lang="en" data-content_root="../">
+  <head><meta charset="utf-8">
+    <meta name="viewport" content="width=device-width,initial-scale=1">
+    <meta name="color-scheme" content="light dark"><meta name="viewport" content="width=device-width, initial-scale=1" />
+<link rel="index" title="Index" href="../genindex.html"><link rel="search" title="Search" href="../search.html"><link rel="next" title="Multiprecision numbers and NumPy" href="../numpy.html"><link rel="prev" title="✈️ The Flight Recorder" href="../showpieces/flight_recorder/index.html">
+        <link rel="prefetch" href="../_static/bpy_icon_.svg" as="image">
+
+    <!-- Generated with Sphinx 9.0.4 and Furo 2025.12.19 -->
+        <title>⚙️ Configuration reference - Bertini 4.0.0 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=03e43079" />
+    <link rel="stylesheet" type="text/css" href="../_static/styles/furo.css?v=7bdb33bb" />
+    <link rel="stylesheet" type="text/css" href="../_static/styles/furo-extensions.css?v=8dab3a3b" />
+    <link rel="stylesheet" type="text/css" href="../_static/custom.css?v=4805ae4f" />
+    
+    
+
+
+<style>
+  body {
+    --color-code-background: #eeffcc;
+  --color-code-foreground: black;
+  
+  }
+  @media not print {
+    body[data-theme="dark"] {
+      --color-code-background: #202020;
+  --color-code-foreground: #d0d0d0;
+  
+    }
+    @media (prefers-color-scheme: dark) {
+      body:not([data-theme="light"]) {
+        --color-code-background: #202020;
+  --color-code-foreground: #d0d0d0;
+  
+      }
+    }
+  }
+</style></head>
+  <body>
+    
+    <script>
+      document.body.dataset.theme = localStorage.getItem("theme") || "auto";
+    </script>
+    
+
+<svg xmlns="http://www.w3.org/2000/svg" style="display: none;">
+  <symbol id="svg-toc" viewBox="0 0 24 24">
+    <title>Contents</title>
+    <svg stroke="currentColor" fill="currentColor" stroke-width="0" viewBox="0 0 1024 1024">
+      <path d="M408 442h480c4.4 0 8-3.6 8-8v-56c0-4.4-3.6-8-8-8H408c-4.4 0-8 3.6-8 8v56c0 4.4 3.6 8 8 8zm-8 204c0 4.4 3.6 8 8 8h480c4.4 0 8-3.6 8-8v-56c0-4.4-3.6-8-8-8H408c-4.4 0-8 3.6-8 8v56zm504-486H120c-4.4 0-8 3.6-8 8v56c0 4.4 3.6 8 8 8h784c4.4 0 8-3.6 8-8v-56c0-4.4-3.6-8-8-8zm0 632H120c-4.4 0-8 3.6-8 8v56c0 4.4 3.6 8 8 8h784c4.4 0 8-3.6 8-8v-56c0-4.4-3.6-8-8-8zM115.4 518.9L271.7 642c5.8 4.6 14.4.5 14.4-6.9V388.9c0-7.4-8.5-11.5-14.4-6.9L115.4 505.1a8.74 8.74 0 0 0 0 13.8z"/>
+    </svg>
+  </symbol>
+  <symbol id="svg-menu" viewBox="0 0 24 24">
+    <title>Menu</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather-menu">
+      <line x1="3" y1="12" x2="21" y2="12"></line>
+      <line x1="3" y1="6" x2="21" y2="6"></line>
+      <line x1="3" y1="18" x2="21" y2="18"></line>
+    </svg>
+  </symbol>
+  <symbol id="svg-arrow-right" viewBox="0 0 24 24">
+    <title>Expand</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather-chevron-right">
+      <polyline points="9 18 15 12 9 6"></polyline>
+    </svg>
+  </symbol>
+  <symbol id="svg-sun" viewBox="0 0 24 24">
+    <title>Light mode</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1" stroke-linecap="round" stroke-linejoin="round" class="feather-sun">
+      <circle cx="12" cy="12" r="5"></circle>
+      <line x1="12" y1="1" x2="12" y2="3"></line>
+      <line x1="12" y1="21" x2="12" y2="23"></line>
+      <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
+      <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
+      <line x1="1" y1="12" x2="3" y2="12"></line>
+      <line x1="21" y1="12" x2="23" y2="12"></line>
+      <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
+      <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
+    </svg>
+  </symbol>
+  <symbol id="svg-moon" viewBox="0 0 24 24">
+    <title>Dark mode</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1" stroke-linecap="round" stroke-linejoin="round" class="icon-tabler-moon">
+      <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+      <path d="M12 3c.132 0 .263 0 .393 0a7.5 7.5 0 0 0 7.92 12.446a9 9 0 1 1 -8.313 -12.454z" />
+    </svg>
+  </symbol>
+  <symbol id="svg-sun-with-moon" viewBox="0 0 24 24">
+    <title>Auto light/dark, in light mode</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1" stroke-linecap="round" stroke-linejoin="round"
+      class="icon-custom-derived-from-feather-sun-and-tabler-moon">
+      <path style="opacity: 50%" d="M 5.411 14.504 C 5.471 14.504 5.532 14.504 5.591 14.504 C 3.639 16.319 4.383 19.569 6.931 20.352 C 7.693 20.586 8.512 20.551 9.25 20.252 C 8.023 23.207 4.056 23.725 2.11 21.184 C 0.166 18.642 1.702 14.949 4.874 14.536 C 5.051 14.512 5.231 14.5 5.411 14.5 L 5.411 14.504 Z"/>
+      <line x1="14.5" y1="3.25" x2="14.5" y2="1.25"/>
+      <line x1="14.5" y1="15.85" x2="14.5" y2="17.85"/>
+      <line x1="10.044" y1="5.094" x2="8.63" y2="3.68"/>
+      <line x1="19" y1="14.05" x2="20.414" y2="15.464"/>
+      <line x1="8.2" y1="9.55" x2="6.2" y2="9.55"/>
+      <line x1="20.8" y1="9.55" x2="22.8" y2="9.55"/>
+      <line x1="10.044" y1="14.006" x2="8.63" y2="15.42"/>
+      <line x1="19" y1="5.05" x2="20.414" y2="3.636"/>
+      <circle cx="14.5" cy="9.55" r="3.6"/>
+    </svg>
+  </symbol>
+  <symbol id="svg-moon-with-sun" viewBox="0 0 24 24">
+    <title>Auto light/dark, in dark mode</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1" stroke-linecap="round" stroke-linejoin="round"
+      class="icon-custom-derived-from-feather-sun-and-tabler-moon">
+      <path d="M 8.282 7.007 C 8.385 7.007 8.494 7.007 8.595 7.007 C 5.18 10.184 6.481 15.869 10.942 17.24 C 12.275 17.648 13.706 17.589 15 17.066 C 12.851 22.236 5.91 23.143 2.505 18.696 C -0.897 14.249 1.791 7.786 7.342 7.063 C 7.652 7.021 7.965 7 8.282 7 L 8.282 7.007 Z"/>
+      <line style="opacity: 50%" x1="18" y1="3.705" x2="18" y2="2.5"/>
+      <line style="opacity: 50%" x1="18" y1="11.295" x2="18" y2="12.5"/>
+      <line style="opacity: 50%" x1="15.316" y1="4.816" x2="14.464" y2="3.964"/>
+      <line style="opacity: 50%" x1="20.711" y1="10.212" x2="21.563" y2="11.063"/>
+      <line style="opacity: 50%" x1="14.205" y1="7.5" x2="13.001" y2="7.5"/>
+      <line style="opacity: 50%" x1="21.795" y1="7.5" x2="23" y2="7.5"/>
+      <line style="opacity: 50%" x1="15.316" y1="10.184" x2="14.464" y2="11.036"/>
+      <line style="opacity: 50%" x1="20.711" y1="4.789" x2="21.563" y2="3.937"/>
+      <circle style="opacity: 50%" cx="18" cy="7.5" r="2.169"/>
+    </svg>
+  </symbol>
+  <symbol id="svg-pencil" viewBox="0 0 24 24">
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1" stroke-linecap="round" stroke-linejoin="round" class="icon-tabler-pencil-code">
+      <path d="M4 20h4l10.5 -10.5a2.828 2.828 0 1 0 -4 -4l-10.5 10.5v4" />
+      <path d="M13.5 6.5l4 4" />
+      <path d="M20 21l2 -2l-2 -2" />
+      <path d="M17 17l-2 2l2 2" />
+    </svg>
+  </symbol>
+  <symbol id="svg-eye" viewBox="0 0 24 24">
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1" stroke-linecap="round" stroke-linejoin="round" class="icon-tabler-eye-code">
+      <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+      <path d="M10 12a2 2 0 1 0 4 0a2 2 0 0 0 -4 0" />
+      <path
+        d="M11.11 17.958c-3.209 -.307 -5.91 -2.293 -8.11 -5.958c2.4 -4 5.4 -6 9 -6c3.6 0 6.6 2 9 6c-.21 .352 -.427 .688 -.647 1.008" />
+      <path d="M20 21l2 -2l-2 -2" />
+      <path d="M17 17l-2 2l2 2" />
+    </svg>
+  </symbol>
+</svg>
+
+<input type="checkbox" class="sidebar-toggle" name="__navigation" id="__navigation" aria-label="Toggle site navigation sidebar">
+<input type="checkbox" class="sidebar-toggle" name="__toc" id="__toc" aria-label="Toggle table of contents sidebar">
+<label class="overlay sidebar-overlay" for="__navigation"></label>
+<label class="overlay toc-overlay" for="__toc"></label>
+
+<a class="skip-to-content muted-link" href="#furo-main-content">Skip to content</a>
+
+
+
+<div class="page">
+  <header class="mobile-header">
+    <div class="header-left">
+      <label class="nav-overlay-icon" for="__navigation">
+        <span class="icon"><svg><use href="#svg-menu"></use></svg></span>
+      </label>
+    </div>
+    <div class="header-center">
+      <a href="../index.html"><div class="brand">Bertini 4.0.0 documentation</div></a>
+    </div>
+    <div class="header-right">
+      <div class="theme-toggle-container theme-toggle-header">
+        <button class="theme-toggle" aria-label="Toggle Light / Dark / Auto color theme">
+          <svg class="theme-icon-when-auto-light"><use href="#svg-sun-with-moon"></use></svg>
+          <svg class="theme-icon-when-auto-dark"><use href="#svg-moon-with-sun"></use></svg>
+          <svg class="theme-icon-when-dark"><use href="#svg-moon"></use></svg>
+          <svg class="theme-icon-when-light"><use href="#svg-sun"></use></svg>
+        </button>
+      </div>
+      <label class="toc-overlay-icon toc-header-icon" for="__toc">
+        <span class="icon"><svg><use href="#svg-toc"></use></svg></span>
+      </label>
+    </div>
+  </header>
+  <aside class="sidebar-drawer">
+    <div class="sidebar-container">
+      
+      <div class="sidebar-sticky"><a class="sidebar-brand" href="../index.html">
+  <div class="sidebar-logo-container">
+    <img class="sidebar-logo" src="../_static/bpy_icon_.svg" alt="Logo"/>
+  </div>
+  
+  <span class="sidebar-brand-text">Bertini 4.0.0 documentation</span>
+  
+</a><form class="sidebar-search-container" method="get" action="../search.html" role="search">
+  <input class="sidebar-search" placeholder="Search" name="q" aria-label="Search">
+  <input type="hidden" name="check_keywords" value="yes">
+  <input type="hidden" name="area" value="default">
+</form>
+<div id="searchbox"></div><div class="sidebar-scroll"><div class="sidebar-tree">
+  <ul>
+<li class="toctree-l1"><a class="reference internal" href="../welcome.html">👋 Welcome to Bertini 2</a></li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="../tutorials/tutorials.html">🔦 Tutorials</a><input aria-label="Toggle navigation of 🔦 Tutorials" class="toctree-checkbox" id="toctree-checkbox-1" name="toctree-checkbox-1" role="switch" type="checkbox"/><label for="toctree-checkbox-1"><span class="icon"><svg><use href="#svg-arrow-right"></use></svg></span></label><ul>
+<li class="toctree-l2 has-children"><a class="reference internal" href="../tutorials/formulating_and_solving/index.html">Formulating and solving systems</a><input aria-label="Toggle navigation of Formulating and solving systems" class="toctree-checkbox" id="toctree-checkbox-2" name="toctree-checkbox-2" role="switch" type="checkbox"/><label for="toctree-checkbox-2"><span class="icon"><svg><use href="#svg-arrow-right"></use></svg></span></label><ul>
+<li class="toctree-l3"><a class="reference internal" href="../tutorials/formulating_and_solving/all_solutions/index.html">🌐 Finding <em>all</em> the solutions</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../tutorials/formulating_and_solving/zerodim_solver/index.html">🎯 Solving a system with ZeroDimSolver</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../tutorials/formulating_and_solving/real_points/index.html">📍 A real point on every component (the Trott curve)</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../tutorials/formulating_and_solving/critical_points/index.html">🎯 Critical points by rank deficiency</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../tutorials/formulating_and_solving/eigenvalues_by_homotopy/index.html">🧮 Eigenvalues by homotopy continuation</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../tutorials/formulating_and_solving/parameter_homotopy/index.html">🔁 Parameter homotopy</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../tutorials/formulating_and_solving/concatenate_systems/index.html">🧱 Build a system in pieces with clone and concatenate</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../tutorials/formulating_and_solving/randomize/index.html">🎲 Randomize an overdetermined system</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../tutorials/formulating_and_solving/user_product_of_linears/index.html">🪢 Author your own start system: a product of linears</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../tutorials/formulating_and_solving/canonical_ordering/index.html">🧮 Canonical monomial ordering, and opting out</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../tutorials/formulating_and_solving/solution_dataframe/index.html">🗃️ A dataframe of solutions: filtering and plotting with pandas</a></li>
+</ul>
+</li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="../tutorials/manipulating_solutions/index.html">Manipulating solutions</a><input aria-label="Toggle navigation of Manipulating solutions" class="toctree-checkbox" id="toctree-checkbox-3" name="toctree-checkbox-3" role="switch" type="checkbox"/><label for="toctree-checkbox-3"><span class="icon"><svg><use href="#svg-arrow-right"></use></svg></span></label><ul>
+<li class="toctree-l3"><a class="reference internal" href="../tutorials/manipulating_solutions/intro_to_slices/index.html">✂️ Intro to slices</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../tutorials/manipulating_solutions/moving_slice/index.html">🛷 Move a slice, hold the system fixed</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../tutorials/manipulating_solutions/plotting/index.html">📈 Plotting solutions and paths</a></li>
+</ul>
+</li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="../tutorials/settings_and_precision/index.html">Solver settings &amp; multiprecision</a><input aria-label="Toggle navigation of Solver settings &amp; multiprecision" class="toctree-checkbox" id="toctree-checkbox-4" name="toctree-checkbox-4" role="switch" type="checkbox"/><label for="toctree-checkbox-4"><span class="icon"><svg><use href="#svg-arrow-right"></use></svg></span></label><ul>
+<li class="toctree-l3"><a class="reference internal" href="../tutorials/settings_and_precision/auxiliary_coordinates/index.html">Auxiliary coordinates</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../tutorials/settings_and_precision/carrying_settings/index.html">⚙️ Carrying settings across related solves</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../tutorials/settings_and_precision/crossed_paths/index.html">🪢 Crossed paths: when two paths (accidentally) become one</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../tutorials/settings_and_precision/precision_matters/index.html">🎚️ When double precision is not enough</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../tutorials/settings_and_precision/precision_models/index.html">🔬 Precision models: double, multiple, adaptive</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../tutorials/settings_and_precision/stopping_and_budgets/index.html">⏱️ Stopping a solve, and using a wall-clock budget</a></li>
+</ul>
+</li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="../tutorials/parallelism/index.html">Parallelism in Python</a><input aria-label="Toggle navigation of Parallelism in Python" class="toctree-checkbox" id="toctree-checkbox-5" name="toctree-checkbox-5" role="switch" type="checkbox"/><label for="toctree-checkbox-5"><span class="icon"><svg><use href="#svg-arrow-right"></use></svg></span></label><ul>
+<li class="toctree-l3"><a class="reference internal" href="../tutorials/parallelism/solving_at_scale/index.html">🚀 Solving at scale: many cores, many machines</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../tutorials/parallelism/parallel_parameter_homotopy/index.html">⚗️ Parameter homotopy in parallel</a></li>
+</ul>
+</li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="../tutorials/observing_metadata_more/index.html">Observing, metadata, and more</a><input aria-label="Toggle navigation of Observing, metadata, and more" class="toctree-checkbox" id="toctree-checkbox-6" name="toctree-checkbox-6" role="switch" type="checkbox"/><label for="toctree-checkbox-6"><span class="icon"><svg><use href="#svg-arrow-right"></use></svg></span></label><ul>
+<li class="toctree-l3"><a class="reference internal" href="../tutorials/observing_metadata_more/observers_and_path_data/index.html">👀 Watching paths: observers and path data</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../tutorials/observing_metadata_more/seeing_precision_change/index.html">🎨 Seeing precision change</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../tutorials/observing_metadata_more/classic_continuation_cartoon/index.html">🖼️ The classic continuation cartoon, from real data</a></li>
+</ul>
+</li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="../tutorials/performance_benchmarking/index.html">Performance and benchmarking</a><input aria-label="Toggle navigation of Performance and benchmarking" class="toctree-checkbox" id="toctree-checkbox-7" name="toctree-checkbox-7" role="switch" type="checkbox"/><label for="toctree-checkbox-7"><span class="icon"><svg><use href="#svg-arrow-right"></use></svg></span></label><ul>
+<li class="toctree-l3"><a class="reference internal" href="../tutorials/performance_benchmarking/bertini1_vs_bertini2_timing/index.html">⏱️ Timing Bertini 1 vs Bertini 2</a></li>
+</ul>
+</li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="../tutorials/record_keeping/index.html">The record-keeping system</a><input aria-label="Toggle navigation of The record-keeping system" class="toctree-checkbox" id="toctree-checkbox-8" name="toctree-checkbox-8" role="switch" type="checkbox"/><label for="toctree-checkbox-8"><span class="icon"><svg><use href="#svg-arrow-right"></use></svg></span></label><ul>
+<li class="toctree-l3"><a class="reference internal" href="../tutorials/record_keeping/automatic_record_keeping/index.html">Automatic record keeping</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../tutorials/record_keeping/chained_homotopies/index.html">Chained homotopies: provenance all the way back</a></li>
+</ul>
+</li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="../tutorials/doing_things_manually/index.html">Doing things manually</a><input aria-label="Toggle navigation of Doing things manually" class="toctree-checkbox" id="toctree-checkbox-9" name="toctree-checkbox-9" role="switch" type="checkbox"/><label for="toctree-checkbox-9"><span class="icon"><svg><use href="#svg-arrow-right"></use></svg></span></label><ul>
+<li class="toctree-l3"><a class="reference internal" href="../tutorials/doing_things_manually/evaluation_cyclic/index.html">♻️ Evaluation of cyclic-<span class="math notranslate nohighlight">\(n\)</span> polynomials</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../tutorials/doing_things_manually/manual_endgame_usage/index.html">🎮 Using an endgame to compute singular endpoints</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../tutorials/doing_things_manually/tracking_nonsingular/index.html">🛤 Tracking to nonsingular endpoints</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../tutorials/doing_things_manually/tracking_analytic/index.html">〰️ Tracking an analytic homotopy</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="everyday.html">🌟 Everyday API</a></li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="../showpieces/index.html">✨ Showpieces</a><input aria-label="Toggle navigation of ✨ Showpieces" class="toctree-checkbox" id="toctree-checkbox-10" name="toctree-checkbox-10" role="switch" type="checkbox"/><label for="toctree-checkbox-10"><span class="icon"><svg><use href="#svg-arrow-right"></use></svg></span></label><ul>
+<li class="toctree-l2"><a class="reference internal" href="../showpieces/monodromy_loom/index.html">🧬 The Monodromy Loom</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../showpieces/flight_recorder/index.html">✈️ The Flight Recorder</a></li>
+</ul>
+</li>
+</ul>
+<ul class="current">
+<li class="toctree-l1 current current-page"><a class="current reference internal" href="#">⚙️ Configuration reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../numpy.html">Multiprecision numbers and NumPy</a></li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="api.html">🔎 Full API reference</a><input aria-label="Toggle navigation of 🔎 Full API reference" class="toctree-checkbox" id="toctree-checkbox-11" name="toctree-checkbox-11" role="switch" type="checkbox"/><label for="toctree-checkbox-11"><span class="icon"><svg><use href="#svg-arrow-right"></use></svg></span></label><ul>
+<li class="toctree-l2 has-children"><a class="reference internal" href="_autosummary/bertini.algorithms.html">bertini.algorithms</a><input aria-label="Toggle navigation of bertini.algorithms" class="toctree-checkbox" id="toctree-checkbox-12" name="toctree-checkbox-12" role="switch" type="checkbox"/><label for="toctree-checkbox-12"><span class="icon"><svg><use href="#svg-arrow-right"></use></svg></span></label><ul>
+<li class="toctree-l3"><a class="reference internal" href="_autosummary/bertini.algorithms.zerodim.html">bertini.algorithms.zerodim</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="_autosummary/bertini.config.html">bertini.config</a></li>
+<li class="toctree-l2"><a class="reference internal" href="_autosummary/bertini.endgame.html">bertini.endgame</a></li>
+<li class="toctree-l2"><a class="reference internal" href="_autosummary/bertini.logging.html">bertini.logging</a></li>
+<li class="toctree-l2"><a class="reference internal" href="_autosummary/bertini.multiprec.html">bertini.multiprec</a></li>
+<li class="toctree-l2"><a class="reference internal" href="_autosummary/bertini.nag_algorithm.html">bertini.nag_algorithm</a></li>
+<li class="toctree-l2"><a class="reference internal" href="_autosummary/bertini.operators.html">bertini.operators</a></li>
+<li class="toctree-l2"><a class="reference internal" href="_autosummary/bertini.parallel.html">bertini.parallel</a></li>
+<li class="toctree-l2"><a class="reference internal" href="_autosummary/bertini.parse.html">bertini.parse</a></li>
+<li class="toctree-l2"><a class="reference internal" href="_autosummary/bertini.random.html">bertini.random</a></li>
+<li class="toctree-l2"><a class="reference internal" href="_autosummary/bertini.records.html">bertini.records</a></li>
+<li class="toctree-l2"><a class="reference internal" href="_autosummary/bertini.symbolics.html">bertini.symbolics</a></li>
+<li class="toctree-l2"><a class="reference internal" href="_autosummary/bertini.sympy_bridge.html">bertini.sympy_bridge</a></li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="_autosummary/bertini.system.html">bertini.system</a><input aria-label="Toggle navigation of bertini.system" class="toctree-checkbox" id="toctree-checkbox-13" name="toctree-checkbox-13" role="switch" type="checkbox"/><label for="toctree-checkbox-13"><span class="icon"><svg><use href="#svg-arrow-right"></use></svg></span></label><ul>
+<li class="toctree-l3"><a class="reference internal" href="_autosummary/bertini.system.start_system.html">bertini.system.start_system</a></li>
+</ul>
+</li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="_autosummary/bertini.tracking.html">bertini.tracking</a><input aria-label="Toggle navigation of bertini.tracking" class="toctree-checkbox" id="toctree-checkbox-14" name="toctree-checkbox-14" role="switch" type="checkbox"/><label for="toctree-checkbox-14"><span class="icon"><svg><use href="#svg-arrow-right"></use></svg></span></label><ul>
+<li class="toctree-l3 has-children"><a class="reference internal" href="_autosummary/bertini.tracking.observers.html">bertini.tracking.observers</a><input aria-label="Toggle navigation of bertini.tracking.observers" class="toctree-checkbox" id="toctree-checkbox-15" name="toctree-checkbox-15" role="switch" type="checkbox"/><label for="toctree-checkbox-15"><span class="icon"><svg><use href="#svg-arrow-right"></use></svg></span></label><ul>
+<li class="toctree-l4"><a class="reference internal" href="_autosummary/bertini.tracking.observers.amp.html">bertini.tracking.observers.amp</a></li>
+<li class="toctree-l4"><a class="reference internal" href="_autosummary/bertini.tracking.observers.double.html">bertini.tracking.observers.double</a></li>
+<li class="toctree-l4"><a class="reference internal" href="_autosummary/bertini.tracking.observers.multiple.html">bertini.tracking.observers.multiple</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../zbib.html">📚 Bibliography</a></li>
+</ul>
+
+</div>
+</div>
+
+      </div>
+      
+    </div>
+  </aside>
+  <div class="main">
+    <div class="content">
+      <div class="article-container">
+        <a href="#" class="back-to-top muted-link">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+            <path d="M13 20h-2V8l-5.5 5.5-1.42-1.42L12 4.16l7.92 7.92-1.42 1.42L13 8v12z"></path>
+          </svg>
+          <span>Back to top</span>
+        </a>
+        <div class="content-icon-container">
+          <div class="view-this-page">
+  <a class="muted-link" href="../_sources/detailed/configuration.rst.txt" title="View this page">
+    <svg><use href="#svg-eye"></use></svg>
+    <span class="visually-hidden">View this page</span>
+  </a>
+</div>
+<div class="theme-toggle-container theme-toggle-content">
+            <button class="theme-toggle" aria-label="Toggle Light / Dark / Auto color theme">
+              <svg class="theme-icon-when-auto-light"><use href="#svg-sun-with-moon"></use></svg>
+              <svg class="theme-icon-when-auto-dark"><use href="#svg-moon-with-sun"></use></svg>
+              <svg class="theme-icon-when-dark"><use href="#svg-moon"></use></svg>
+              <svg class="theme-icon-when-light"><use href="#svg-sun"></use></svg>
+            </button>
+          </div>
+          <label class="toc-overlay-icon toc-content-icon" for="__toc">
+            <span class="icon"><svg><use href="#svg-toc"></use></svg></span>
+          </label>
+        </div>
+        <article role="main" id="furo-main-content">
+          <section id="configuration-reference">
+<h1>⚙️ Configuration reference<a class="headerlink" href="#configuration-reference" title="Link to this heading">¶</a></h1>
+<p>This page collects every tracker and algorithm setting the Python interface to
+Bertini 2 has, with its default and what it does.</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>The tables below are read out of
+the library when these docs are built, so they describe the version you are reading about rather
+than the version someone last wrote a table for.</p>
+</div>
+<section id="three-ways-to-set-a-setting">
+<h2>Three ways to set a setting<a class="headerlink" href="#three-ways-to-set-a-setting" title="Link to this heading">¶</a></h2>
+<p>Name the field, and it is routed to whichever config holds it. This is the usual way, and it
+reaches the solver’s own settings, its tracker’s, and its endgame’s alike:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">solver</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">final_tolerance</span><span class="o">=</span><span class="s2">"1e-11"</span><span class="p">,</span> <span class="n">max_step_size</span><span class="o">=</span><span class="s2">"0.05"</span><span class="p">,</span> <span class="n">num_sample_points</span><span class="o">=</span><span class="mi">6</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>Name the config, when you want to set several of its fields at once:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">solver</span><span class="o">.</span><span class="n">configure</span><span class="p">(</span><span class="n">stepping</span><span class="o">=</span><span class="p">{</span><span class="s1">'max_step_size'</span><span class="p">:</span> <span class="s2">"0.05"</span><span class="p">},</span>
+                 <span class="n">endgame</span><span class="o">=</span><span class="p">{</span><span class="s1">'final_tolerance'</span><span class="p">:</span> <span class="s2">"1e-8"</span><span class="p">})</span>
+</pre></div>
+</div>
+<p>Hand over a whole config object, which is what <code class="xref py py-meth docutils literal notranslate"><span class="pre">get_settings()</span></code> and <code class="xref py py-meth docutils literal notranslate"><span class="pre">set_settings()</span></code> carry
+between solvers:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">settings</span> <span class="o">=</span> <span class="n">tuned_solver</span><span class="o">.</span><span class="n">get_settings</span><span class="p">()</span>
+<span class="n">next_solver</span><span class="o">.</span><span class="n">set_settings</span><span class="p">(</span><span class="n">settings</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>A misspelled name raises immediately and suggests the one you meant, rather than doing nothing.</p>
+</section>
+<section id="numbers-exactly">
+<h2>Numbers, exactly<a class="headerlink" href="#numbers-exactly" title="Link to this heading">¶</a></h2>
+<p>Numeric settings take strings, and a string is the noise-free way to write one: <code class="docutils literal notranslate"><span class="pre">&quot;1e-11&quot;</span></code> means
+exactly that, where the Python float <code class="docutils literal notranslate"><span class="pre">1e-11</span></code> is the nearest double to it. For the settings
+stored as exact rationals – a sample ladder’s ratio, the homotopy times – a Python float is
+refused outright, since <code class="docutils literal notranslate"><span class="pre">0.1</span></code> the double is not one tenth; write <code class="docutils literal notranslate"><span class="pre">&quot;1/10&quot;</span></code> or <code class="docutils literal notranslate"><span class="pre">&quot;0.1&quot;</span></code> and
+both give the exact rational, or pass an <code class="docutils literal notranslate"><span class="pre">int</span></code>, a <code class="xref py py-class docutils literal notranslate"><span class="pre">fractions.Fraction</span></code>, or a
+<a class="reference internal" href="_autosummary/bertini.multiprec.html#bertini.multiprec.rational_mp" title="bertini.multiprec.rational_mp"><code class="xref py py-class docutils literal notranslate"><span class="pre">bertini.multiprec.rational_mp</span></code></a>.</p>
+</section>
+<section id="tracker-settings-that-have-no-config-struct">
+<span id="settings-without-a-config"></span><h2>Tracker settings that have no config struct<a class="headerlink" href="#tracker-settings-that-have-no-config-struct" title="Link to this heading">¶</a></h2>
+<div class="admonition-todo admonition" id="id1">
+<p class="admonition-title">Todo</p>
+<p>Get these into a config, so the interface is uniform.</p>
+</div>
+<p>These are set by calling a method on the tracker rather than by naming a field, so they appear in
+no config listing, including the generated ones below. They are among the most consequential
+settings there are, and this is the only place they are collected.</p>
+<div class="table-wrapper colwidths-given docutils container">
+<table class="docutils align-default">
+<colgroup>
+<col style="width: 38.0%" />
+<col style="width: 20.0%" />
+<col style="width: 42.0%" />
+</colgroup>
+<thead>
+<tr class="row-odd"><th class="head"><p>Setting</p></th>
+<th class="head"><p>Default</p></th>
+<th class="head"><p>What it does</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">tracker.infinite_truncation(bool)</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">True</span></code></p></td>
+<td><p>Whether to truncate such paths at all.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">tracker.precision_preservation(bool)</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">False</span></code></p></td>
+<td><p>Whether an adaptive tracker returns to its starting precision when a path ends.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">tracker.reinitialize_initial_step_size(bool)</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">True</span></code></p></td>
+<td><p>Whether each path starts from the configured initial step size rather than inheriting the
+last one used.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">tracker.set_max_wall_clock_duration(seconds)</span></code></p></td>
+<td><p>none</p></td>
+<td><p>A wall-clock deadline; a track in progress is abandoned between steps once it passes.
+Cleared with <code class="docutils literal notranslate"><span class="pre">clear_max_wall_clock_time()</span></code>. See
+<a class="reference internal" href="../tutorials/settings_and_precision/stopping_and_budgets/index.html"><span class="doc">⏱️ Stopping a solve, and using a wall-clock budget</span></a>.</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+</section>
+<section id="the-configs">
+<h2>The configs<a class="headerlink" href="#the-configs" title="Link to this heading">¶</a></h2>
+<p>Everything below is generated. Each heading is a config class; the keyword beside it is what
+<code class="xref py py-meth docutils literal notranslate"><span class="pre">configure()</span></code> takes, and every field name is what <code class="xref py py-meth docutils literal notranslate"><span class="pre">update()</span></code> accepts directly.</p>
+<section id="tracking">
+<h3>Tracking<a class="headerlink" href="#tracking" title="Link to this heading">¶</a></h3>
+<p>How a path is followed: step sizes, Newton’s method, and the precision model.</p>
+<section id="ampconfig">
+<h4>AMPConfig<a class="headerlink" href="#ampconfig" title="Link to this heading">¶</a></h4>
+<p>Set as <code class="docutils literal notranslate"><span class="pre">amp=...</span></code>, or by any of its field names directly.  API: <a class="reference internal" href="_autosummary/bertini.tracking.html#bertini.tracking.AMPConfig" title="bertini.tracking.AMPConfig"><code class="xref py py-class docutils literal notranslate"><span class="pre">bertini.tracking.AMPConfig</span></code></a>.</p>
+<div class="table-wrapper colwidths-given docutils container">
+<table class="docutils align-default">
+<colgroup>
+<col style="width: 26.0%" />
+<col style="width: 18.0%" />
+<col style="width: 56.0%" />
+</colgroup>
+<thead>
+<tr class="row-odd"><th class="head"><p>Setting</p></th>
+<th class="head"><p>Default</p></th>
+<th class="head"><p>What it does</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">coefficient_bound</span></code></p></td>
+<td><p><em>derived from the system</em></p></td>
+<td><p>None( (bertini._pybertini.tracking.AMPConfig)arg1) -&gt; float</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">degree_bound</span></code></p></td>
+<td><p><em>derived from the system</em></p></td>
+<td><p>None( (bertini._pybertini.tracking.AMPConfig)arg1) -&gt; float</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">function_eval_error_bound</span></code></p></td>
+<td><p><em>derived from the system</em></p></td>
+<td><p>None( (bertini._pybertini.tracking.AMPConfig)arg1) -&gt; float</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">jacobian_eval_error_bound</span></code></p></td>
+<td><p><em>derived from the system</em></p></td>
+<td><p>None( (bertini._pybertini.tracking.AMPConfig)arg1) -&gt; float</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">linear_solve_error_bound</span></code></p></td>
+<td><p><em>derived from the system</em></p></td>
+<td><p>None( (bertini._pybertini.tracking.AMPConfig)arg1) -&gt; float</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">max_num_precision_decreases</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">10</span></code></p></td>
+<td><p>None( (bertini._pybertini.tracking.AMPConfig)arg1) -&gt; int</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">maximum_precision</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">300</span></code></p></td>
+<td><p>None( (bertini._pybertini.tracking.AMPConfig)arg1) -&gt; int</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">safety_digits_1</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">1</span></code></p></td>
+<td><p>None( (bertini._pybertini.tracking.AMPConfig)arg1) -&gt; int</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">safety_digits_2</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">1</span></code></p></td>
+<td><p>None( (bertini._pybertini.tracking.AMPConfig)arg1) -&gt; int</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+</section>
+<section id="fixedprecisionconfig">
+<h4>FixedPrecisionConfig<a class="headerlink" href="#fixedprecisionconfig" title="Link to this heading">¶</a></h4>
+<p>Set as <code class="docutils literal notranslate"><span class="pre">fixed_precision=...</span></code>, or by any of its field names directly.  API: <a class="reference internal" href="_autosummary/bertini.tracking.html#bertini.tracking.FixedPrecisionConfig" title="bertini.tracking.FixedPrecisionConfig"><code class="xref py py-class docutils literal notranslate"><span class="pre">bertini.tracking.FixedPrecisionConfig</span></code></a>.</p>
+<div class="table-wrapper colwidths-given docutils container">
+<table class="docutils align-default">
+<colgroup>
+<col style="width: 26.0%" />
+<col style="width: 18.0%" />
+<col style="width: 56.0%" />
+</colgroup>
+<thead>
+<tr class="row-odd"><th class="head"><p>Setting</p></th>
+<th class="head"><p>Default</p></th>
+<th class="head"><p>What it does</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">precision</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">0</span></code></p></td>
+<td><p>The number of digits to always work at. For a double-precision tracker this is DoublePrecision() (16) and cannot be changed; for a fixed-multiple tracker it is the precision the whole solve runs at – set it to choose a different fixed precision. A tracker keeps this in sync with its actual precision, so reading it tells you the precision in effect.</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+</section>
+<section id="newtonconfig">
+<h4>NewtonConfig<a class="headerlink" href="#newtonconfig" title="Link to this heading">¶</a></h4>
+<p>Set as <code class="docutils literal notranslate"><span class="pre">newton=...</span></code>, or by any of its field names directly.  API: <a class="reference internal" href="_autosummary/bertini.tracking.html#bertini.tracking.NewtonConfig" title="bertini.tracking.NewtonConfig"><code class="xref py py-class docutils literal notranslate"><span class="pre">bertini.tracking.NewtonConfig</span></code></a>.</p>
+<div class="table-wrapper colwidths-given docutils container">
+<table class="docutils align-default">
+<colgroup>
+<col style="width: 26.0%" />
+<col style="width: 18.0%" />
+<col style="width: 56.0%" />
+</colgroup>
+<thead>
+<tr class="row-odd"><th class="head"><p>Setting</p></th>
+<th class="head"><p>Default</p></th>
+<th class="head"><p>What it does</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">max_num_newton_iterations</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">2</span></code></p></td>
+<td><p>None( (bertini._pybertini.tracking.NewtonConfig)arg1) -&gt; int</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">min_num_newton_iterations</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">1</span></code></p></td>
+<td><p>None( (bertini._pybertini.tracking.NewtonConfig)arg1) -&gt; int</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+</section>
+<section id="steppingconfig">
+<h4>SteppingConfig<a class="headerlink" href="#steppingconfig" title="Link to this heading">¶</a></h4>
+<p>Set as <code class="docutils literal notranslate"><span class="pre">stepping=...</span></code>, or by any of its field names directly.  API: <a class="reference internal" href="_autosummary/bertini.tracking.html#bertini.tracking.SteppingConfig" title="bertini.tracking.SteppingConfig"><code class="xref py py-class docutils literal notranslate"><span class="pre">bertini.tracking.SteppingConfig</span></code></a>.</p>
+<div class="table-wrapper colwidths-given docutils container">
+<table class="docutils align-default">
+<colgroup>
+<col style="width: 26.0%" />
+<col style="width: 18.0%" />
+<col style="width: 56.0%" />
+</colgroup>
+<thead>
+<tr class="row-odd"><th class="head"><p>Setting</p></th>
+<th class="head"><p>Default</p></th>
+<th class="head"><p>What it does</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">consecutive_successful_steps_before_stepsize_increase</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">5</span></code></p></td>
+<td><p>This number of successful steps have to taken consecutively, and then the stepsize is permitted to increase</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">frequency_of_CN_estimation</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">1</span></code></p></td>
+<td><p>How frequently the condition number should be updated. Less frequently is faster (estimation requires an additional linear solve), but may cause precision adjustment to lag behind.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">initial_step_size</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">0.1</span></code></p></td>
+<td><p>The initial stepsize when tracking is started. See also tracking.AMPTracker.reinitialize_initial_step_size</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">max_num_steps</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">100000</span></code></p></td>
+<td><p>The maximum number of steps. Tracking will die if it tries to take more than this number, sad day.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">max_step_size</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">0.1</span></code></p></td>
+<td><p>The maximum allowed stepsize during tracking. See also min_num_steps</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">min_num_steps</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">1</span></code></p></td>
+<td><p>The minimum number of steps the tracker can take between now and then. This is useful if you are tracking closely between times, and want to guarantee some number of steps are taken. Then again, this could be wasteful, too.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">min_step_size</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">1e-100</span></code></p></td>
+<td><p>The minimum stepsize the tracker is allowed to take. See also max_step_size</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">step_size_fail_factor</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">0.5</span></code></p></td>
+<td><p>The scale factor for stepsize, after a fail happens. See also step_size_success_factor</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">step_size_success_factor</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">2</span></code></p></td>
+<td><p>The scale factor for stepsize, after some consecutive steps. See also consecutive_successful_steps_before_stepsize_increase</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+</section>
+<section id="trackerconfig">
+<h4>TrackerConfig<a class="headerlink" href="#trackerconfig" title="Link to this heading">¶</a></h4>
+<p>Set as <code class="docutils literal notranslate"><span class="pre">tracker=...</span></code>, or by any of its field names directly.  API: <a class="reference internal" href="_autosummary/bertini.tracking.html#bertini.tracking.TrackerConfig" title="bertini.tracking.TrackerConfig"><code class="xref py py-class docutils literal notranslate"><span class="pre">bertini.tracking.TrackerConfig</span></code></a>.</p>
+<div class="table-wrapper colwidths-given docutils container">
+<table class="docutils align-default">
+<colgroup>
+<col style="width: 26.0%" />
+<col style="width: 18.0%" />
+<col style="width: 56.0%" />
+</colgroup>
+<thead>
+<tr class="row-odd"><th class="head"><p>Setting</p></th>
+<th class="head"><p>Default</p></th>
+<th class="head"><p>What it does</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">path_truncation_threshold</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">100000.0</span></code></p></td>
+<td><p>The tracker abandons a path once the largest coordinate of its dehomogenized point exceeds this. Distinct from the endgame’s Security.max_norm and from PostProcessingConfig.endpoint_finite_threshold, which ask the same question later.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">predictor</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">Predictor.RKF45</span></code></p></td>
+<td><p>The ODE method used to predict the next point along the path. RKF45 – order 4 with an embedded error estimate – is the default; a lower-order choice is how a path crossing is usually provoked.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">tracking_tolerance</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">1e-05</span></code></p></td>
+<td><p>How tightly Newton must correct onto the path for a step to be accepted. A solver drives this per phase – loose to the endgame boundary, tight through the endgame – so expect it to change under you during a solve.</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+</section>
+</section>
+<section id="endgames">
+<h3>Endgames<a class="headerlink" href="#endgames" title="Link to this heading">¶</a></h3>
+<p>How the last stretch to a singular endpoint is handled.</p>
+<section id="cauchyconfig">
+<h4>CauchyConfig<a class="headerlink" href="#cauchyconfig" title="Link to this heading">¶</a></h4>
+<p>Set as <code class="docutils literal notranslate"><span class="pre">cauchy=...</span></code>, or by any of its field names directly.  API: <a class="reference internal" href="_autosummary/bertini.endgame.html#bertini.endgame.CauchyConfig" title="bertini.endgame.CauchyConfig"><code class="xref py py-class docutils literal notranslate"><span class="pre">bertini.endgame.CauchyConfig</span></code></a>.</p>
+<div class="table-wrapper colwidths-given docutils container">
+<table class="docutils align-default">
+<colgroup>
+<col style="width: 26.0%" />
+<col style="width: 18.0%" />
+<col style="width: 56.0%" />
+</colgroup>
+<thead>
+<tr class="row-odd"><th class="head"><p>Setting</p></th>
+<th class="head"><p>Default</p></th>
+<th class="head"><p>What it does</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">cycle_cutoff_time</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">1e-08</span></code></p></td>
+<td><p>None( (bertini._pybertini.endgame.CauchyConfig)arg1) -&gt; float</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">fail_safe_maximum_cycle_number</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">250</span></code></p></td>
+<td><p>max number of loops before giving up.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">maximum_cauchy_ratio</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">0.5</span></code></p></td>
+<td><p>None( (bertini._pybertini.endgame.CauchyConfig)arg1) -&gt; float</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">num_consecutive_same_cycle_number</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">2</span></code></p></td>
+<td><p>Number of consecutive Cauchy approximations that must report the same cycle number before a converged approximation is trusted.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">ratio_cutoff_time</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">1e-14</span></code></p></td>
+<td><p>None( (bertini._pybertini.endgame.CauchyConfig)arg1) -&gt; float</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+</section>
+<section id="endgameconfig">
+<h4>EndgameConfig<a class="headerlink" href="#endgameconfig" title="Link to this heading">¶</a></h4>
+<p>Set as <code class="docutils literal notranslate"><span class="pre">endgame=...</span></code>, or by any of its field names directly.  API: <a class="reference internal" href="_autosummary/bertini.endgame.html#bertini.endgame.EndgameConfig" title="bertini.endgame.EndgameConfig"><code class="xref py py-class docutils literal notranslate"><span class="pre">bertini.endgame.EndgameConfig</span></code></a>.</p>
+<div class="table-wrapper colwidths-given docutils container">
+<table class="docutils align-default">
+<colgroup>
+<col style="width: 26.0%" />
+<col style="width: 18.0%" />
+<col style="width: 56.0%" />
+</colgroup>
+<thead>
+<tr class="row-odd"><th class="head"><p>Setting</p></th>
+<th class="head"><p>Default</p></th>
+<th class="head"><p>What it does</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">final_tolerance</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">1e-11</span></code></p></td>
+<td><p>The tolerance to which to track the path, using the endgame: in effect, how many digits to get right. An endgame stops when two consecutive approximations of the root are this close to each other in the infinity norm, measured in the solver’s INTERNAL coordinates (homogenized, on the patch), where a point has size about one. In your own variables that is an absolute error of about this tolerance times the size of the solution: a solution of order 1000 found to 1e-6 is known to about 1e-3. The distance reached is reported per solution as accuracy_estimate_internal_coords, and in your variables as accuracy_estimate_user_coords. Default value is 1e-11.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">max_num_refinements</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">4</span></code></p></td>
+<td><p>the maximum number of Newton refinements to be taken during sample point sharpening. Increasing this can help speed convergence, at the risk of path jumping.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">min_track_time</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">1e-100</span></code></p></td>
+<td><p>The minimum distance from the target time to track to. Decreasing this may help failing runs succeed, or maybe not, because you are, after all, tracking toward a singularity.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">minimum_for_c_over_k_stabilization</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">0.75</span></code></p></td>
+<td><p>How closely successive c/k estimates must agree for the path to count as being in the endgame operating zone, as a ratio of the smaller to the larger. Their settling is what says the cycle-number estimate has settled, and so that the Puiseux asymptotics the endgame is built on dominate.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">num_needed_for_stabilization</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">3</span></code></p></td>
+<td><p>How many consecutive c/k estimates must agree for the path to count as being in the endgame operating zone.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">num_sample_points</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">3</span></code></p></td>
+<td><p>The number of points to use for extrapolant calculation. In the Power Series Endgame, the is the number of geometrically spaces points on the path. For Cauchy, this is the number of points on each circle tracked around the target time value.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">refine_when_increasing_precision</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">False</span></code></p></td>
+<td><p>Whether to re-refine the samples the endgame is keeping when it moves to a higher working precision (default False). Off, the retained samples carry the accuracy they were computed at, which is the accuracy of the lower precision; on, they are refined again at the new one, which costs Newton steps per retained sample and buys a sharper sample window. Part of the run’s identity, so changing it is a different ask.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">sample_factor</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">1/2</span></code></p></td>
+<td><p>The factor by which to space the geometrically spaced ‘distance’ between sample points, or sample circles for Cauchy.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">sample_point_refinement_factor</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">0.01</span></code></p></td>
+<td><p>Extra amount of tolerance for refining before computing the final approximation, during endgame.</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+</section>
+<section id="powerseriesconfig">
+<h4>PowerSeriesConfig<a class="headerlink" href="#powerseriesconfig" title="Link to this heading">¶</a></h4>
+<p>Set as <code class="docutils literal notranslate"><span class="pre">power_series=...</span></code>, or by any of its field names directly.  API: <a class="reference internal" href="_autosummary/bertini.endgame.html#bertini.endgame.PowerSeriesConfig" title="bertini.endgame.PowerSeriesConfig"><code class="xref py py-class docutils literal notranslate"><span class="pre">bertini.endgame.PowerSeriesConfig</span></code></a>.</p>
+<div class="table-wrapper colwidths-given docutils container">
+<table class="docutils align-default">
+<colgroup>
+<col style="width: 26.0%" />
+<col style="width: 18.0%" />
+<col style="width: 56.0%" />
+</colgroup>
+<thead>
+<tr class="row-odd"><th class="head"><p>Setting</p></th>
+<th class="head"><p>Default</p></th>
+<th class="head"><p>What it does</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">cycle_number_amplification</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">5</span></code></p></td>
+<td><p>The maximum number allowable iterations during endgames, for points used to approximate the final solution.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">max_cycle_number</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">6</span></code></p></td>
+<td><p>The maximum cycle number to consider, when calculating the cycle number which best fits the path being tracked.</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+</section>
+<section id="securityconfig">
+<h4>SecurityConfig<a class="headerlink" href="#securityconfig" title="Link to this heading">¶</a></h4>
+<p>Set as <code class="docutils literal notranslate"><span class="pre">security=...</span></code>, or by any of its field names directly.  API: <a class="reference internal" href="_autosummary/bertini.endgame.html#bertini.endgame.SecurityConfig" title="bertini.endgame.SecurityConfig"><code class="xref py py-class docutils literal notranslate"><span class="pre">bertini.endgame.SecurityConfig</span></code></a>.</p>
+<div class="table-wrapper colwidths-given docutils container">
+<table class="docutils align-default">
+<colgroup>
+<col style="width: 26.0%" />
+<col style="width: 18.0%" />
+<col style="width: 56.0%" />
+</colgroup>
+<thead>
+<tr class="row-odd"><th class="head"><p>Setting</p></th>
+<th class="head"><p>Default</p></th>
+<th class="head"><p>What it does</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">level</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">0</span></code></p></td>
+<td><p>Whether the endgame truncates a path that appears to be going to infinity. 0 (the default) truncates: two consecutive endpoint approximations whose largest coordinate is above max_norm end the path with SuccessCode.SecurityMaxNormReached, in either endgame. 1 does not truncate, and tracks every path to its end.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">max_norm</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">10000.0</span></code></p></td>
+<td><p>If on, the norm at which to truncate a path.</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+</section>
+</section>
+<section id="algorithms">
+<h3>Algorithms<a class="headerlink" href="#algorithms" title="Link to this heading">¶</a></h3>
+<p>What the solver itself does, around the tracking.</p>
+<section id="autoretrackconfig">
+<h4>AutoRetrackConfig<a class="headerlink" href="#autoretrackconfig" title="Link to this heading">¶</a></h4>
+<p>Set as <code class="docutils literal notranslate"><span class="pre">auto_retrack=...</span></code>, or by any of its field names directly.  API: <a class="reference internal" href="_autosummary/bertini.nag_algorithm.html#bertini.nag_algorithm.AutoRetrackConfig" title="bertini.nag_algorithm.AutoRetrackConfig"><code class="xref py py-class docutils literal notranslate"><span class="pre">bertini.nag_algorithm.AutoRetrackConfig</span></code></a>.</p>
+<div class="table-wrapper colwidths-given docutils container">
+<table class="docutils align-default">
+<colgroup>
+<col style="width: 26.0%" />
+<col style="width: 18.0%" />
+<col style="width: 56.0%" />
+</colgroup>
+<thead>
+<tr class="row-odd"><th class="head"><p>Setting</p></th>
+<th class="head"><p>Default</p></th>
+<th class="head"><p>What it does</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">midpath_decrease_tolerance_factor</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">0.5</span></code></p></td>
+<td><p>Factor by which tracking tolerances are tightened when retracking after the midpath check detects a path crossing.</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+</section>
+<section id="midpathconfig">
+<h4>MidPathConfig<a class="headerlink" href="#midpathconfig" title="Link to this heading">¶</a></h4>
+<p>Set as <code class="docutils literal notranslate"><span class="pre">mid_path=...</span></code>, or by any of its field names directly.  API: <a class="reference internal" href="_autosummary/bertini.nag_algorithm.html#bertini.nag_algorithm.MidPathConfig" title="bertini.nag_algorithm.MidPathConfig"><code class="xref py py-class docutils literal notranslate"><span class="pre">bertini.nag_algorithm.MidPathConfig</span></code></a>.</p>
+<div class="table-wrapper colwidths-given docutils container">
+<table class="docutils align-default">
+<colgroup>
+<col style="width: 26.0%" />
+<col style="width: 18.0%" />
+<col style="width: 56.0%" />
+</colgroup>
+<thead>
+<tr class="row-odd"><th class="head"><p>Setting</p></th>
+<th class="head"><p>Default</p></th>
+<th class="head"><p>What it does</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">same_point_tolerance</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">1e-05</span></code></p></td>
+<td><p>Tolerance used by the midpath check to detect two paths that have crossed (become the same point) partway through tracking, which signals a need to retrack.</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+</section>
+<section id="postprocessingconfig">
+<h4>PostProcessingConfig<a class="headerlink" href="#postprocessingconfig" title="Link to this heading">¶</a></h4>
+<p>Set as <code class="docutils literal notranslate"><span class="pre">post_processing=...</span></code>, or by any of its field names directly.  API: <a class="reference internal" href="_autosummary/bertini.nag_algorithm.html#bertini.nag_algorithm.PostProcessingConfig" title="bertini.nag_algorithm.PostProcessingConfig"><code class="xref py py-class docutils literal notranslate"><span class="pre">bertini.nag_algorithm.PostProcessingConfig</span></code></a>.</p>
+<div class="table-wrapper colwidths-given docutils container">
+<table class="docutils align-default">
+<colgroup>
+<col style="width: 26.0%" />
+<col style="width: 18.0%" />
+<col style="width: 56.0%" />
+</colgroup>
+<thead>
+<tr class="row-odd"><th class="head"><p>Setting</p></th>
+<th class="head"><p>Default</p></th>
+<th class="head"><p>What it does</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">condition_number_threshold</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">100000000.0</span></code></p></td>
+<td><p>Bertini 1’s CondNumThreshold. An endpoint is classified singular if it is the endpoint of multiple paths (multiplicity &gt; 1), or if its spectral-norm condition-number estimate exceeds this value. Default 1e8.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">endpoint_finite_threshold</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">100000.0</span></code></p></td>
+<td><p>Bertini 1’s EndpointFiniteThreshold. An endpoint is classified at infinity if the infinity norm of its dehomogenized coordinates exceeds this value. Default 1e5.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">real_threshold</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">1e-08</span></code></p></td>
+<td><p>Bertini 1’s ImagThreshold. A (dehomogenized) endpoint is classified real if the infinity norm of its coordinates’ imaginary parts is below this. Default 1e-8.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">same_point_tolerance_multiplier</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">10.0</span></code></p></td>
+<td><p>Bertini 1’s EndpointSameThreshold. A multiplier (&gt;= 1) on final_tolerance: two endpoints are the same point (raising multiplicity) when the infinity norm of the difference of their dehomogenized coordinates is below final_tolerance * same_point_tolerance_multiplier. Default 10.</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+</section>
+<section id="recordsconfig">
+<h4>RecordsConfig<a class="headerlink" href="#recordsconfig" title="Link to this heading">¶</a></h4>
+<p>Set as <code class="docutils literal notranslate"><span class="pre">records=...</span></code>, or by any of its field names directly.  API: <a class="reference internal" href="_autosummary/bertini.nag_algorithm.html#bertini.nag_algorithm.RecordsConfig" title="bertini.nag_algorithm.RecordsConfig"><code class="xref py py-class docutils literal notranslate"><span class="pre">bertini.nag_algorithm.RecordsConfig</span></code></a>.</p>
+<div class="table-wrapper colwidths-given docutils container">
+<table class="docutils align-default">
+<colgroup>
+<col style="width: 26.0%" />
+<col style="width: 18.0%" />
+<col style="width: 56.0%" />
+</colgroup>
+<thead>
+<tr class="row-odd"><th class="head"><p>Setting</p></th>
+<th class="head"><p>Default</p></th>
+<th class="head"><p>What it does</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">recall</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">RecallPolicy.Completed</span></code></p></td>
+<td><p>Which recorded outcomes of an identical ask already in the records directory are used in place of tracking: a RecallPolicy (default RecallPolicy.Completed). A bool is accepted too: True means Completed, False means Nothing – force a fresh track even when the paths are recorded, e.g. to run path observers, benchmark the solve, or re-verify a run; the fresh track is still recorded. No effect when nothing is recorded.</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+</section>
+<section id="regenerationconfig">
+<h4>RegenerationConfig<a class="headerlink" href="#regenerationconfig" title="Link to this heading">¶</a></h4>
+<p>Set as <code class="docutils literal notranslate"><span class="pre">regeneration=...</span></code>, or by any of its field names directly.  API: <a class="reference internal" href="_autosummary/bertini.nag_algorithm.html#bertini.nag_algorithm.RegenerationConfig" title="bertini.nag_algorithm.RegenerationConfig"><code class="xref py py-class docutils literal notranslate"><span class="pre">bertini.nag_algorithm.RegenerationConfig</span></code></a>.</p>
+<div class="table-wrapper colwidths-given docutils container">
+<table class="docutils align-default">
+<colgroup>
+<col style="width: 26.0%" />
+<col style="width: 18.0%" />
+<col style="width: 56.0%" />
+</colgroup>
+<thead>
+<tr class="row-odd"><th class="head"><p>Setting</p></th>
+<th class="head"><p>Default</p></th>
+<th class="head"><p>What it does</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">higher_dimension_check</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">True</span></code></p></td>
+<td><p>Whether to test for, and remove, points lying on higher-dimensional components during regeneration.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">remove_infinite_endpoints</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">True</span></code></p></td>
+<td><p>Whether endpoints found to be at infinity during regeneration start-point buildup are discarded. Set True if you are not interested in solutions at infinity.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">slice_final_tolerance</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">1e-11</span></code></p></td>
+<td><p>Final tolerance to track the slice move to, using the endgame (Bertini 1 SliceFinalTol).</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">slice_newton_before_endgame</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">1e-05</span></code></p></td>
+<td><p>Slice-moving tracking tolerance before the endgame (Bertini 1 SliceTolBeforeEG). Separate from TolerancesConfig.newton_before_endgame, which governs the main tracking.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">slice_newton_during_endgame</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">1e-06</span></code></p></td>
+<td><p>Slice-moving tracking tolerance during the endgame (Bertini 1 SliceTolDuringEG).</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">start_level</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">0</span></code></p></td>
+<td><p>The regeneration level at which to begin.</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+</section>
+<section id="sharpeningconfig">
+<h4>SharpeningConfig<a class="headerlink" href="#sharpeningconfig" title="Link to this heading">¶</a></h4>
+<p>Set as <code class="docutils literal notranslate"><span class="pre">sharpening=...</span></code>, or by any of its field names directly.  API: <a class="reference internal" href="_autosummary/bertini.nag_algorithm.html#bertini.nag_algorithm.SharpeningConfig" title="bertini.nag_algorithm.SharpeningConfig"><code class="xref py py-class docutils literal notranslate"><span class="pre">bertini.nag_algorithm.SharpeningConfig</span></code></a>.</p>
+<div class="table-wrapper colwidths-given docutils container">
+<table class="docutils align-default">
+<colgroup>
+<col style="width: 26.0%" />
+<col style="width: 18.0%" />
+<col style="width: 56.0%" />
+</colgroup>
+<thead>
+<tr class="row-odd"><th class="head"><p>Setting</p></th>
+<th class="head"><p>Default</p></th>
+<th class="head"><p>What it does</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">function_residual_tolerance</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">1e-12</span></code></p></td>
+<td><p>A function value is considered zero if its magnitude is smaller than this.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">ratio_tolerance</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">0.99</span></code></p></td>
+<td><p>A value is considered zero if the ratio of two different approximations is smaller than this.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">sharpendigits</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">0</span></code></p></td>
+<td><p>How many digits should be correct after sharpening a solution.</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+</section>
+<section id="tolerancesconfig">
+<h4>TolerancesConfig<a class="headerlink" href="#tolerancesconfig" title="Link to this heading">¶</a></h4>
+<p>Set as <code class="docutils literal notranslate"><span class="pre">tolerances=...</span></code>, or by any of its field names directly.  API: <a class="reference internal" href="_autosummary/bertini.nag_algorithm.html#bertini.nag_algorithm.TolerancesConfig" title="bertini.nag_algorithm.TolerancesConfig"><code class="xref py py-class docutils literal notranslate"><span class="pre">bertini.nag_algorithm.TolerancesConfig</span></code></a>.</p>
+<div class="table-wrapper colwidths-given docutils container">
+<table class="docutils align-default">
+<colgroup>
+<col style="width: 26.0%" />
+<col style="width: 18.0%" />
+<col style="width: 56.0%" />
+</colgroup>
+<thead>
+<tr class="row-odd"><th class="head"><p>Setting</p></th>
+<th class="head"><p>Default</p></th>
+<th class="head"><p>What it does</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">newton_before_endgame</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">1e-05</span></code></p></td>
+<td><p>Tracking (Newton) tolerance used while tracking before the endgame begins. Tighten this if paths drift together or are missed.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">newton_during_endgame</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">1e-06</span></code></p></td>
+<td><p>Tracking (Newton) tolerance used during the endgame.</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+</section>
+<section id="zerodimconfig">
+<h4>ZeroDimConfig<a class="headerlink" href="#zerodimconfig" title="Link to this heading">¶</a></h4>
+<p>Set as <code class="docutils literal notranslate"><span class="pre">zero_dim=...</span></code>, or by any of its field names directly.  API: <a class="reference internal" href="_autosummary/bertini.nag_algorithm.html#bertini.nag_algorithm.ZeroDimConfig" title="bertini.nag_algorithm.ZeroDimConfig"><code class="xref py py-class docutils literal notranslate"><span class="pre">bertini.nag_algorithm.ZeroDimConfig</span></code></a>.</p>
+<div class="table-wrapper colwidths-given docutils container">
+<table class="docutils align-default">
+<colgroup>
+<col style="width: 26.0%" />
+<col style="width: 18.0%" />
+<col style="width: 56.0%" />
+</colgroup>
+<thead>
+<tr class="row-odd"><th class="head"><p>Setting</p></th>
+<th class="head"><p>Default</p></th>
+<th class="head"><p>What it does</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">endgame_boundary</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">0.1</span></code></p></td>
+<td><p>The time value at which tracking stops and the endgame takes over.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">initial_ambient_precision</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">20</span></code></p></td>
+<td><p>The working precision (digits) each path starts at. Read at the start of every path, so setting it on an existing solver takes effect on the next solve. Part of the run’s identity.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">max_num_crossed_path_resolve_attempts</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">2</span></code></p></td>
+<td><p>How many times to re-track crossed paths (with tightened settings) at the endgame boundary before giving up. 0 = detect and report only, do not re-track. Default 2.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">max_path_wall_clock_duration</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">0.0</span></code></p></td>
+<td><p>Wall-clock budget for EACH path, in seconds; 0 (the default) means none. A path that has not finished when its budget runs out is abandoned between steps with SuccessCode.WallClockLimitReached, stamped with where it got to (<code class="docutils literal notranslate"><span class="pre">latest_path_point</span></code>, <code class="docutils literal notranslate"><span class="pre">final_time_used</span></code>, the step counts), and recorded with this limit. Not part of the run’s identity: a budget says how long to wait for an answer, not what the answer is. How a later run treats a path abandoned under a budget is RecallPolicy’s business. Wall-clock time is machine-dependent; the recorded stamp is the machine-independent account.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">max_solve_wall_clock_duration</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">0.0</span></code></p></td>
+<td><p>Wall-clock budget for the WHOLE solve() call, in seconds; 0 (the default) means none. Once it runs out no further path is started and any path in flight is abandoned between steps, and the solve reads exactly as if you had pressed Ctrl-C: was_stopped_early() is True, abandoned paths read ExternallyTerminated, unstarted ones NeverStarted, and a later solve of the same ask re-tracks them. The per-path budget is the finer tool (it guarantees progress path by path); this one is for thinking in terms of the whole call. Not applied to the MPI solve.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">num_threads</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">0</span></code></p></td>
+<td><p>Worker threads tracking paths, in a standalone solve and on each MPI rank. 0 = auto (every CPU this process may run on), 1 = serial (no thread pool), N = N threads. The BERTINI_NUM_THREADS environment variable overrides this. Threading needs no MPI and no free-threaded Python: the heavy tracking runs in C++ with the GIL released.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">path_variable_name</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">ZERO_DIM_PATH_VARIABLE</span></code></p></td>
+<td><p>The name given to the homotopy’s path variable. Read when the solver BUILDS its homotopy, so set it on a config you hand to a constructor. Setting it on a solver that already built one does not rename that homotopy’s path variable – the name is part of the run’s identity, so the two would then disagree; build a new solver instead. (If the name collides with one of your variables the solver mangles it to keep them apart, so the homotopy’s actual path variable may differ from what you asked for.)</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">start_time</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">1</span></code></p></td>
+<td><p>The time value at which the homotopy starts (where the start solutions live).</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">target_time</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">0</span></code></p></td>
+<td><p>The time value the homotopy tracks to (where the solutions of interest live).</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+</section>
+</section>
+</section>
+</section>
+
+        </article>
+      </div>
+      <footer>
+        
+  
+        <div class="related-pages">
+          <a class="next-page" href="../numpy.html">
+              <div class="page-info">
+                <div class="context">
+                  <span>Next</span>
+                </div>
+                <div class="title">Multiprecision numbers and NumPy</div>
+              </div>
+              <svg class="furo-related-icon"><use href="#svg-arrow-right"></use></svg>
+            </a>
+          <a class="prev-page" href="../showpieces/flight_recorder/index.html">
+              <svg class="furo-related-icon"><use href="#svg-arrow-right"></use></svg>
+              <div class="page-info">
+                <div class="context">
+                  <span>Previous</span>
+                </div>
+                
+                <div class="title">✈️ The Flight Recorder</div>
+                
+              </div>
+            </a>
+        </div>
+        <div class="bottom-of-page">
+          <div class="left-details">
+            <div class="copyright">
+                Copyright &#169; 2015-2026, Bertini Team
+            </div>
+            Made with <a href="https://www.sphinx-doc.org/">Sphinx</a> and <a class="muted-link" href="https://pradyunsg.me">@pradyunsg</a>'s
+            
+            <a href="https://github.com/pradyunsg/furo">Furo</a>
+            
+          </div>
+          <div class="right-details">
+            
+          </div>
+        </div>
+        
+  
+  <div class="build-info" style="margin-top: 0.75rem; font-size: var(--font-size--small); color: var(--color-foreground-muted);">
+    Built from
+    <a href="https://github.com/bertiniteam/b2/commit/d882924a2d85c3dc994e1a3871d85672db111dab"><code>d882924</code></a> on 2026-10-06 20:10 UTC.
+  </div>
+  
+
+      </footer>
+    </div>
+    <aside class="toc-drawer">
+      
+      
+      <div class="toc-sticky toc-scroll">
+        <div class="toc-title-container">
+          <span class="toc-title">
+            On this page
+          </span>
+        </div>
+        <div class="toc-tree-container">
+          <div class="toc-tree">
+            <ul>
+<li><a class="reference internal" href="#">⚙️ Configuration reference</a><ul>
+<li><a class="reference internal" href="#three-ways-to-set-a-setting">Three ways to set a setting</a></li>
+<li><a class="reference internal" href="#numbers-exactly">Numbers, exactly</a></li>
+<li><a class="reference internal" href="#tracker-settings-that-have-no-config-struct">Tracker settings that have no config struct</a></li>
+<li><a class="reference internal" href="#the-configs">The configs</a><ul>
+<li><a class="reference internal" href="#tracking">Tracking</a><ul>
+<li><a class="reference internal" href="#ampconfig">AMPConfig</a></li>
+<li><a class="reference internal" href="#fixedprecisionconfig">FixedPrecisionConfig</a></li>
+<li><a class="reference internal" href="#newtonconfig">NewtonConfig</a></li>
+<li><a class="reference internal" href="#steppingconfig">SteppingConfig</a></li>
+<li><a class="reference internal" href="#trackerconfig">TrackerConfig</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#endgames">Endgames</a><ul>
+<li><a class="reference internal" href="#cauchyconfig">CauchyConfig</a></li>
+<li><a class="reference internal" href="#endgameconfig">EndgameConfig</a></li>
+<li><a class="reference internal" href="#powerseriesconfig">PowerSeriesConfig</a></li>
+<li><a class="reference internal" href="#securityconfig">SecurityConfig</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#algorithms">Algorithms</a><ul>
+<li><a class="reference internal" href="#autoretrackconfig">AutoRetrackConfig</a></li>
+<li><a class="reference internal" href="#midpathconfig">MidPathConfig</a></li>
+<li><a class="reference internal" href="#postprocessingconfig">PostProcessingConfig</a></li>
+<li><a class="reference internal" href="#recordsconfig">RecordsConfig</a></li>
+<li><a class="reference internal" href="#regenerationconfig">RegenerationConfig</a></li>
+<li><a class="reference internal" href="#sharpeningconfig">SharpeningConfig</a></li>
+<li><a class="reference internal" href="#tolerancesconfig">TolerancesConfig</a></li>
+<li><a class="reference internal" href="#zerodimconfig">ZeroDimConfig</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+
+          </div>
+        </div>
+      </div>
+      
+      
+    </aside>
+  </div>
+</div><script src="../_static/documentation_options.js?v=3304f9e4"></script>
+    <script src="../_static/doctools.js?v=fd6eb6e6"></script>
+    <script src="../_static/sphinx_highlight.js?v=6ffebe34"></script>
+    <script src="../_static/scripts/furo.js?v=46bd48cc"></script>
+    </body>
+</html>

@@ -1,0 +1,9 @@
+<map id="bertini::node::Operator" name="bertini::node::Operator">
+<area shape="rect" id="Node000001" title="Abstract Node type from which all Operators inherit." alt="" coords="92,174,260,201"/>
+<area shape="rect" id="Node000002" href="$classbertini_1_1node_1_1Node.html" title="An interface for all nodes in a function tree, and for a function object as well." alt="" coords="104,98,249,126"/>
+<area shape="poly" id="edge1_Node000001_Node000002" title=" " alt="" coords="178,140,178,175,174,172,174,143"/>
+<area shape="rect" id="Node000003" href="$classbertini_1_1VisitableBase.html" title="The base class for visitable types." alt="" coords="5,5,166,50"/>
+<area shape="poly" id="edge2_Node000002_Node000003" title=" " alt="" coords="121,58,164,97,159,98,120,63"/>
+<area shape="rect" id="Node000004" title=" " alt="" coords="190,5,344,50"/>
+<area shape="poly" id="edge3_Node000002_Node000004" title=" " alt="" coords="234,59,192,99,189,95,230,62"/>
+</map>

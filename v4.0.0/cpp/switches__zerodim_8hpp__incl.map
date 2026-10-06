@@ -1,0 +1,134 @@
+<map id="core/include/bertini2/blackbox/switches_zerodim.hpp" name="core/include/bertini2/blackbox/switches_zerodim.hpp">
+<area shape="rect" id="Node000001" title="A sequence of switches for getting a particular instantiation of a ZeroDim algorithm,..." alt="" coords="1623,5,1856,50"/>
+<area shape="rect" id="Node000002" href="$system_8hpp.html" title="Collects the various header files which define the Bertini2 systems." alt="" coords="104,292,255,320"/>
+<area shape="poly" id="edge1_Node000001_Node000002" title=" " alt="" coords="1620,32,1316,43,1124,54,922,69,723,89,541,116,387,151,325,171,276,193,250,211,228,233,196,279,191,277,224,230,247,207,273,188,324,166,386,146,540,111,723,84,921,64,1123,48,1316,38,1625,30"/>
+<area shape="rect" id="Node000106" href="$zero__dim__solve_8hpp.html" title="Provides the algorithm for computing all zero&#45;dimensional solutions for an algberaic system." alt="" coords="1589,98,1765,143"/>
+<area shape="poly" id="edge21_Node000001_Node000106" title=" " alt="" coords="1727,49,1702,87,1699,83,1723,52"/>
+<area shape="rect" id="Node000210" href="$endgames_8hpp.html" title="Collects the various header files which define the Bertini2 endgames." alt="" coords="3389,199,3560,227"/>
+<area shape="poly" id="edge81_Node000001_Node000210" title=" " alt="" coords="1750,48,1781,98,1803,122,1829,140,1869,153,1932,164,2111,178,2340,184,2596,185,3084,183,3268,183,3377,188,3410,195,3404,196,3377,193,3268,188,3084,188,2596,191,2340,189,2110,183,1931,169,1868,158,1826,145,1799,126,1777,101,1748,53"/>
+<area shape="rect" id="Node000222" href="$blackbox_2config_8hpp.html" title="Configs for the blackbox whatnot." alt="" coords="1840,106,2045,134"/>
+<area shape="poly" id="edge82_Node000001_Node000222" title=" " alt="" coords="1788,48,1902,100,1896,100,1788,53"/>
+<area shape="rect" id="Node000003" href="$precon_8hpp.html" title="Provides preconstructed systems for use around the home and office." alt="" coords="5,587,205,614"/>
+<area shape="poly" id="edge2_Node000002_Node000003" title=" " alt="" coords="178,318,115,572,110,571,175,322"/>
+<area shape="rect" id="Node000004" href="$system_2system_8hpp.html" title="Provides the bertini::System class." alt="" coords="886,671,1089,699"/>
+<area shape="poly" id="edge20_Node000002_Node000004" title=" " alt="" coords="182,317,193,359,210,414,237,475,255,503,276,528,323,569,366,591,415,605,476,620,579,644,684,661,783,671,873,680,868,680,783,677,683,666,578,649,475,626,413,610,364,596,320,573,272,532,251,506,232,477,205,416,188,360,182,323"/>
+<area shape="rect" id="Node000096" href="$start__systems_8hpp.html" title="Aggregate include for the various start systems in Bertini2." alt="" coords="586,376,744,421"/>
+<area shape="poly" id="edge10_Node000002_Node000096" title=" " alt="" coords="250,317,573,378,569,381,251,323"/>
+<area shape="poly" id="edge3_Node000003_Node000004" title=" " alt="" coords="172,613,224,620,400,640,576,656,873,677,868,678,576,661,400,645,223,626,173,618"/>
+<area shape="rect" id="Node000005" title=" " alt="" coords="992,747,1066,774"/>
+<area shape="poly" id="edge4_Node000004_Node000005" title=" " alt="" coords="996,697,1017,734,1012,732,994,702"/>
+<area shape="rect" id="Node000006" title=" " alt="" coords="1342,747,1417,774"/>
+<area shape="poly" id="edge5_Node000004_Node000006" title=" " alt="" coords="1058,697,1330,749,1325,750,1058,702"/>
+<area shape="rect" id="Node000007" title=" " alt="" coords="1498,747,1560,774"/>
+<area shape="poly" id="edge6_Node000004_Node000007" title=" " alt="" coords="1085,697,1485,753,1480,753,1085,702"/>
+<area shape="rect" id="Node000008" title=" " alt="" coords="927,747,968,774"/>
+<area shape="poly" id="edge7_Node000004_Node000008" title=" " alt="" coords="983,698,964,735,960,731,978,701"/>
+<area shape="rect" id="Node000028" href="$eigen__extensions_8hpp.html" title="Bertini extensions of the Eigen linear algebra library." alt="" coords="2683,747,2900,774"/>
+<area shape="poly" id="edge8_Node000004_Node000028" title=" " alt="" coords="1090,688,2668,752,2667,757,1090,693"/>
+<area shape="rect" id="Node000029" href="$num__traits_8hpp.html" title="Provides an Eigen&#45;like NumTraits struct for querying traits of a number type." alt="" coords="2558,822,2732,850"/>
+<area shape="poly" id="edge9_Node000028_Node000029" title=" " alt="" coords="2768,774,2685,818,2684,813,2763,775"/>
+<area shape="rect" id="Node000097" href="$total__degree__linear__product_8hpp.html" title="Defines the TotalDegreeLinearProduct start system type." alt="" coords="512,469,669,530"/>
+<area shape="poly" id="edge11_Node000096_Node000097" title=" " alt="" coords="651,419,624,458,620,454,647,423"/>
+<area shape="rect" id="Node000101" href="$total__degree__binomial_8hpp.html" title="Defines the TotalDegreeBinomial start system type." alt="" coords="693,477,893,522"/>
+<area shape="poly" id="edge14_Node000096_Node000101" title=" " alt="" coords="693,418,756,468,751,468,692,424"/>
+<area shape="rect" id="Node000102" href="$mhom_8hpp.html" title="Defines the MHomogeneous start system type." alt="" coords="917,477,1074,522"/>
+<area shape="poly" id="edge16_Node000096_Node000102" title=" " alt="" coords="742,419,906,466,919,472,913,472,904,471,743,424"/>
+<area shape="rect" id="Node000103" href="$user_8hpp.html" title="Defines the User&#45;defined start system type." alt="" coords="330,477,488,522"/>
+<area shape="poly" id="edge18_Node000096_Node000103" title=" " alt="" coords="607,423,480,474,478,469,611,420"/>
+<area shape="rect" id="Node000098" href="$start__base_8hpp.html" title="Defines generic start system type." alt="" coords="812,578,969,623"/>
+<area shape="poly" id="edge12_Node000097_Node000098" title=" " alt="" coords="670,524,813,573,807,573,669,530"/>
+<area shape="poly" id="edge13_Node000098_Node000004" title=" " alt="" coords="917,621,963,661,958,660,915,626"/>
+<area shape="poly" id="edge15_Node000101_Node000098" title=" " alt="" coords="815,520,861,568,856,567,813,525"/>
+<area shape="poly" id="edge17_Node000102_Node000098" title=" " alt="" coords="975,521,926,570,923,565,970,524"/>
+<area shape="poly" id="edge19_Node000103_Node000098" title=" " alt="" coords="471,520,500,528,656,561,799,586,794,587,655,566,499,533,472,525"/>
+<area shape="poly" id="edge23_Node000106_Node000028" title=" " alt="" coords="1766,139,1773,140,1836,143,1943,144,2226,146,2374,149,2506,156,2608,169,2643,178,2665,189,2688,214,2698,240,2699,269,2698,304,2698,602,2705,641,2722,677,2745,709,2768,737,2763,735,2741,712,2718,680,2700,642,2693,602,2693,304,2694,269,2692,241,2684,216,2662,193,2641,183,2607,174,2505,162,2374,154,2226,151,1943,150,1836,149,1773,145,1766,144"/>
+<area shape="poly" id="edge22_Node000106_Node000029" title=" " alt="" coords="1766,139,1773,140,1935,144,2204,146,2345,149,2470,157,2567,169,2600,178,2621,189,2643,214,2650,240,2648,304,2648,686,2647,808,2643,805,2642,686,2642,304,2644,241,2638,217,2618,193,2598,183,2566,174,2470,162,2345,155,2204,151,1935,150,1773,145,1766,144"/>
+<area shape="poly" id="edge80_Node000106_Node000096" title=" " alt="" coords="1586,126,1402,137,1178,151,979,170,909,181,869,193,848,207,833,222,814,255,797,291,785,310,767,330,716,369,713,365,763,326,780,307,793,288,810,252,829,219,845,203,867,188,908,176,978,164,1177,145,1401,131,1591,124"/>
+<area shape="poly" id="edge42_Node000106_Node000098" title=" " alt="" coords="1586,125,1421,133,1227,145,1059,165,1002,178,983,185,973,192,967,212,967,249,971,291,980,327,993,356,1007,376,1046,419,1070,441,1080,451,1089,468,1099,500,1097,516,1089,532,1068,554,1042,571,1014,584,985,592,984,587,1012,579,1040,567,1064,550,1084,529,1092,514,1093,501,1084,470,1076,455,1066,445,1042,423,1003,379,988,358,974,329,966,292,961,250,962,212,968,189,981,180,1000,173,1058,159,1227,140,1421,127,1591,123"/>
+<area shape="rect" id="Node000050" href="$visitable_8hpp.html" title="Contains the visitable base types." alt="" coords="2984,199,3184,227"/>
+<area shape="poly" id="edge24_Node000106_Node000050" title=" " alt="" coords="1765,137,1784,140,1964,157,2117,165,2252,167,2378,165,2503,163,2638,164,2792,171,2972,188,3010,196,3005,196,2971,193,2791,177,2638,169,2503,168,2378,170,2252,172,2117,171,1964,163,1783,145,1766,143"/>
+<area shape="rect" id="Node000107" href="$tracking_8hpp.html" title="Includes all files for tracking in Bertini2." alt="" coords="3208,199,3364,227"/>
+<area shape="poly" id="edge25_Node000106_Node000107" title=" " alt="" coords="1765,138,1784,140,1998,159,2180,166,2340,165,2490,160,2640,156,2800,156,2982,165,3196,188,3225,195,3220,195,3195,193,2982,171,2800,161,2640,161,2490,165,2340,170,2180,171,1998,165,1783,145,1766,143"/>
+<area shape="rect" id="Node000146" href="$midpath__check_8hpp.html" title="Provides methods for checking for path crossings." alt="" coords="381,191,557,235"/>
+<area shape="poly" id="edge26_Node000106_Node000146" title=" " alt="" coords="1586,124,1406,131,1155,142,868,162,573,193,571,188,867,156,1155,136,1405,125,1591,122"/>
+<area shape="rect" id="Node000147" href="$nag__algorithms_2common_2config_8hpp.html" title=" " alt="" coords="577,283,753,328"/>
+<area shape="poly" id="edge39_Node000106_Node000147" title=" " alt="" coords="1586,123,1407,129,1184,140,970,160,883,175,818,193,800,202,788,212,761,237,709,276,705,272,758,233,785,208,797,198,816,188,882,170,969,155,1183,135,1407,124,1591,122"/>
+<area shape="rect" id="Node000142" href="$configured_8hpp.html" title="Contains the detail/configured helper type, for templated getting/setting/storage of config structs." alt="" coords="336,292,548,320"/>
+<area shape="poly" id="edge32_Node000106_Node000142" title=" " alt="" coords="1586,124,1283,132,887,145,537,165,422,178,387,185,371,193,364,203,363,213,371,237,390,260,414,282,409,283,386,263,366,239,357,214,359,201,367,189,386,180,421,173,537,159,886,139,1282,127,1591,122"/>
+<area shape="rect" id="Node000148" href="$generators_8hpp.html" title="Provides the generators for bertini2." alt="" coords="2733,292,2922,320"/>
+<area shape="poly" id="edge30_Node000106_Node000148" title=" " alt="" coords="1765,137,1784,140,1875,146,1989,146,2255,142,2391,142,2518,149,2629,163,2676,174,2716,188,2736,202,2761,226,2810,281,2805,279,2757,229,2733,207,2713,193,2674,179,2628,168,2518,154,2391,148,2255,147,1989,152,1875,151,1783,145,1766,143"/>
+<area shape="rect" id="Node000130" href="$observable_8hpp.html" title="Contains the observable base types." alt="" coords="1153,384,1369,412"/>
+<area shape="poly" id="edge33_Node000106_Node000130" title=" " alt="" coords="1586,125,1431,134,1251,147,1095,166,1042,179,1015,193,1008,207,1006,225,1017,266,1036,305,1051,326,1073,343,1097,358,1152,380,1146,380,1095,362,1070,348,1047,330,1031,307,1012,268,1001,225,1003,205,1011,189,1041,174,1094,161,1250,141,1431,129,1591,124"/>
+<area shape="rect" id="Node000110" title=" " alt="" coords="1167,486,1251,513"/>
+<area shape="poly" id="edge60_Node000106_Node000110" title=" " alt="" coords="1586,125,1428,134,1243,146,1083,166,1029,178,1000,193,987,211,980,230,978,249,980,269,997,309,1026,349,1063,388,1103,422,1178,477,1173,477,1100,426,1059,391,1022,353,992,312,975,270,972,249,975,228,983,208,997,189,1027,173,1082,160,1242,141,1428,128,1591,123"/>
+<area shape="rect" id="Node000137" title=" " alt="" coords="1375,486,1438,513"/>
+<area shape="poly" id="edge65_Node000106_Node000137" title=" " alt="" coords="1655,142,1606,193,1573,230,1549,261,1525,293,1491,330,1460,352,1447,362,1435,377,1424,400,1417,425,1409,472,1405,468,1412,424,1419,398,1431,375,1444,358,1457,348,1487,326,1521,289,1545,258,1569,227,1602,189,1651,144"/>
+<area shape="rect" id="Node000158" href="$algorithm__base_8hpp.html" title="provides a common base type for algorithms to inherit from, for the abstraction layer above for calli..." alt="" coords="1061,283,1277,328"/>
+<area shape="poly" id="edge37_Node000106_Node000158" title=" " alt="" coords="1586,122,1518,129,1438,140,1356,161,1316,175,1278,193,1253,210,1230,230,1193,272,1190,268,1227,226,1250,205,1276,188,1314,170,1354,156,1437,135,1518,123,1591,121"/>
+<area shape="rect" id="Node000159" href="$nag__algorithms_2events_8hpp.html" title="Events emitted by the higher&#45;level algorithms (e.g." alt="" coords="1301,283,1477,328"/>
+<area shape="poly" id="edge40_Node000106_Node000159" title=" " alt="" coords="1586,125,1504,134,1416,146,1339,165,1311,178,1292,192,1286,202,1285,212,1293,234,1308,255,1330,275,1325,274,1305,259,1288,237,1279,212,1281,201,1288,189,1308,173,1337,160,1415,140,1504,128,1591,124"/>
+<area shape="rect" id="Node000160" href="$parallel_8hpp.html" title="Collective include file for parallelism in Bertini2." alt="" coords="1025,199,1177,227"/>
+<area shape="poly" id="edge43_Node000106_Node000160" title=" " alt="" coords="1586,133,1407,159,1196,193,1172,198,1171,193,1195,188,1406,154,1591,131"/>
+<area shape="rect" id="Node000175" href="$output__directory_8hpp.html" title="The structured output directory: durable, self&#45;documenting records of computations (b2rec/1; ADR&#45;0045..." alt="" coords="1444,376,1614,421"/>
+<area shape="poly" id="edge44_Node000106_Node000175" title=" " alt="" coords="1665,141,1635,192,1586,284,1547,364,1543,360,1582,282,1631,189,1661,145"/>
+<area shape="rect" id="Node000047" title=" " alt="" coords="1590,486,1641,513"/>
+<area shape="poly" id="edge67_Node000106_Node000047" title=" " alt="" coords="1676,141,1622,472,1618,469,1672,145"/>
+<area shape="rect" id="Node000179" href="$producer_8hpp.html" title="Which software produced a record: name, version, and source commit, for the producer field of run hea..." alt="" coords="1302,199,1513,227"/>
+<area shape="poly" id="edge49_Node000106_Node000179" title=" " alt="" coords="1610,144,1462,196,1460,191,1615,142"/>
+<area shape="rect" id="Node000180" href="$solver__recording_8hpp.html" title="FullPathResult &lt;&#45;&gt; track&#45;record serialization (b2rec/1; the arc&#39;s rung 4)." alt="" coords="2256,191,2423,235"/>
+<area shape="poly" id="edge50_Node000106_Node000180" title=" " alt="" coords="1765,137,1784,140,1911,156,2011,163,2112,171,2243,190,2238,191,2111,176,2010,168,1910,161,1783,145,1766,142"/>
+<area shape="rect" id="Node000173" title=" " alt="" coords="2024,292,2088,320"/>
+<area shape="poly" id="edge63_Node000106_Node000173" title=" " alt="" coords="1691,141,1729,188,1753,213,1781,233,1839,261,1900,280,1959,292,2011,301,2005,301,1958,297,1899,285,1837,265,1778,238,1750,217,1725,192,1690,146"/>
+<area shape="rect" id="Node000182" href="$config__encoding_8hpp.html" title="Canonical exact encoding + persistent digests for configuration structs (ADR&#45;0043; the structured&#45;out..." alt="" coords="582,191,748,235"/>
+<area shape="poly" id="edge53_Node000106_Node000182" title=" " alt="" coords="1586,126,1229,147,999,166,767,193,764,194,762,189,766,188,998,161,1229,141,1591,124"/>
+<area shape="rect" id="Node000184" href="$classic__writer_8hpp.html" title="Emit a System (and, with a config, a whole solve) as a Bertini 1 classic input file." alt="" coords="1567,578,1702,623"/>
+<area shape="poly" id="edge55_Node000106_Node000184" title=" " alt="" coords="1683,141,1698,214,1705,304,1705,400,1700,446,1688,491,1655,567,1652,563,1683,490,1695,445,1700,400,1700,304,1692,215,1681,145"/>
+<area shape="rect" id="Node000187" href="$json__writer_8hpp.html" title="Render a System&#39;s structure as JSON: named fields for its parts." alt="" coords="487,587,678,614"/>
+<area shape="poly" id="edge58_Node000106_Node000187" title=" " alt="" coords="1586,122,1292,125,905,134,717,142,552,155,426,171,383,182,356,193,326,215,308,239,298,267,296,304,296,400,293,471,300,499,320,528,345,545,383,559,480,583,474,584,381,564,342,549,316,532,295,501,288,471,290,400,290,304,293,266,303,236,322,211,353,188,381,177,425,166,551,149,716,137,905,129,1292,120,1591,120"/>
+<area shape="rect" id="Node000111" title=" " alt="" coords="1791,199,1856,227"/>
+<area shape="poly" id="edge61_Node000106_Node000111" title=" " alt="" coords="1712,141,1792,191,1787,191,1712,146"/>
+<area shape="rect" id="Node000143" href="$stop__request_8hpp.html" title="Asking a long computation to stop, from outside it." alt="" coords="1880,191,2044,235"/>
+<area shape="poly" id="edge62_Node000106_Node000143" title=" " alt="" coords="1745,141,1883,186,1877,186,1745,146"/>
+<area shape="rect" id="Node000170" title=" " alt="" coords="2069,199,2128,227"/>
+<area shape="poly" id="edge64_Node000106_Node000170" title=" " alt="" coords="1765,137,1784,140,1861,152,1922,158,1983,167,2058,188,2064,192,2059,192,2056,193,1981,172,1922,163,1861,157,1783,145,1766,142"/>
+<area shape="rect" id="Node000046" title=" " alt="" coords="2152,199,2231,227"/>
+<area shape="poly" id="edge66_Node000106_Node000046" title=" " alt="" coords="1765,137,1784,140,1884,153,1963,158,2042,167,2140,188,2151,193,2146,193,2139,193,2041,172,1963,164,1884,158,1783,145,1766,142"/>
+<area shape="rect" id="Node000188" href="$output_8hpp.html" title="Provides some outputting classes for printing results of running algorithms." alt="" coords="2784,191,2960,235"/>
+<area shape="poly" id="edge68_Node000106_Node000188" title=" " alt="" coords="1765,139,1772,140,1921,155,2047,162,2262,164,2478,166,2604,173,2753,188,2771,193,2766,193,2753,193,2604,178,2478,171,2262,169,2047,168,1920,160,1771,145,1766,145"/>
+<area shape="rect" id="Node000189" href="$settings__parsers_8hpp.html" title="Provides the parsers for settings in bertini2." alt="" coords="2448,191,2608,235"/>
+<area shape="poly" id="edge71_Node000106_Node000189" title=" " alt="" coords="1765,137,1784,140,1964,158,2107,163,2250,168,2334,175,2435,190,2429,191,2333,181,2249,173,2106,168,1964,163,1783,145,1766,143"/>
+<area shape="poly" id="edge72_Node000106_Node000210" title=" " alt="" coords="1765,138,1784,140,2026,161,2231,169,2412,167,2581,162,2749,156,2930,155,3136,165,3377,188,3410,195,3404,196,3377,193,3135,170,2930,161,2749,161,2581,167,2412,173,2231,174,2025,167,1783,145,1766,143"/>
+<area shape="poly" id="edge27_Node000146_Node000147" title=" " alt="" coords="516,233,607,276,602,277,516,239"/>
+<area shape="poly" id="edge29_Node000146_Node000142" title=" " alt="" coords="464,233,453,278,448,276,461,238"/>
+<area shape="poly" id="edge28_Node000147_Node000096" title=" " alt="" coords="666,326,667,362,663,359,664,331"/>
+<area shape="poly" id="edge31_Node000148_Node000028" title=" " alt="" coords="2828,318,2819,396,2813,498,2813,602,2808,672,2799,733,2795,729,2803,672,2808,602,2808,498,2814,395,2824,322"/>
+<area shape="poly" id="edge36_Node000130_Node000007" title=" " alt="" coords="1272,410,1513,735,1508,734,1269,415"/>
+<area shape="poly" id="edge34_Node000130_Node000110" title=" " alt="" coords="1256,411,1224,474,1221,470,1252,414"/>
+<area shape="poly" id="edge35_Node000130_Node000137" title=" " alt="" coords="1281,410,1377,477,1372,476,1279,415"/>
+<area shape="poly" id="edge38_Node000158_Node000130" title=" " alt="" coords="1191,326,1239,374,1234,373,1190,331"/>
+<area shape="poly" id="edge41_Node000159_Node000130" title=" " alt="" coords="1361,327,1293,378,1291,373,1356,330"/>
+<area shape="poly" id="edge47_Node000175_Node000006" title=" " alt="" coords="1522,420,1393,734,1389,730,1518,422"/>
+<area shape="poly" id="edge48_Node000175_Node000007" title=" " alt="" coords="1531,419,1531,732,1527,729,1527,423"/>
+<area shape="poly" id="edge46_Node000175_Node000137" title=" " alt="" coords="1505,420,1435,478,1433,474,1500,422"/>
+<area shape="poly" id="edge45_Node000175_Node000047" title=" " alt="" coords="1549,419,1597,475,1592,474,1547,424"/>
+<area shape="poly" id="edge52_Node000180_Node000029" title=" " alt="" coords="2380,233,2420,261,2461,298,2478,320,2492,344,2502,369,2505,397,2505,686,2508,707,2515,727,2540,762,2572,791,2607,815,2602,814,2569,795,2536,765,2510,729,2502,708,2500,686,2500,397,2496,371,2487,346,2474,323,2457,302,2417,265,2379,238"/>
+<area shape="poly" id="edge51_Node000180_Node000173" title=" " alt="" coords="2274,235,2104,292,2102,287,2269,237"/>
+<area shape="poly" id="edge54_Node000182_Node000147" title=" " alt="" coords="666,233,667,269,663,267,664,238"/>
+<area shape="poly" id="edge56_Node000184_Node000004" title=" " alt="" coords="1564,611,1105,671,1104,666,1569,610"/>
+<area shape="poly" id="edge57_Node000184_Node000007" title=" " alt="" coords="1622,622,1548,736,1545,731,1618,624"/>
+<area shape="poly" id="edge59_Node000187_Node000004" title=" " alt="" coords="648,612,910,667,905,668,647,618"/>
+<area shape="poly" id="edge69_Node000188_Node000106" title=" " alt="" coords="2781,192,2777,193,2628,178,2502,171,2286,169,2071,168,1944,160,1795,145,1781,143,1780,138,1796,140,1945,155,2071,162,2286,164,2502,166,2628,173,2777,188,2786,191"/>
+<area shape="poly" id="edge70_Node000188_Node000148" title=" " alt="" coords="2863,234,2842,280,2839,275,2859,237"/>
+<area shape="rect" id="Node000211" href="$amp__endgame_8hpp.html" title=" " alt="" coords="3225,283,3401,328"/>
+<area shape="poly" id="edge73_Node000210_Node000211" title=" " alt="" coords="3453,227,3366,278,3364,273,3448,228"/>
+<area shape="rect" id="Node000215" href="$fixed__prec__endgame_8hpp.html" title="Contains the policy for fixed precision endgame types." alt="" coords="3718,283,3897,328"/>
+<area shape="poly" id="edge75_Node000210_Node000215" title=" " alt="" coords="3523,225,3716,279,3710,279,3523,230"/>
+<area shape="rect" id="Node000217" href="$powerseries_8hpp.html" title=" " alt="" coords="2946,292,3200,320"/>
+<area shape="poly" id="edge76_Node000210_Node000217" title=" " alt="" coords="3419,227,3147,291,3146,285,3413,228"/>
+<area shape="rect" id="Node000220" href="$cauchy_8hpp.html" title="The concrete Cauchy endgame type." alt="" coords="3475,292,3695,320"/>
+<area shape="poly" id="edge77_Node000210_Node000220" title=" " alt="" coords="3491,225,3560,282,3555,281,3489,230"/>
+<area shape="rect" id="Node000221" href="$endgames_2observers_8hpp.html" title="Contains the endgames/observers base types." alt="" coords="3083,671,3322,699"/>
+<area shape="poly" id="edge78_Node000210_Node000221" title=" " alt="" coords="3472,226,3453,300,3445,348,3441,397,3441,501,3436,533,3423,562,3404,587,3379,609,3322,644,3264,668,3263,663,3319,639,3376,605,3400,583,3419,559,3431,531,3436,501,3436,397,3439,347,3448,299,3468,229"/>
+<area shape="poly" id="edge74_Node000211_Node000130" title=" " alt="" coords="3222,327,3212,331,2942,357,2713,368,2512,370,2323,367,2135,362,1933,359,1704,364,1433,379,1371,385,1370,379,1433,373,1704,358,1933,354,2135,356,2324,362,2512,365,2713,363,2942,351,3211,325,3227,326"/>
+<area shape="poly" id="edge79_Node000221_Node000007" title=" " alt="" coords="3080,692,1576,760,1576,754,3085,691"/>
+</map>

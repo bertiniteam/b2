@@ -1,0 +1,9 @@
+﻿bertini.operators
+=================
+.. automodule:: bertini.operators
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+
+

@@ -1,0 +1,21 @@
+<map id="bertini::node::Number" name="bertini::node::Number">
+<area shape="rect" id="Node000001" title="Abstract Number type from which other Numbers derive." alt="" coords="615,109,779,137"/>
+<area shape="rect" id="Node000006" href="$classbertini_1_1node_1_1Complex.html" title="A complex&#45;number literal node in an expression tree." alt="" coords="827,5,996,33"/>
+<area shape="poly" id="edge5_Node000001_Node000006" title=" " alt="" coords="730,98,774,70,826,43,856,34,861,33,828,48,777,75,732,103"/>
+<area shape="rect" id="Node000007" href="$classbertini_1_1node_1_1Integer.html" title="Signed real Integer storage in an expression tree." alt="" coords="833,57,990,85"/>
+<area shape="poly" id="edge6_Node000001_Node000007" title=" " alt="" coords="772,102,848,86,854,85,773,108"/>
+<area shape="rect" id="Node000008" href="$classbertini_1_1node_1_1Rational.html" title="The Rational number type for Bertini2 expression trees." alt="" coords="829,109,994,137"/>
+<area shape="poly" id="edge7_Node000001_Node000008" title=" " alt="" coords="794,121,831,123,826,123,795,126"/>
+<area shape="rect" id="Node000009" href="$classbertini_1_1node_1_1special__number_1_1E.html" title="The number ." alt="" coords="833,161,990,206"/>
+<area shape="poly" id="edge8_Node000001_Node000009" title=" " alt="" coords="764,139,835,161,829,161,763,144"/>
+<area shape="rect" id="Node000010" href="$classbertini_1_1node_1_1special__number_1_1Pi.html" title="The number ." alt="" coords="833,230,990,275"/>
+<area shape="poly" id="edge9_Node000001_Node000010" title=" " alt="" coords="727,144,774,180,828,216,853,230,847,229,825,220,771,184,726,150"/>
+<area shape="rect" id="Node000002" href="$classbertini_1_1node_1_1Symbol.html" title="Abstract symbol class." alt="" coords="407,109,567,137"/>
+<area shape="poly" id="edge1_Node000001_Node000002" title=" " alt="" coords="582,121,618,123,612,124,583,126"/>
+<area shape="rect" id="Node000003" href="$classbertini_1_1node_1_1Node.html" title="An interface for all nodes in a function tree, and for a function object as well." alt="" coords="214,109,359,137"/>
+<area shape="poly" id="edge2_Node000002_Node000003" title=" " alt="" coords="374,121,409,123,404,124,375,126"/>
+<area shape="rect" id="Node000004" href="$classbertini_1_1VisitableBase.html" title="The base class for visitable types." alt="" coords="5,66,166,111"/>
+<area shape="poly" id="edge3_Node000003_Node000004" title=" " alt="" coords="181,102,216,110,211,112,182,108"/>
+<area shape="rect" id="Node000005" title=" " alt="" coords="8,136,163,180"/>
+<area shape="poly" id="edge4_Node000003_Node000005" title=" " alt="" coords="177,139,216,135,211,137,179,144"/>
+</map>

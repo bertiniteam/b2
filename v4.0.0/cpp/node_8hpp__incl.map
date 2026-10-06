@@ -1,0 +1,103 @@
+<map id="core/include/bertini2/function_tree/node.hpp" name="core/include/bertini2/function_tree/node.hpp">
+<area shape="rect" id="Node000001" title="Defines the abstract Node base class." alt="" coords="1474,5,1649,50"/>
+<area shape="rect" id="Node000002" title=" " alt="" coords="723,106,802,134"/>
+<area shape="poly" id="edge1_Node000001_Node000002" title=" " alt="" coords="1471,29,1344,35,1179,46,996,66,905,81,815,101,806,103,804,98,814,95,904,76,996,61,1178,40,1343,30,1476,28"/>
+<area shape="rect" id="Node000003" title=" " alt="" coords="434,443,492,471"/>
+<area shape="poly" id="edge2_Node000001_Node000003" title=" " alt="" coords="1532,49,1456,99,1362,145,1244,185,1140,207,1045,218,956,226,868,235,778,254,680,288,627,313,571,344,544,364,520,386,482,432,478,428,516,383,540,359,568,340,625,308,678,283,777,249,868,230,956,220,1044,213,1139,202,1243,180,1360,140,1454,94,1527,52"/>
+<area shape="rect" id="Node000004" title=" " alt="" coords="1024,106,1074,134"/>
+<area shape="poly" id="edge3_Node000001_Node000004" title=" " alt="" coords="1471,33,1391,41,1293,53,1189,72,1087,101,1084,102,1082,97,1086,95,1188,67,1292,48,1390,36,1476,32"/>
+<area shape="rect" id="Node000005" title=" " alt="" coords="1098,106,1152,134"/>
+<area shape="poly" id="edge4_Node000001_Node000005" title=" " alt="" coords="1471,37,1327,59,1245,77,1165,101,1161,102,1159,97,1163,95,1244,72,1326,54,1476,35"/>
+<area shape="rect" id="Node000006" title=" " alt="" coords="1176,106,1250,134"/>
+<area shape="poly" id="edge5_Node000001_Node000006" title=" " alt="" coords="1471,46,1372,70,1263,101,1256,103,1255,98,1262,95,1371,65,1476,44"/>
+<area shape="rect" id="Node000007" title=" " alt="" coords="1274,106,1350,134"/>
+<area shape="poly" id="edge6_Node000001_Node000007" title=" " alt="" coords="1502,50,1369,101,1362,103,1360,98,1367,95,1497,52"/>
+<area shape="rect" id="Node000008" title=" " alt="" coords="1653,266,1814,294"/>
+<area shape="poly" id="edge7_Node000001_Node000008" title=" " alt="" coords="1560,48,1560,86,1563,130,1574,176,1583,197,1595,217,1623,241,1658,261,1653,260,1620,246,1591,220,1578,200,1568,177,1558,130,1555,86,1557,52"/>
+<area shape="rect" id="Node000009" href="$num__traits_8hpp.html" title="Provides an Eigen&#45;like NumTraits struct for querying traits of a number type." alt="" coords="827,106,1000,134"/>
+<area shape="poly" id="edge8_Node000001_Node000009" title=" " alt="" coords="1471,38,1263,64,1012,101,987,105,985,100,1012,95,1262,59,1476,37"/>
+<area shape="rect" id="Node000015" title=" " alt="" coords="1437,435,1576,479"/>
+<area shape="poly" id="edge53_Node000001_Node000015" title=" " alt="" coords="1560,48,1555,98,1513,421,1509,418,1549,98,1557,52"/>
+<area shape="rect" id="Node000016" title=" " alt="" coords="1273,435,1412,479"/>
+<area shape="poly" id="edge54_Node000001_Node000016" title=" " alt="" coords="1553,49,1362,423,1359,419,1548,51"/>
+<area shape="rect" id="Node000030" href="$visitable_8hpp.html" title="Contains the visitable base types." alt="" coords="1598,106,1799,134"/>
+<area shape="poly" id="edge45_Node000001_Node000030" title=" " alt="" coords="1595,48,1669,98,1664,97,1594,53"/>
+<area shape="rect" id="Node000033" href="$forward__declares_8hpp.html" title="Forward declarations for types in the node:: namespace." alt="" coords="1823,98,1988,143"/>
+<area shape="poly" id="edge50_Node000001_Node000033" title=" " alt="" coords="1644,48,1811,93,1806,94,1644,53"/>
+<area shape="rect" id="Node000034" href="$print__dialect_8hpp.html" title="The dialect a function tree is printed in – who the text is for." alt="" coords="2013,98,2174,143"/>
+<area shape="poly" id="edge51_Node000001_Node000034" title=" " alt="" coords="1649,38,1808,62,2000,97,1995,98,1807,67,1650,44"/>
+<area shape="rect" id="Node000036" title=" " alt="" coords="2199,98,2340,143"/>
+<area shape="poly" id="edge55_Node000001_Node000036" title=" " alt="" coords="1649,32,1887,54,2034,72,2186,97,2181,98,2033,77,1886,59,1650,38"/>
+<area shape="rect" id="Node000037" title=" " alt="" coords="2364,98,2505,143"/>
+<area shape="poly" id="edge56_Node000001_Node000037" title=" " alt="" coords="1649,29,1955,48,2150,67,2351,98,2346,98,2149,73,1955,54,1649,35"/>
+<area shape="rect" id="Node000038" title=" " alt="" coords="2529,98,2671,143"/>
+<area shape="poly" id="edge57_Node000001_Node000038" title=" " alt="" coords="1649,28,1809,32,2023,43,2266,63,2517,98,2511,98,2265,69,2022,49,1809,38,1650,33"/>
+<area shape="rect" id="Node000039" title=" " alt="" coords="2695,98,2836,143"/>
+<area shape="poly" id="edge58_Node000001_Node000039" title=" " alt="" coords="1649,26,1835,29,2089,39,2381,59,2531,75,2682,98,2677,98,2531,80,2380,65,2089,44,1835,34,1650,31"/>
+<area shape="rect" id="Node000040" title=" " alt="" coords="2860,98,3001,143"/>
+<area shape="poly" id="edge59_Node000001_Node000040" title=" " alt="" coords="1649,29,2243,51,2584,71,2730,82,2847,98,2842,98,2729,88,2584,76,2243,57,1650,34"/>
+<area shape="rect" id="Node000041" title=" " alt="" coords="3025,98,3167,143"/>
+<area shape="poly" id="edge60_Node000001_Node000041" title=" " alt="" coords="1649,28,2321,49,2712,69,2879,81,3012,98,3007,98,2879,86,2712,74,2321,54,1650,34"/>
+<area shape="rect" id="Node000010" title=" " alt="" coords="20,536,92,564"/>
+<area shape="poly" id="edge9_Node000009_Node000010" title=" " alt="" coords="853,136,815,145,728,153,612,154,480,154,343,157,214,166,157,175,107,187,66,204,35,224,15,249,8,279,8,366,12,409,21,451,46,521,41,522,16,453,7,410,3,366,3,279,10,246,31,220,63,199,106,182,156,170,214,161,342,151,480,148,612,149,728,147,814,140,858,134"/>
+<area shape="rect" id="Node000011" href="$draw__functions_8hpp.html" title="Dependency&#45;free declarations of the pinned draw primitives (ADR&#45;0044)." alt="" coords="890,527,1049,572"/>
+<area shape="poly" id="edge10_Node000009_Node000011" title=" " alt="" coords="957,132,1139,192,1255,235,1371,283,1475,334,1519,359,1555,385,1582,410,1598,435,1601,459,1590,481,1563,495,1515,507,1376,526,1211,539,1065,547,1064,542,1211,534,1375,521,1514,502,1561,490,1586,477,1596,458,1593,436,1578,413,1552,389,1516,364,1473,338,1369,288,1253,240,1137,197,956,137"/>
+<area shape="rect" id="Node000012" title=" " alt="" coords="1349,536,1427,564"/>
+<area shape="poly" id="edge11_Node000009_Node000012" title=" " alt="" coords="973,132,1073,156,1183,188,1373,243,1412,258,1452,278,1494,305,1542,340,1582,372,1614,404,1624,422,1628,440,1625,460,1614,481,1598,499,1578,514,1533,535,1486,547,1442,551,1442,546,1485,541,1532,530,1575,510,1594,495,1610,478,1620,458,1623,441,1619,424,1609,408,1578,376,1538,344,1491,309,1449,283,1410,263,1371,248,1182,193,1071,161,973,137"/>
+<area shape="rect" id="Node000013" title=" " alt="" coords="869,191,931,218"/>
+<area shape="poly" id="edge12_Node000009_Node000013" title=" " alt="" coords="913,133,907,177,902,174,910,137"/>
+<area shape="rect" id="Node000014" href="$mpfr__complex_8hpp.html" title="The main multiprecision complex number type." alt="" coords="869,266,1067,294"/>
+<area shape="poly" id="edge13_Node000009_Node000014" title=" " alt="" coords="921,132,945,190,963,252,959,250,940,192,918,137"/>
+<area shape="rect" id="Node000024" href="$random_8hpp.html" title="stuff for generating random numbers" alt="" coords="455,191,609,218"/>
+<area shape="poly" id="edge31_Node000009_Node000024" title=" " alt="" coords="850,136,609,189,607,184,854,134"/>
+<area shape="poly" id="edge17_Node000014_Node000003" title=" " alt="" coords="866,294,770,315,668,345,619,365,572,390,495,437,493,432,569,385,617,361,666,339,769,310,871,293"/>
+<area shape="poly" id="edge14_Node000014_Node000015" title=" " alt="" coords="1054,292,1152,311,1256,339,1363,381,1456,428,1450,427,1360,386,1254,345,1151,317,1054,297"/>
+<area shape="poly" id="edge15_Node000014_Node000016" title=" " alt="" coords="1056,292,1131,310,1205,340,1265,379,1314,424,1309,423,1262,383,1203,344,1129,315,1056,297"/>
+<area shape="rect" id="Node000017" title=" " alt="" coords="1106,435,1248,479"/>
+<area shape="poly" id="edge16_Node000014_Node000017" title=" " alt="" coords="1050,292,1129,312,1160,325,1181,340,1190,359,1194,380,1190,421,1186,418,1189,380,1185,361,1177,344,1158,329,1127,317,1050,297"/>
+<area shape="rect" id="Node000018" title=" " alt="" coords="915,350,989,378"/>
+<area shape="poly" id="edge18_Node000014_Node000018" title=" " alt="" coords="967,293,959,337,955,334,964,296"/>
+<area shape="rect" id="Node000019" href="$mpfr__extensions_8hpp.html" title="Extensions to the Boost.Multiprecision library." alt="" coords="679,350,892,378"/>
+<area shape="poly" id="edge19_Node000014_Node000019" title=" " alt="" coords="941,294,829,346,827,341,936,295"/>
+<area shape="rect" id="Node000023" title=" " alt="" coords="1012,342,1166,387"/>
+<area shape="poly" id="edge30_Node000014_Node000023" title=" " alt="" coords="988,292,1047,333,1042,333,987,297"/>
+<area shape="poly" id="edge25_Node000019_Node000003" title=" " alt="" coords="710,379,613,404,505,437,500,439,499,434,503,432,612,399,715,378"/>
+<area shape="poly" id="edge22_Node000019_Node000015" title=" " alt="" coords="853,376,903,384,1047,399,1161,405,1276,412,1424,434,1419,435,1275,418,1161,410,1046,404,902,389,853,381"/>
+<area shape="poly" id="edge23_Node000019_Node000016" title=" " alt="" coords="856,376,903,384,1079,406,1158,415,1260,434,1255,434,1157,420,1078,411,902,389,856,381"/>
+<area shape="poly" id="edge24_Node000019_Node000017" title=" " alt="" coords="847,376,1094,434,1088,434,846,381"/>
+<area shape="rect" id="Node000020" title=" " alt="" coords="679,435,833,479"/>
+<area shape="poly" id="edge20_Node000019_Node000020" title=" " alt="" coords="783,377,770,422,766,418,779,380"/>
+<area shape="rect" id="Node000021" title=" " alt="" coords="516,443,655,471"/>
+<area shape="poly" id="edge21_Node000019_Node000021" title=" " alt="" coords="759,378,629,439,627,434,754,380"/>
+<area shape="rect" id="Node000022" href="$double__extensions_8hpp.html" title="Provides bertini extensions to the double and complex&lt;double&gt; types." alt="" coords="857,443,1082,471"/>
+<area shape="poly" id="edge26_Node000019_Node000022" title=" " alt="" coords="813,376,931,436,926,436,812,381"/>
+<area shape="poly" id="edge27_Node000022_Node000010" title=" " alt="" coords="901,471,846,482,631,506,420,525,108,548,107,543,419,520,630,501,845,477,895,472"/>
+<area shape="poly" id="edge28_Node000022_Node000011" title=" " alt="" coords="971,469,971,513,967,510,967,473"/>
+<area shape="poly" id="edge29_Node000022_Node000012" title=" " alt="" coords="1031,469,1337,537,1332,537,1030,474"/>
+<area shape="poly" id="edge43_Node000024_Node000010" title=" " alt="" coords="452,206,395,212,326,222,256,240,191,269,159,292,132,321,111,355,94,391,72,463,61,521,56,519,67,462,89,389,106,352,128,318,155,288,188,264,255,235,325,217,394,207,457,204"/>
+<area shape="poly" id="edge32_Node000024_Node000014" title=" " alt="" coords="609,216,877,262,872,264,609,221"/>
+<area shape="poly" id="edge42_Node000024_Node000021" title=" " alt="" coords="537,217,582,429,577,427,533,221"/>
+<area shape="rect" id="Node000025" href="$derive_8hpp.html" title="Seed&#45;rooted, fully&#45;specified random derivation (b2rand/1; ADR&#45;0044; the structured&#45;output&#45;directory a..." alt="" coords="326,266,522,294"/>
+<area shape="poly" id="edge33_Node000024_Node000025" title=" " alt="" coords="510,220,457,260,454,255,515,217"/>
+<area shape="rect" id="Node000026" title=" " alt="" coords="94,443,159,471"/>
+<area shape="poly" id="edge44_Node000024_Node000026" title=" " alt="" coords="453,210,379,222,294,245,252,262,212,284,177,311,146,344,135,363,129,385,126,428,121,427,124,384,130,361,142,340,173,307,209,279,250,257,292,240,378,217,457,208"/>
+<area shape="poly" id="edge41_Node000025_Node000011" title=" " alt="" coords="423,293,413,392,413,444,417,464,423,477,444,489,484,499,603,518,745,531,877,543,872,543,745,537,603,523,483,505,442,494,419,481,412,466,408,445,407,391,420,297"/>
+<area shape="poly" id="edge40_Node000025_Node000019" title=" " alt="" coords="482,292,715,346,710,348,482,297"/>
+<area shape="poly" id="edge34_Node000025_Node000026" title=" " alt="" coords="323,288,289,297,252,308,217,323,184,344,167,363,153,384,136,429,131,427,148,382,163,359,181,340,214,318,250,303,288,292,328,286"/>
+<area shape="rect" id="Node000027" href="$sha256_8hpp.html" title="Self&#45;contained SHA&#45;256 (FIPS 180&#45;4) and the Digest256 value type." alt="" coords="195,350,386,378"/>
+<area shape="poly" id="edge35_Node000025_Node000027" title=" " alt="" coords="400,296,327,344,324,340,405,293"/>
+<area shape="poly" id="edge38_Node000027_Node000003" title=" " alt="" coords="316,376,427,435,422,436,315,381"/>
+<area shape="poly" id="edge37_Node000027_Node000026" title=" " alt="" coords="265,381,165,438,162,433,269,377"/>
+<area shape="rect" id="Node000028" title=" " alt="" coords="183,443,238,471"/>
+<area shape="poly" id="edge36_Node000027_Node000028" title=" " alt="" coords="281,377,234,433,230,430,277,380"/>
+<area shape="rect" id="Node000029" title=" " alt="" coords="262,443,359,471"/>
+<area shape="poly" id="edge39_Node000027_Node000029" title=" " alt="" coords="295,376,307,429,302,427,292,381"/>
+<area shape="rect" id="Node000031" href="$visitor_8hpp.html" title="Contains the visitor base types." alt="" coords="1605,191,1790,218"/>
+<area shape="poly" id="edge46_Node000030_Node000031" title=" " alt="" coords="1700,133,1700,177,1696,174,1697,137"/>
+<area shape="rect" id="Node000032" href="$detail_2events_8hpp.html" title="Contains the detail/events base types." alt="" coords="1814,191,2002,218"/>
+<area shape="poly" id="edge48_Node000030_Node000032" title=" " alt="" coords="1733,132,1863,185,1858,184,1732,137"/>
+<area shape="poly" id="edge47_Node000031_Node000008" title=" " alt="" coords="1705,217,1723,253,1718,251,1703,221"/>
+<area shape="poly" id="edge49_Node000032_Node000008" title=" " alt="" coords="1879,218,1779,263,1777,258,1874,220"/>
+<area shape="rect" id="Node000035" title=" " alt="" coords="2073,191,2114,218"/>
+<area shape="poly" id="edge52_Node000034_Node000035" title=" " alt="" coords="2095,141,2095,177,2091,173,2092,145"/>
+</map>

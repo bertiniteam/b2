@@ -1,0 +1,19 @@
+bertini.tracking.observers
+==========================
+.. automodule:: bertini.tracking.observers
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+
+
+.. rubric:: Submodules
+
+.. autosummary::
+   :toctree:
+   :recursive:
+
+   amp
+   double
+   multiple
+

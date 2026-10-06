@@ -1,0 +1,21 @@
+<map id="core/include/bertini2/detail/observer.hpp" name="core/include/bertini2/detail/observer.hpp">
+<area shape="rect" id="Node000001" title="Contains the observer base types." alt="" coords="299,5,454,50"/>
+<area shape="rect" id="Node000002" title=" " alt="" coords="5,106,60,134"/>
+<area shape="poly" id="edge1_Node000001_Node000002" title=" " alt="" coords="297,42,191,66,73,101,70,102,67,97,72,95,190,61,301,39"/>
+<area shape="rect" id="Node000003" title=" " alt="" coords="84,106,170,134"/>
+<area shape="poly" id="edge2_Node000001_Node000003" title=" " alt="" coords="313,52,184,101,177,103,175,98,182,95,317,49"/>
+<area shape="rect" id="Node000004" title=" " alt="" coords="195,106,254,134"/>
+<area shape="poly" id="edge3_Node000001_Node000004" title=" " alt="" coords="342,49,261,100,258,96,338,52"/>
+<area shape="rect" id="Node000005" title=" " alt="" coords="279,106,341,134"/>
+<area shape="poly" id="edge4_Node000001_Node000005" title=" " alt="" coords="363,49,330,96,327,92,359,52"/>
+<area shape="rect" id="Node000006" title=" " alt="" coords="365,98,524,143"/>
+<area shape="poly" id="edge5_Node000001_Node000006" title=" " alt="" coords="394,48,422,86,417,85,392,53"/>
+<area shape="rect" id="Node000007" title=" " alt="" coords="548,98,717,143"/>
+<area shape="poly" id="edge6_Node000001_Node000007" title=" " alt="" coords="438,48,560,92,554,93,438,53"/>
+<area shape="rect" id="Node000008" title=" " alt="" coords="740,98,893,143"/>
+<area shape="poly" id="edge7_Node000001_Node000008" title=" " alt="" coords="454,41,727,96,722,98,454,46"/>
+<area shape="rect" id="Node000009" href="$detail_2events_8hpp.html" title="Contains the detail/events base types." alt="" coords="917,106,1105,134"/>
+<area shape="poly" id="edge8_Node000001_Node000009" title=" " alt="" coords="454,35,659,60,905,95,936,103,930,103,904,101,658,65,454,40"/>
+<area shape="rect" id="Node000010" title=" " alt="" coords="930,191,1092,218"/>
+<area shape="poly" id="edge9_Node000009_Node000010" title=" " alt="" coords="1013,133,1013,177,1009,173,1009,137"/>
+</map>
