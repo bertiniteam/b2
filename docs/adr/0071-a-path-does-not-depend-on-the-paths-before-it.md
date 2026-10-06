@@ -45,6 +45,17 @@ solver and leave it in place for anyone reusing a tracker or an endgame by hand.
 - A random direction that should be fresh per path is drawn at the start of the run, after the
   per-path reseed, never lazily mid-path.
 - Containers kept per lane are cleared in every lane when a run begins.
+- **A record has a stated span, and it starts afresh exactly where that span starts.**  The
+  tracker's precision recorders, `FirstPrecisionRecorder` and `MinMaxPrecisionRecorder`, record
+  one track.  They start afresh at the track's `Initializing` event, before the start point is
+  refined, and they never unsubscribe, so a recorder attached once reports every track, failed
+  ones included.  Before, they started afresh at `TrackingStarted`, which a track that fails to
+  initialize never sends and which comes after the refinement; and `FirstPrecisionRecorder`
+  unsubscribed at its first increase.  The solver's per-path metadata (`precision_changed`,
+  `time_of_first_prec_increase`, `max_precision_used`) comes from `PathPrecisionRecorder`, which
+  spans every track of a path and starts afresh only when the solver resets it at the path's
+  start.  Before, the solver read a per-track recorder, so a precision raised in an earlier
+  endgame sub-track and lowered before the last went unreported.
 
 ## Consequences
 
@@ -56,6 +67,15 @@ solver and leave it in place for anyone reusing a tracker or an endgame by hand.
   happens to be first.
 - **Do not replace this with a fresh tracker per path.**  That would pass the solver's tests and
   leave the trap for hand users.
+- **Do not let an observer unsubscribe to save work, or start afresh on `TrackingStarted`.**  The
+  first leaves a recorder reporting one track forever after; the second misses the start-point
+  refinement and leaves a failed track's record stale.
+- **Do not read a per-track recorder for a per-path quantity.**  The endgame tracks a path in many
+  calls.
+- Pinned, for the recorders, by `a_precision_recorder_attached_once_reports_every_track` and
+  `a_track_that_fails_to_initialize_is_recorded_as_itself` (`amp_tracker_test.cpp`), and by
+  `max_precision_used_covers_every_track_of_a_path_*` (`threaded_solve.cpp`); each fails against
+  the old behavior.
 - Results changed from 4.0.0.dev1 in the last bits and, occasionally, in step counts.  The old
   results depended on path order, so no earlier result is the reference.
 - Pinned by tests at every level, each of which fails against the code without its fix:

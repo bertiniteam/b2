@@ -79,6 +79,29 @@ def test_threaded_solve_is_bit_identical_to_serial(endgame, monkeypatch):
                         index, field, num_threads, a[1][field], b[1][field])
 
 
+@pytest.mark.parametrize("endgame", ["powerseries", "cauchy"])
+def test_max_precision_used_covers_every_track_of_a_path(endgame):
+    """A path's max_precision_used is at least every precision its tracker stepped at, across the
+    track to the endgame boundary and every endgame sub-track.  (On this solve it once reported 30
+    for a path whose endgame had run at 40: the record started afresh with every sub-track.)"""
+    pb.random.set_random_seed(20261005)
+    solver = ZeroDimSolver(_cyclic(5), endgame=endgame)
+    collector = pb.nag_algorithm.SolutionPathCollector()
+    solver.add_observer(collector)
+    solver.solve()
+
+    metadata = solver.solution_metadata()
+    assert len(collector.series) == len(metadata) == 120
+    for path in collector.series:
+        stepped = path.diagnostics()[:, 2]           # the precision column, at every accepted step
+        if len(stepped) == 0:
+            continue
+        reported = int(metadata[path.path_index].max_precision_used)
+        assert reported >= int(stepped.max()), \
+            'path {}: max_precision_used {} below the {} it stepped at'.format(
+                path.path_index, reported, int(stepped.max()))
+
+
 def _double_root_tracker():
     """x^2 - t, y - x: toward a double root at t = 0, tracked at tolerance 1e-12 so that a track
     to t = 1e-20 ends in multiple precision.  The seed is set before building, so every tracker

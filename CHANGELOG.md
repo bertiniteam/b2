@@ -503,6 +503,15 @@ the identity of the algorithm that answered it (#420).
   wall-clock time.  A tracker or endgame driven by hand gives a track the same result as a
   fresh one would.  Results differ from 4.0.0.dev1 in the last bits and, occasionally, in step
   counts.
+- **`max_precision_used` is the highest precision a path used, over all of its tracking**
+  (ADR-0071).  The endgame tracks a path in many calls, and the solver's record started afresh
+  with every one, so a precision raised in an earlier endgame sub-track and lowered before the
+  last went unreported: seeded cyclic-5 had paths that reported 30 digits after tracking at 40.
+  The tracker's `FirstPrecisionRecorder` and `MinMaxPrecisionRecorder` now record each track
+  from its very start, the start-point refinement included, and keep recording every track
+  once attached.  `FirstPrecisionRecorder` used to unsubscribe at its first increase and
+  report that track ever after, and a track whose initialization failed was reported with the
+  previous track's values.  A new `PathPrecisionRecorder` records a whole path.
 - **A copied or unpickled system combines with its original** (ADR-0068).  `copy.deepcopy`,
   `copy.copy` and `pickle` go through an archive, and loading from one built variables
   outside the variable factory: a copy was over fresh variables with the same names, and

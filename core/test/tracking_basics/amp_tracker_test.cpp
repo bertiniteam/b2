@@ -28,6 +28,7 @@
 #include "bertini2/random.hpp"
 #include "bertini2/system/start_systems.hpp"
 #include "bertini2/trackers/tracker.hpp"
+#include "bertini2/trackers/observers.hpp"
 #include "bertini2/records/solver_recording.hpp"   // CanonicalName, for readable test messages
 
 
@@ -1339,6 +1340,123 @@ BOOST_AUTO_TEST_CASE(the_step_size_is_at_the_working_precision_after_a_track)
             }
         }
     }
+}
+
+
+namespace {
+
+// x^2 + (1-t)x, y^2 + (1-t)y.  At t = 1 the start point (0, 0) is a double root: its refinement
+// raises the precision until it gives up with SingularStartPoint, so the track fails during its
+// initialization.  At t = 1/2 the point (-1/2, -1/2) is a regular root, tracked to t = 1/4.
+struct SingularAndRegularStarts
+{
+    Var x = Variable::Make("x");
+    Var y = Variable::Make("y");
+    Var t = Variable::Make("t");
+    System sys;
+
+    SingularAndRegularStarts()
+    {
+        sys.AddFunction(pow(x, 2) + (1 - t) * x);
+        sys.AddFunction(pow(y, 2) + (1 - t) * y);
+        sys.AddPathVariable(t);
+        sys.AddVariableGroup(VariableGroup{x, y});
+    }
+
+    bertini::tracking::AMPTracker MakeTracker() const
+    {
+        using namespace bertini::tracking;
+        AMPTracker tracker(sys);
+        tracker.Setup(Predictor::RKF45, 1e-5, 1e5, SteppingConfig(), NewtonConfig());
+        tracker.PrecisionSetup(AMPConfigFrom(sys));
+        return tracker;
+    }
+
+    static bertini::SuccessCode TrackSingular(bertini::tracking::AMPTracker const& tracker)
+    {
+        DefaultPrecision(30);
+        Vec<mpfr> start(2);
+        start << mpfr(0), mpfr(0);
+        Vec<mpfr> end;
+        return tracker.TrackPath(end, mpfr(1), mpfr(0), start);
+    }
+
+    static bertini::SuccessCode TrackRegular(bertini::tracking::AMPTracker const& tracker)
+    {
+        DefaultPrecision(16);
+        Vec<mpfr> start(2);
+        start << mpfr("-0.5"), mpfr("-0.5");
+        Vec<mpfr> end;
+        return tracker.TrackPath(end, mpfr("0.5"), mpfr("0.25"), start);
+    }
+};
+
+} // namespace
+
+
+/**
+A precision recorder attached once reports every track.
+
+Each recorder starts afresh when a track begins and stays attached, so after a track whose
+start-point refinement raised the precision, the next track, which raises nothing, says so.
+*/
+BOOST_AUTO_TEST_CASE(a_precision_recorder_attached_once_reports_every_track)
+{
+    using namespace bertini::tracking;
+    SingularAndRegularStarts h;
+    auto tracker = h.MakeTracker();
+    FirstPrecisionRecorder<AMPTracker> first;
+    MinMaxPrecisionRecorder<AMPTracker> min_max;
+    tracker.AddObserver(first);
+    tracker.AddObserver(min_max);
+
+    BOOST_REQUIRE(SingularAndRegularStarts::TrackSingular(tracker) == bertini::SuccessCode::SingularStartPoint);
+    BOOST_CHECK(first.DidPrecisionIncrease());
+    BOOST_CHECK_EQUAL(first.StartPrecision(), 30u);
+    BOOST_CHECK_EQUAL(min_max.MinPrecision(), 30u);
+    BOOST_CHECK_GT(min_max.MaxPrecision(), 30u);
+
+    BOOST_REQUIRE(SingularAndRegularStarts::TrackRegular(tracker) == bertini::SuccessCode::Success);
+    BOOST_CHECK(!first.DidPrecisionIncrease());
+    BOOST_CHECK_EQUAL(first.StartPrecision(), 16u);
+    BOOST_CHECK_EQUAL(min_max.MinPrecision(), 16u);
+    BOOST_CHECK_EQUAL(min_max.MaxPrecision(), 16u);
+}
+
+
+/**
+A track whose initialization fails is recorded as itself, not as the track before it.
+
+The start-point refinement comes before TrackingStarted, and a failed refinement ends the track
+before TrackingStarted is ever sent.  The record starts at the track's Initializing event, so a
+recorder that saw an earlier track reports the failed one exactly as a fresh recorder does.
+*/
+BOOST_AUTO_TEST_CASE(a_track_that_fails_to_initialize_is_recorded_as_itself)
+{
+    using namespace bertini::tracking;
+    SingularAndRegularStarts h;
+
+    auto used = h.MakeTracker();
+    FirstPrecisionRecorder<AMPTracker> used_first;
+    MinMaxPrecisionRecorder<AMPTracker> used_min_max;
+    used.AddObserver(used_first);
+    used.AddObserver(used_min_max);
+    BOOST_REQUIRE(SingularAndRegularStarts::TrackRegular(used) == bertini::SuccessCode::Success);
+    BOOST_REQUIRE(SingularAndRegularStarts::TrackSingular(used) == bertini::SuccessCode::SingularStartPoint);
+
+    auto fresh = h.MakeTracker();
+    FirstPrecisionRecorder<AMPTracker> fresh_first;
+    MinMaxPrecisionRecorder<AMPTracker> fresh_min_max;
+    fresh.AddObserver(fresh_first);
+    fresh.AddObserver(fresh_min_max);
+    BOOST_REQUIRE(SingularAndRegularStarts::TrackSingular(fresh) == bertini::SuccessCode::SingularStartPoint);
+
+    BOOST_CHECK_EQUAL(used_first.DidPrecisionIncrease(), fresh_first.DidPrecisionIncrease());
+    BOOST_CHECK_EQUAL(used_first.StartPrecision(), fresh_first.StartPrecision());
+    BOOST_CHECK_EQUAL(used_first.NextPrecision(), fresh_first.NextPrecision());
+    BOOST_CHECK(used_first.TimeOfIncrease() == fresh_first.TimeOfIncrease());
+    BOOST_CHECK_EQUAL(used_min_max.MinPrecision(), fresh_min_max.MinPrecision());
+    BOOST_CHECK_EQUAL(used_min_max.MaxPrecision(), fresh_min_max.MaxPrecision());
 }
 
 

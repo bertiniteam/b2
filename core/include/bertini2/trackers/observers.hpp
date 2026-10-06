@@ -40,37 +40,69 @@ namespace bertini {
     namespace tracking{
 
 
-        /// \brief Observer that records the starting precision and the first precision increase during a track.
+        /**
+        \brief Observer that records the starting precision and the first precision increase of
+        each track: each call to TrackPath, from its start.
+
+        A track begins with the tracker's Initializing event, which comes before the start point
+        is refined, so an increase that the refinement needs counts as the track's first.  The
+        record starts afresh with each track, and the observer stays attached: attach it once and
+        it reports every track, including one whose initialization fails.
+
+        For a whole path, which the endgame tracks in many calls, see PathPrecisionRecorder.
+        */
+        // Reset on Initializing, never on TrackingStarted, and never unsubscribe: a reset at
+        // TrackingStarted comes after the refinement and misses its increases, and an observer
+        // that unsubscribes reports one track forever after (#378).
         template<class TrackerT>
         class FirstPrecisionRecorder
             : public TypedObserver< FirstPrecisionRecorder<TrackerT>, TrackerT,
+                    Initializing<typename TrackerTraits<TrackerT>::EventEmitterType,
+                                 typename TrackerTraits<TrackerT>::BaseComplexT>,
                     TrackingStarted<typename TrackerTraits<TrackerT>::EventEmitterType>,
                     PrecisionChanged<typename TrackerTraits<TrackerT>::EventEmitterType> >
         { BOOST_TYPE_INDEX_REGISTER_CLASS
 
             using EmitterT = typename TrackerTraits<TrackerT>::EventEmitterType;
+            using BCT = typename TrackerTraits<TrackerT>::BaseComplexT;
 
         public:
 
-            /// \brief On tracking start, record the starting precision.
-            ObserveResult OnEvent(TrackingStarted<EmitterT> const& e)
+            /// \brief A track begins: the record starts afresh.
+            ObserveResult OnEvent(Initializing<EmitterT, BCT> const&)
             {
+                have_start_ = false;
                 precision_increased_ = false;
-                starting_precision_ = e.Get().CurrentPrecision();
+                starting_precision_ = 0;
+                next_precision_ = 0;
+                time_of_first_increase_ = typename TrackerTraits<TrackerT>::BaseComplexT{};
                 return ObserveResult::KeepObserving;
             }
 
-            /// \brief On a precision increase, record it and unsubscribe (only the first increase is wanted).
+            /// \brief Tracking starts after the start point is refined: the start precision, unless a refinement change already gave it.
+            ObserveResult OnEvent(TrackingStarted<EmitterT> const& e)
+            {
+                if (!have_start_)
+                {
+                    starting_precision_ = e.Get().CurrentPrecision();
+                    have_start_ = true;
+                }
+                return ObserveResult::KeepObserving;
+            }
+
+            /// \brief A change of precision: the first one gives the start precision, and the first increase is recorded.
             ObserveResult OnEvent(PrecisionChanged<EmitterT> const& e)
             {
-                auto next = e.Next();
-                if (next > e.Previous())
+                if (!have_start_)
+                {
+                    starting_precision_ = e.Previous();
+                    have_start_ = true;
+                }
+                if (!precision_increased_ && e.Next() > e.Previous())
                 {
                     precision_increased_ = true;
-                    next_precision_ = next;
+                    next_precision_ = e.Next();
                     time_of_first_increase_ = e.Get().CurrentTime();
-                    // done: ask to be dropped instead of mutating the list mid-dispatch.
-                    return ObserveResult::Unsubscribe;
                 }
                 return ObserveResult::KeepObserving;
             }
@@ -103,41 +135,65 @@ namespace bertini {
 
         private:
 
-            unsigned starting_precision_;
-            unsigned next_precision_;
-            bool precision_increased_;
-            typename TrackerTraits<TrackerT>::BaseComplexT time_of_first_increase_;
+            bool have_start_ = false;          ///< Whether this track's start precision is known yet.
+            unsigned starting_precision_ = 0;  ///< The precision this track started at.
+            unsigned next_precision_ = 0;      ///< The precision after this track's first increase.
+            bool precision_increased_ = false; ///< Whether precision increased during this track.
+            typename TrackerTraits<TrackerT>::BaseComplexT time_of_first_increase_{};  ///< The time of this track's first increase.
         };
 
 
-        /// \brief Observer that records the minimum and maximum precision reached during a track.
+        /**
+        \brief Observer that records the minimum and maximum precision of each track: each call
+        to TrackPath, from its start.
+
+        A track begins with the tracker's Initializing event, before the start point is refined,
+        so the precision the track started at, and any the refinement moved through, count.
+
+        For a whole path, which the endgame tracks in many calls, see PathPrecisionRecorder.
+        */
         template<class TrackerT>
         class MinMaxPrecisionRecorder
             : public TypedObserver< MinMaxPrecisionRecorder<TrackerT>, TrackerT,
+                    Initializing<typename TrackerTraits<TrackerT>::EventEmitterType,
+                                 typename TrackerTraits<TrackerT>::BaseComplexT>,
                     TrackingStarted<typename TrackerTraits<TrackerT>::EventEmitterType>,
                     PrecisionChanged<typename TrackerTraits<TrackerT>::EventEmitterType> >
         { BOOST_TYPE_INDEX_REGISTER_CLASS
 
             using EmitterT = typename TrackerTraits<TrackerT>::EventEmitterType;
+            using BCT = typename TrackerTraits<TrackerT>::BaseComplexT;
+
+            void Include(unsigned p)
+            {
+                if (p < min_precision_)
+                    min_precision_ = p;
+                if (p > max_precision_)
+                    max_precision_ = p;
+            }
 
         public:
 
-            /// \brief On tracking start, seed the min and max with the starting precision.
-            ObserveResult OnEvent(TrackingStarted<EmitterT> const& e)
+            /// \brief A track begins: the record starts afresh.
+            ObserveResult OnEvent(Initializing<EmitterT, BCT> const&)
             {
-                min_precision_ = e.Get().CurrentPrecision();
-                max_precision_ = e.Get().CurrentPrecision();
+                min_precision_ = std::numeric_limits<unsigned>::max();
+                max_precision_ = 0;
                 return ObserveResult::KeepObserving;
             }
 
-            /// \brief On a precision change, update the running min and max.
+            /// \brief Tracking starts: include the precision it starts at.
+            ObserveResult OnEvent(TrackingStarted<EmitterT> const& e)
+            {
+                Include(e.Get().CurrentPrecision());
+                return ObserveResult::KeepObserving;
+            }
+
+            /// \brief A change of precision: include both ends of it.
             ObserveResult OnEvent(PrecisionChanged<EmitterT> const& e)
             {
-                auto next_precision = e.Next();
-                if (next_precision < min_precision_)
-                    min_precision_ = next_precision;
-                if (next_precision > max_precision_)
-                    max_precision_ = next_precision;
+                Include(e.Previous());
+                Include(e.Next());
                 return ObserveResult::KeepObserving;
             }
 
@@ -167,6 +223,87 @@ namespace bertini {
 
             unsigned min_precision_ = std::numeric_limits<unsigned>::max();
             unsigned max_precision_ = 0;
+        };
+
+
+        /**
+        \brief Observer that records the precision a whole path used, across every call to
+        TrackPath that tracks it: the track to the endgame boundary and every endgame sub-track.
+
+        Unlike the per-track recorders, it never starts afresh on its own: its owner calls Reset
+        when a path begins, and reads it when the path ends.  The zero-dim solver uses it for each
+        path's precision_changed, time_of_first_prec_increase and max_precision_used.
+        */
+        // A per-track recorder starts afresh at every endgame sub-track, so a precision raised in
+        // an earlier sub-track and lowered before the last would go unreported (#378).
+        template<class TrackerT>
+        class PathPrecisionRecorder
+            : public TypedObserver< PathPrecisionRecorder<TrackerT>, TrackerT,
+                    TrackingStarted<typename TrackerTraits<TrackerT>::EventEmitterType>,
+                    PrecisionChanged<typename TrackerTraits<TrackerT>::EventEmitterType> >
+        { BOOST_TYPE_INDEX_REGISTER_CLASS
+
+            using EmitterT = typename TrackerTraits<TrackerT>::EventEmitterType;
+
+            void Include(unsigned p)
+            {
+                if (p < min_precision_)
+                    min_precision_ = p;
+                if (p > max_precision_)
+                    max_precision_ = p;
+            }
+
+        public:
+
+            /// \brief Start the record of a new path.
+            void Reset()
+            {
+                precision_increased_ = false;
+                time_of_first_increase_ = typename TrackerTraits<TrackerT>::BaseComplexT{};
+                min_precision_ = std::numeric_limits<unsigned>::max();
+                max_precision_ = 0;
+            }
+
+            /// \brief A track of the path starts: include the precision it starts at.
+            ObserveResult OnEvent(TrackingStarted<EmitterT> const& e)
+            {
+                Include(e.Get().CurrentPrecision());
+                return ObserveResult::KeepObserving;
+            }
+
+            /// \brief A change of precision: include both ends, and record the path's first increase.
+            ObserveResult OnEvent(PrecisionChanged<EmitterT> const& e)
+            {
+                Include(e.Previous());
+                Include(e.Next());
+                if (!precision_increased_ && e.Next() > e.Previous())
+                {
+                    precision_increased_ = true;
+                    time_of_first_increase_ = e.Get().CurrentTime();
+                }
+                return ObserveResult::KeepObserving;
+            }
+
+            /// \brief Whether precision increased anywhere on the path.
+            bool DidPrecisionIncrease() const { return precision_increased_; }
+
+            /// \brief The time of the path's first precision increase.
+            typename TrackerTraits<TrackerT>::BaseComplexT TimeOfIncrease() const { return time_of_first_increase_; }
+
+            /// \brief The lowest precision the path used; the maximum unsigned value if it saw none.
+            unsigned MinPrecision() const { return min_precision_; }
+
+            /// \brief The highest precision the path used; 0 if it saw none.
+            unsigned MaxPrecision() const { return max_precision_; }
+
+            virtual ~PathPrecisionRecorder() = default;
+
+        private:
+
+            bool precision_increased_ = false;  ///< Whether precision increased anywhere on the path.
+            typename TrackerTraits<TrackerT>::BaseComplexT time_of_first_increase_{};  ///< The time of the path's first increase.
+            unsigned min_precision_ = std::numeric_limits<unsigned>::max();  ///< The lowest precision seen.
+            unsigned max_precision_ = 0;  ///< The highest precision seen.
         };
 
 

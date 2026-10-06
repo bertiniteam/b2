@@ -28,8 +28,10 @@ as a serial one -- threading is a performance feature, never a correctness chang
 on every platform (no MPI required), which is what gives us cross-OS threading coverage.
 */
 
+#include <algorithm>
 #include <atomic>
 #include <cstdlib>
+#include <map>
 #include <memory>
 #include <numeric>
 #include <set>
@@ -521,6 +523,100 @@ BOOST_AUTO_TEST_CASE(threaded_solve_is_bit_identical_to_serial_cauchy)
 {
     using TrackerA = bertini::tracking::AMPTracker;
     CheckBitIdenticalAcrossThreadCounts<bertini::endgame::EndgameSelector<TrackerA>::Cauchy>();
+}
+
+
+namespace {
+
+// The highest precision the watched tracker reports, in any event: the start of a track, and
+// both ends of a change of precision.
+struct TrackerPrecisionWatch : public bertini::Observer<bertini::tracking::AMPTracker>
+{
+    unsigned highest = 0;
+
+    bertini::ObserveResult Observe(bertini::AnyEvent const& e) override
+    {
+        using namespace bertini::tracking;
+        if (auto s = dynamic_cast<TrackingStarted<AMPTracker> const*>(&e))
+            highest = std::max(highest, s->Get().CurrentPrecision());
+        else if (auto c = dynamic_cast<PrecisionChanged<AMPTracker> const*>(&e))
+            highest = std::max({highest, c->Previous(), c->Next()});
+        return bertini::ObserveResult::KeepObserving;
+    }
+};
+
+// Starts the watch afresh at each path, and keeps its reading when the path completes.
+struct PerPathPrecision : public bertini::Observer<bertini::algorithm::AnyZeroDim>
+{
+    TrackerPrecisionWatch& watch;
+    std::map<std::size_t, unsigned> highest_by_path;
+
+    explicit PerPathPrecision(TrackerPrecisionWatch& w) : watch(w) {}
+
+    bertini::ObserveResult Observe(bertini::AnyEvent const& e) override
+    {
+        using namespace bertini::algorithm;
+        if (dynamic_cast<PathStarted<AnyZeroDim> const*>(&e))
+            watch.highest = 0;
+        else if (auto c = dynamic_cast<PathComplete<AnyZeroDim> const*>(&e))
+            highest_by_path[c->PathIndex()] = watch.highest;
+        return bertini::ObserveResult::KeepObserving;
+    }
+};
+
+template<typename EndgameT>
+void CheckMaxPrecisionUsedCoversEveryTrack()
+{
+    using namespace bertini;
+    // serial, so every path runs on the solver's own tracker, where the watch is attached
+    thread_pool::ScopedEnv serial("BERTINI_NUM_THREADS", "1");
+
+    SetGlobalSeed(20261005);
+    auto sys = Cyclic5();
+    algorithm::ZeroDimSolver<tracking::AMPTracker, EndgameT, System> zd(sys);
+    zd.DefaultSetup();
+
+    TrackerPrecisionWatch watch;
+    PerPathPrecision per_path(watch);
+    zd.GetTracker().AddObserver(watch);
+    zd.AddObserver(per_path);
+    zd.Solve();
+
+    auto const& md = zd.SolutionMetadata();
+    BOOST_REQUIRE_EQUAL(per_path.highest_by_path.size(), md.size());
+    bool some_path_raised_precision = false;
+    for (std::size_t i = 0; i < md.size(); ++i)
+    {
+        BOOST_TEST_CONTEXT("path " << i)
+        {
+            BOOST_CHECK_EQUAL(md[i].max_precision_used, per_path.highest_by_path.at(i));
+            some_path_raised_precision = some_path_raised_precision || md[i].max_precision_used > 16;
+        }
+    }
+    BOOST_CHECK(some_path_raised_precision);   // the premise: the check is not about doubles alone
+}
+
+} // namespace
+
+
+/**
+A path's max_precision_used is the highest precision any of its tracks used (#378 follow-up).
+
+The endgame tracks a path in many calls to TrackPath.  The solver's record of a path's precision
+used to start afresh with every call, so a precision raised in an earlier endgame sub-track and
+lowered before the last went unreported.  Checked against every precision the tracker reports
+while tracking each path, on a serial solve so that the solver's own tracker runs every path.
+*/
+BOOST_AUTO_TEST_CASE(max_precision_used_covers_every_track_of_a_path_power_series)
+{
+    using TrackerA = bertini::tracking::AMPTracker;
+    CheckMaxPrecisionUsedCoversEveryTrack<bertini::endgame::EndgameSelector<TrackerA>::PSEG>();
+}
+
+BOOST_AUTO_TEST_CASE(max_precision_used_covers_every_track_of_a_path_cauchy)
+{
+    using TrackerA = bertini::tracking::AMPTracker;
+    CheckMaxPrecisionUsedCoversEveryTrack<bertini::endgame::EndgameSelector<TrackerA>::Cauchy>();
 }
 
 BOOST_AUTO_TEST_SUITE_END()
