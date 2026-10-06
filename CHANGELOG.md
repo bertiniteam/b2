@@ -67,13 +67,14 @@ _______________________________________________________________________________
 
 _______________________________________________________________________________
 
-## [4.0.0] - unreleased
+## [4.0.0] - 2026-10-06
 
 The release where a solve tells you what it is doing.  Multiprecision numbers go straight onto a
 matplotlib axis, every object describes itself when printed instead of giving you its address, and
 a long solve reports how far it has got.  Underneath that sits a large correctness pass --
 precision, endpoint classification, the classic-format round trip, path crossings, start points --
-and Intel macOS wheels are built and tested again.
+and Intel macOS wheels are built and tested again.  A seeded solve now gives the same bits however
+it runs: serially, on any number of threads, or across MPI ranks.
 
 **A major version because it breaks source compatibility.**  A `System` no longer carries a
 precision, because evaluation happens at the precision of the point it is handed.
@@ -85,8 +86,11 @@ and the gamma actually used.  `Homogenize()` throws where it used to half-succee
 **It also breaks quietly, which matters more**: code that still compiles can get different
 answers.  The default endgame is power series rather than Cauchy, `InEGOperatingZone` changed
 meaning, a system can now declare coordinates that the finiteness and realness tests must ignore,
-and `function(i)` addresses the patch rows on a patched system.  Read Changed and Fixed before
-upgrading a script whose answers you rely on.
+and `function(i)` addresses the patch rows on a patched system.  The thread count is
+`BERTINI_NUM_THREADS`, which defaults to every available CPU: `OMP_NUM_THREADS` no longer reaches
+b2, and MPI ranks no longer default to one thread.  `set_random_seed(0)` is now an ordinary,
+reproducible seed rather than a request for entropy.  Read Changed and Fixed before upgrading a
+script whose answers you rely on.
 
 **Records written by 3.x are not recalled.**  Both content encodings moved -- `b2sysenc/2` for
 systems, `b2cfgenc/4` for configs -- so a record written by an older version describes a different
