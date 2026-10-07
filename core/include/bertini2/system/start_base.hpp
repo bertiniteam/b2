@@ -32,6 +32,7 @@
 
 #include <functional>
 #include <memory>
+#include <string>
 
 
 namespace bertini
@@ -97,6 +98,20 @@ namespace bertini
             {
                 return GenerateStartPoint(T(),index);
             }
+
+            /**
+            \brief The identity of start points this system was GIVEN, as a digest; empty for a
+            start system whose points follow from its target system.
+
+            A solve's records ask names its target, homotopy, settings and seed.  Start points
+            derived from the target are determined by those; given start points are not, so a
+            start system that holds given points reports their identity here and the solve adds it
+            to its ask.  The same homotopy from different given points is then a different ask,
+            and the same points are still recalled.
+
+            \return A digest of the given start points, or the empty string.
+            */
+            virtual std::string GivenStartIdentity() const { return {}; }
 
             virtual ~StartSystem() = default;
 

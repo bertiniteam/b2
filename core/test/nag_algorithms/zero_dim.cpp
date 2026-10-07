@@ -1584,6 +1584,105 @@ BOOST_AUTO_TEST_CASE(a_recalled_path_remembers_that_its_crossing_was_never_resol
 }
 
 
+namespace {
+
+// One path of the parameter homotopy H(x,t) = x^2 - (9 - 5t) -- t = 1 roots +/-2, t = 0 roots
+// +/-3 -- from a GIVEN start point, recording into `dir`.
+struct GivenStartSolve
+{
+    using TrackerT = bertini::tracking::DoublePrecisionTracker;
+    using SolverT  = bertini::algorithm::HomotopySolver<TrackerT,
+                         bertini::endgame::EndgameSelector<TrackerT>::PSEG, bertini::System>;
+
+    bertini::System H, target;
+    bertini::SampCont<bertini::complex_mp> start_points;
+    std::unique_ptr<bertini::start_system::User> start;
+    std::unique_ptr<SolverT> solver;
+
+    GivenStartSolve(bertini::complex_mp const& from, std::filesystem::path const& dir)
+    {
+        using namespace bertini;
+        auto x = Variable::Make("x");
+        auto t = Variable::Make("t");
+        H.AddVariableGroup(VariableGroup{x});
+        H.AddFunction(x*x - (9 - 5*t));
+        H.AddPathVariable(t);
+        target.AddVariableGroup(VariableGroup{x});
+        target.AddFunction(x*x - 9);
+
+        Vec<complex_mp> p(1); p(0) = from;
+        start_points.push_back(p);
+        start  = std::make_unique<start_system::User>(target, start_points);
+        solver = std::make_unique<SolverT>(target, *start, H);
+        solver->DefaultSetup();
+        solver->RecordTo(std::make_shared<records::OutputDirectory>(dir));
+        solver->Solve();
+    }
+
+    bertini::complex_dbl Endpoint() const
+    {
+        return bertini::complex_dbl(solver->SolutionsUserCoords().at(0)(0));
+    }
+};
+
+} // namespace
+
+
+// The same homotopy tracked from DIFFERENT given start points is a different computation, so a
+// records directory holding the first must not answer the second with the first's endpoints.
+// Before the start system's own identity joined the ask, the second solve was the same ask and was
+// recalled: tracked from -2 it came back at +3.
+BOOST_AUTO_TEST_CASE(different_given_start_points_are_different_asks)
+{
+    auto const dir = FreshCrossingRecords("given_starts");
+    GivenStartSolve from_plus(bertini::complex_mp(2), dir);
+    GivenStartSolve from_minus(bertini::complex_mp(-2), dir);
+
+    BOOST_CHECK_NE(from_plus.solver->RecordsRunId(), from_minus.solver->RecordsRunId());
+    BOOST_CHECK_EQUAL(from_minus.solver->NumPathsRecalled(), 0u);
+    BOOST_CHECK_SMALL(std::abs(from_plus.Endpoint()  - bertini::complex_dbl( 3, 0)), 1e-8);
+    BOOST_CHECK_SMALL(std::abs(from_minus.Endpoint() - bertini::complex_dbl(-3, 0)), 1e-8);
+}
+
+
+// ... and the same given start points are still the same ask, answered from the record.
+BOOST_AUTO_TEST_CASE(the_same_given_start_points_are_still_recalled)
+{
+    auto const dir = FreshCrossingRecords("given_starts_again");
+    GivenStartSolve first(bertini::complex_mp(2), dir);
+    GivenStartSolve again(bertini::complex_mp(2), dir);
+
+    BOOST_CHECK_EQUAL(again.solver->RecordsRunId(), first.solver->RecordsRunId());
+    BOOST_CHECK_EQUAL(again.solver->NumPathsRecalled(), 1u);
+    BOOST_CHECK_SMALL(std::abs(again.Endpoint() - first.Endpoint()), 1e-14);
+}
+
+
+// The identity is of the points' exact values: two start points that differ by a hair are
+// different start data, and the identity does not depend on anything but the points.
+BOOST_AUTO_TEST_CASE(given_start_identity_is_exact)
+{
+    using namespace bertini;
+    System target;
+    auto x = Variable::Make("x");
+    target.AddVariableGroup(VariableGroup{x});
+    target.AddFunction(x*x - 9);
+
+    auto identity_of = [&](complex_mp const& v) {
+        SampCont<complex_mp> pts;
+        Vec<complex_mp> p(1); p(0) = v;
+        pts.push_back(p);
+        return start_system::User(target, pts).GivenStartIdentity();
+    };
+    // 2 and 2 + 2^-40: a small difference, exactly representable at any working precision
+    complex_mp a(2), b(complex_dbl(2.0 + std::ldexp(1.0, -40), 0.0));
+
+    BOOST_CHECK(!identity_of(a).empty());
+    BOOST_CHECK_EQUAL(identity_of(a), identity_of(complex_mp(2)));
+    BOOST_CHECK_NE(identity_of(a), identity_of(b));
+}
+
+
 // A run whose check passed says so in its own record: absence of a midpath record has to keep
 // meaning "the check did not run", or a solve cut short reads as a clean bill of health.
 BOOST_AUTO_TEST_CASE(a_clean_solve_records_a_crossing_check_that_passed)

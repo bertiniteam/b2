@@ -20,9 +20,37 @@
 // additional terms in the b2/licenses/ directory.
 
 #include "bertini2/system/start/user.hpp"
+#include "bertini2/detail/sha256.hpp"
+
+#include <cstdint>
+#include <cstring>
+#include <iomanip>
+#include <sstream>
 
 
 BOOST_CLASS_EXPORT(bertini::start_system::User);
+
+
+namespace {
+
+    // a double as its exact IEEE-754 bit pattern, the convention of every b2 digest preimage
+    void EmitExact(std::ostream& out, double v)
+    {
+        std::uint64_t bits;
+        static_assert(sizeof bits == sizeof v, "a double is 64 bits");
+        std::memcpy(&bits, &v, sizeof bits);
+        out << "d64:" << std::hex << std::setw(16) << std::setfill('0') << bits << std::dec;
+    }
+
+    // an mpfr value at its own precision with every stored digit, as the system canonical
+    // encoding writes its multiprecision constants
+    template<typename RealT>
+    void EmitExactMp(std::ostream& out, RealT const& v)
+    {
+        out << v.str(0, std::ios::scientific);
+    }
+
+} // namespace
 
 
 namespace bertini {
@@ -47,6 +75,50 @@ namespace bertini {
                 return std::get<SampCont<complex_dbl>>(solns_).size();
             else
                 return std::get<SampCont<complex_mp>>(solns_).size();
+        }
+
+
+        std::string User::GivenStartIdentity() const
+        {
+            // the exact start data, in order: version, kind, point count, then each point's
+            // length and coordinates.  Versioned so a later change of encoding is a new identity.
+            std::ostringstream text;
+            text << "b2start/1 ";
+            if (solns_in_dbl_)
+            {
+                auto const& pts = std::get<SampCont<complex_dbl>>(solns_);
+                text << "dbl " << pts.size() << '\n';
+                for (auto const& p : pts)
+                {
+                    text << p.size();
+                    for (Eigen::Index ii = 0; ii < p.size(); ++ii)
+                    {
+                        text << ' ';
+                        EmitExact(text, p(ii).real());
+                        text << ' ';
+                        EmitExact(text, p(ii).imag());
+                    }
+                    text << '\n';
+                }
+            }
+            else
+            {
+                auto const& pts = std::get<SampCont<complex_mp>>(solns_);
+                text << "mp " << pts.size() << '\n';
+                for (auto const& p : pts)
+                {
+                    text << p.size();
+                    for (Eigen::Index ii = 0; ii < p.size(); ++ii)
+                    {
+                        text << ' ' << p(ii).precision() << ' ';
+                        EmitExactMp(text, p(ii).real());
+                        text << ' ';
+                        EmitExactMp(text, p(ii).imag());
+                    }
+                    text << '\n';
+                }
+            }
+            return detail::Sha256(text.str()).Hex();
         }
 
 
