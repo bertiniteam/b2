@@ -67,6 +67,16 @@ _______________________________________________________________________________
 
 _______________________________________________________________________________
 
+## [4.0.1] - unreleased
+
+Bug fixes for 4.0.
+
+### Fixed
+
+- A `HomotopySolver` solve's records ask now includes its start points (#498).  It named the homotopy, target, settings and seed but not the given start points, so with recording on (the default) a second solve of the same homotopy from different start points was the same ask, and was answered from the record of the first: it silently returned the first solve's endpoints.  The start system now reports the identity of start points it was given (`StartSystem::GivenStartIdentity`, a digest of their exact values), and the solve adds it to its ask.  A solve from given start points therefore has a different run id than in 4.0.0, so records written by 4.0.0 for such solves are asked again rather than recalled.
+
+_______________________________________________________________________________
+
 ## [4.0.0] - 2026-10-06
 
 The release where a solve tells you what it is doing.  Multiprecision numbers go straight onto a

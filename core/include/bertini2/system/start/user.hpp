@@ -80,6 +80,14 @@ namespace bertini
             */
             unsigned long long NumStartPoints() const override;
 
+            /**
+            \brief A digest of the given start points: their exact values in order, at the
+            precision they were given in.
+
+            \return The SHA-256 digest, as hex, of the points' exact encoding.
+            */
+            std::string GivenStartIdentity() const override;
+
             User& operator*=(Nd const& n) = delete;
 
             User& operator+=(System const& sys) = delete;

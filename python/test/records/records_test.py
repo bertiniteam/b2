@@ -67,6 +67,34 @@ def test_homotopy_solver_also_produces_a_zerodim_result():
     assert len(hr.answer.finite) == 2 and len(hr.answer.real) == 2   # +-sqrt(3)
 
 
+def test_homotopy_solver_from_different_starts_is_never_recalled(tmp_path):
+    """The same homotopy from DIFFERENT start points is a different solve: recording the first
+    must not answer the second with the first's endpoints, and the same start points still
+    recall.  H(x, t) = x^2 - (9 - 5t) carries +2 to +3 and -2 to -3."""
+    import bertini.nag_algorithm as nag
+    x, t = Variable('x'), Variable('t')
+    H = System(); H.add_variable_group(VariableGroup([x])); H.add_function(x * x - (9 - 5 * t))
+    H.add_path_variable(t)
+    tgt = System(); tgt.add_variable_group(VariableGroup([x])); tgt.add_function(x * x - 9)
+    d = str(tmp_path / 'records')
+
+    def from_(value):
+        # one seed for every solve, so the start points are all that differs between asks
+        pb.random.set_random_seed(11)
+        solver = nag.HomotopySolver(H, [np.array([pb.multiprec.complex_mp(value)])], tgt)
+        solver.record_to(d)
+        result = solver.solve()
+        return complex(result[0][0]), result.num_recalled, result.run_id
+
+    plus, recalled_plus, run_plus = from_(2)
+    minus, recalled_minus, run_minus = from_(-2)
+    assert recalled_minus == 0 and run_minus != run_plus
+    assert abs(plus - 3) < 1e-8 and abs(minus + 3) < 1e-8
+
+    again, recalled_again, run_again = from_(2)
+    assert recalled_again == 1 and run_again == run_plus and abs(again - plus) < 1e-14
+
+
 def test_zerodim_result_categories_for_a_multiple_root():
     # {x^2, y^2}: one distinct finite solution (0,0), singular (multiplicity 4)
     x, y = Variable('x'), Variable('y')

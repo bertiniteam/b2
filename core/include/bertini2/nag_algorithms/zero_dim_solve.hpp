@@ -2716,8 +2716,14 @@ run the endgame, classify the endpoints, report.  See the forward-declare doc ab
                 // redundant with (target, seed) but harmless; for USER homotopies (the
                 // engine driven directly) it is the only thing telling asks apart
                 ask["homotopy"] = Homotopy().ContentDigest().Hex();
-                if (!records_start_identity_.empty())
-                    ask["start"] = records_start_identity_;   // external start data is identity
+                // external start data is identity: the caller's (a chain or a given), else the
+                // start system's own when it holds given points.  Without the second, two solves
+                // of one homotopy from different given points were one ask, and the second was
+                // answered with the first's endpoints (bertiniteam/b2#498)
+                auto const start_identity = !records_start_identity_.empty()
+                    ? records_start_identity_ : StartSystem().GivenStartIdentity();
+                if (!start_identity.empty())
+                    ask["start"] = start_identity;
                 ask["config"] = settings.Hex();
                 ask["seed"] = static_cast<std::int64_t>(GetGlobalSeed());
                 return ask;
