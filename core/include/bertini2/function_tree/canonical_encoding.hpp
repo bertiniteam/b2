@@ -101,5 +101,17 @@ void EncodeCanonical(std::shared_ptr<Node> const& root, std::ostream& out, Encod
 */
 std::string CanonicalEncoding(std::shared_ptr<Node> const& root);
 
+/**
+\brief The root's own canonical encoding, with each operand written as `@` and its content key.
+
+The text a content key is the SHA-256 of (Node::ContentKey): the root's kind, payload and
+operands in the format above, but an operand is not expanded -- it is `@<its content key>`.  So a
+node's key is made from its operands' keys, once per node, and equal content gives equal keys.
+
+\param root The node.
+\return The shallow encoding text.
+*/
+std::string ShallowCanonicalEncoding(std::shared_ptr<Node> const& root);
+
 } // namespace node
 } // namespace bertini

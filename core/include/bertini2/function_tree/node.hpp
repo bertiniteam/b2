@@ -329,12 +329,15 @@ public:
     VariableGroup const& Variables() const;
 
     /**
-    \brief This node's content key, the canonical encoding (CanonicalEncoding) of the tree it roots.
+    \brief This node's content key: the SHA-256, in hex, of its shallow canonical encoding.
 
-    Canonicalization orders the operands of a sum or product by it when their multidegrees tie.
-    Computed on the first request and kept: a node is immutable, so its encoding never changes.
+    The shallow encoding (ShallowCanonicalEncoding) is the node's own canonical encoding with
+    each operand written as its content key, so the key is a Merkle hash of the tree's content:
+    made from the operands' keys, once per node, and equal for equal content.  Canonicalization
+    orders the operands of a sum or product by it when their multidegrees tie (ADR-0073).
+    Computed on the first request and kept: a node is immutable.
 
-    \return The canonical encoding.
+    \return The content key, 64 hex digits.
     */
     std::string const& ContentKey() const;
 

@@ -2675,9 +2675,10 @@ namespace bertini {
     the same commit) whenever the emitted text changes in any way, including the ORDER the
     session canonicalization gives operands: the encoder writes them in that order.
     History: `b2sysenc/1` (ADR-0042); `b2sysenc/2` when the canonicalization tie-break moved
-    from the printed form to the canonical encoding (ADR-0059).
+    from the printed form to the canonical encoding (ADR-0059); `b2sysenc/3` when it moved to
+    the content key, a Merkle hash of the canonical encoding (ADR-0073).
     */
-    inline constexpr char SystemEncodingVersion[] = "b2sysenc/2";
+    inline constexpr char SystemEncodingVersion[] = "b2sysenc/3";
 
     /// \cond INTERNAL
     // Explicit instantiation declarations for the two concrete numeric types.

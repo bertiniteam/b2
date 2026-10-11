@@ -1,6 +1,6 @@
 # 0059 — Identity is the canonical encoding; printing is a family of dialects, one per audience
 
-**Status:** Accepted
+**Status:** Accepted; decision 1's tie-break key is replaced by ADR-0073 (a content key derived from the encoding, `b2sysenc/3`)
 **Date:** 2026-09-17
 
 ## Context

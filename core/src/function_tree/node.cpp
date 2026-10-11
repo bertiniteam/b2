@@ -21,6 +21,7 @@
 
 #include "bertini2/function_tree.hpp"
 #include "bertini2/function_tree/canonical_encoding.hpp"
+#include "bertini2/detail/sha256.hpp"
 
 #include <memory>
 #include <unordered_map>
@@ -391,8 +392,10 @@ namespace node{
     {
         if (auto made = std::atomic_load(&content_key_))
             return *made;
-        std::shared_ptr<const std::string> mine =
-            std::make_shared<const std::string>(CanonicalEncoding(std::const_pointer_cast<Node>(shared_from_this())));
+        // the operands' keys are made first, by the shallow encoding asking for them, so a key
+        // costs O(operands): a Merkle hash of the canonical encoding
+        std::shared_ptr<const std::string> mine = std::make_shared<const std::string>(
+            detail::Sha256(ShallowCanonicalEncoding(std::const_pointer_cast<Node>(shared_from_this()))).Hex());
         std::shared_ptr<const std::string> expected;
         if (!std::atomic_compare_exchange_strong(&content_key_, &expected, mine))
             return *expected;
