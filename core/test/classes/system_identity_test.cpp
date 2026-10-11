@@ -60,6 +60,15 @@ System Parse(std::string const& str)
 
 std::string const kCircleLine = "function f,g; variable_group x,y; f = x^2+y^2-1; g = x-y;";
 
+// Operands that tie on multidegree -- f's four products are all (1,1), g's four terms all
+// non-polynomial -- so their order in the encoding is the tie-break's (the content key,
+// ADR-0073).  Without a recipe like this the fixture and the registry could not see a change to
+// the tie-break; with four tied operands, two tie-breaks agree on their order by chance only
+// once in 24.
+std::string const kTiedTerms = "function f,g; variable_group x,y; "
+    "f = (x+1)*(y+2) + (x+2)*(y+1) + (x+3)*(y+4) + (x+4)*(y+3); "
+    "g = sin(x) + cos(x) + sin(y) + cos(y);";
+
 // Pin the session canonicalization settings for the golden fixture (they are part of the
 // encoding header, so unpinned settings would honestly change the digest -- the fixture
 // pins one configuration).  RAII-restores the previous settings.
@@ -724,6 +733,7 @@ BOOST_AUTO_TEST_CASE(golden_digests_match_committed_fixture)
     recipes.emplace("circle_line", Parse(kCircleLine));
     recipes.emplace("rational_coeffs", Parse("function f; variable_group x,y; f = (1/3)*x^3 - y + 2;"));
     recipes.emplace("transcendental", Parse("function f; variable_group x; f = sin(x) + 3*exp(x);"));
+    recipes.emplace("tied_terms", Parse(kTiedTerms));
     {
         auto homogenized = Parse(kCircleLine);
         homogenized.Homogenize();   // deterministic: no random coefficients involved
@@ -778,6 +788,7 @@ BOOST_AUTO_TEST_CASE(encoding_version_is_bumped_when_the_encoding_changes)
     recipes.emplace("circle_line", Parse(kCircleLine));
     recipes.emplace("rational_coeffs", Parse("function f; variable_group x,y; f = (1/3)*x^3 - y + 2;"));
     recipes.emplace("transcendental", Parse("function f; variable_group x; f = sin(x) + 3*exp(x);"));
+    recipes.emplace("tied_terms", Parse(kTiedTerms));
     {
         auto homogenized = Parse(kCircleLine);
         homogenized.Homogenize();

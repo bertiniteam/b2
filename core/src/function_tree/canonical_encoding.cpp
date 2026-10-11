@@ -89,12 +89,19 @@ namespace {
             public Visitor<node::special_number::E>
     {
     public:
-        CanonicalEncoder(std::ostream& out, EncodingContext& ctx) : out_(out), ctx_(ctx)
+        CanonicalEncoder(std::ostream& out, EncodingContext& ctx, bool shallow = false)
+            : out_(out), ctx_(ctx), shallow_(shallow)
         {}
 
-        // Encode one node: back-reference if already seen, else index it and dispatch.
+        // Encode one node: back-reference if already seen, else index it and dispatch.  In a
+        // shallow encoding only the root is expanded; an operand is its content key.
         void Encode(std::shared_ptr<Node> const& n)
         {
+            if (shallow_ && !ctx_.seen.empty())
+            {
+                out_ << '@' << n->ContentKey();
+                return;
+            }
             auto it = ctx_.seen.find(n.get());
             if (it != ctx_.seen.end())
             {
@@ -218,6 +225,7 @@ namespace {
 
         std::ostream& out_;
         EncodingContext& ctx_;
+        bool shallow_;
     };
 
 } // unnamed namespace
@@ -236,6 +244,17 @@ std::string CanonicalEncoding(std::shared_ptr<Node> const& root)
     std::ostringstream out;
     EncodingContext ctx;
     EncodeCanonical(root, out, ctx);
+    return out.str();
+}
+
+std::string ShallowCanonicalEncoding(std::shared_ptr<Node> const& root)
+{
+    if (!root)
+        throw std::invalid_argument("ShallowCanonicalEncoding: null root");
+    std::ostringstream out;
+    EncodingContext ctx;
+    CanonicalEncoder encoder(out, ctx, true);
+    encoder.Encode(root);
     return out.str();
 }
 

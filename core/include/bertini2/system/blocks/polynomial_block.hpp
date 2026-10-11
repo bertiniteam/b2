@@ -287,6 +287,9 @@ private:
 
     void DifferentiateUsingDerivatives() const
     {
+        // one scope for the whole Jacobian: functions that share subexpressions (the minors a
+        // deflation appends share their sub-minors) differentiate each of them once among them
+        node::DerivativeScope shared_derivatives;
         const size_t n = functions_.size();
         space_derivatives_.resize(n * variables_.size());
         for (size_t jj = 0; jj < variables_.size(); ++jj)

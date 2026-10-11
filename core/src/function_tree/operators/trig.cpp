@@ -33,7 +33,7 @@ namespace node{
     }
 
 
-    std::shared_ptr<Node> SinOperator::Differentiate(std::shared_ptr<Variable> const& v) const
+    std::shared_ptr<Node> SinOperator::DifferentiateImpl(std::shared_ptr<Variable> const& v) const
     {
         return SimplifiedMult({
             {cos(operand_), true},
@@ -53,7 +53,7 @@ namespace node{
         target << ")";
     }
 
-    std::shared_ptr<Node> ArcSinOperator::Differentiate(std::shared_ptr<Variable> const& v) const
+    std::shared_ptr<Node> ArcSinOperator::DifferentiateImpl(std::shared_ptr<Variable> const& v) const
     {
         return SimplifiedMult({
             {operand_->Differentiate(v), true},
@@ -74,7 +74,7 @@ namespace node{
         target << ")";
     }
 
-    std::shared_ptr<Node> CosOperator::Differentiate(std::shared_ptr<Variable> const& v) const
+    std::shared_ptr<Node> CosOperator::DifferentiateImpl(std::shared_ptr<Variable> const& v) const
     {
         return SimplifiedNegate(SimplifiedMult({
             {sin(operand_), true},
@@ -96,7 +96,7 @@ namespace node{
     }
 
 
-    std::shared_ptr<Node> ArcCosOperator::Differentiate(std::shared_ptr<Variable> const& v) const
+    std::shared_ptr<Node> ArcCosOperator::DifferentiateImpl(std::shared_ptr<Variable> const& v) const
     {
         return SimplifiedNegate(SimplifiedMult({
             {operand_->Differentiate(v), true},
@@ -117,7 +117,7 @@ namespace node{
         target << ")";
     }
 
-    std::shared_ptr<Node> TanOperator::Differentiate(std::shared_ptr<Variable> const& v) const
+    std::shared_ptr<Node> TanOperator::DifferentiateImpl(std::shared_ptr<Variable> const& v) const
     {
         return SimplifiedMult({
             {operand_->Differentiate(v), true},
@@ -139,7 +139,7 @@ namespace node{
     }
 
 
-    std::shared_ptr<Node> ArcTanOperator::Differentiate(std::shared_ptr<Variable> const& v) const
+    std::shared_ptr<Node> ArcTanOperator::DifferentiateImpl(std::shared_ptr<Variable> const& v) const
     {
         return SimplifiedMult({
             {operand_->Differentiate(v), true},

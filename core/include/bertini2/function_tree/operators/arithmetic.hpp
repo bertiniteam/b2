@@ -171,12 +171,13 @@ namespace node{
         /**
          Return SumOperator whose children are derivatives of the children, omitted as possible
          */
-        std::shared_ptr<Node> Differentiate(std::shared_ptr<Variable> const& v = nullptr) const override;
+        std::shared_ptr<Node> DifferentiateImpl(std::shared_ptr<Variable> const& v) const override;
 
         /**
          Compute the degree of a node.  For sum functions, the degree is the max among summands.
          */
-        int Degree(std::shared_ptr<Variable> const& v = nullptr) const override;
+        int DegreeImpl(std::shared_ptr<Variable> const& v) const override;
+        using Node::Degree;     ///< the memoized Degree(v), which this class's Degree(vars) would otherwise hide
 
 
         int Degree(VariableGroup const& vars) const override;
@@ -305,10 +306,12 @@ namespace node{
         /**
          Returns negative of derivative of child.
          */
-        std::shared_ptr<Node> Differentiate(std::shared_ptr<Variable> const& v = nullptr) const override;
+        std::shared_ptr<Node> DifferentiateImpl(std::shared_ptr<Variable> const& v) const override;
+
+        using Node::Degree;     ///< the memoized Degree(v), which this class's Degree(vars) would otherwise hide
 
         /// \brief Degree in one variable: negation preserves its operand's degree.
-        int Degree(std::shared_ptr<Variable> const& v = nullptr) const override
+        int DegreeImpl(std::shared_ptr<Variable> const& v) const override
         {
             return operand_->Degree(v);
         }
@@ -465,12 +468,13 @@ namespace node{
         /**
          Differentiates using the product rule.  If there is division, consider as ^(-1) and use chain rule.
          */
-        std::shared_ptr<Node> Differentiate(std::shared_ptr<Variable> const& v = nullptr) const override;
+        std::shared_ptr<Node> DifferentiateImpl(std::shared_ptr<Variable> const& v) const override;
 
         /**
          Compute the degree of a node.  For trig functions, the degree is 0 if the argument is constant, otherwise it's undefined, and we return nan.
          */
-        int Degree(std::shared_ptr<Variable> const& v = nullptr) const override;
+        int DegreeImpl(std::shared_ptr<Variable> const& v) const override;
+        using Node::Degree;     ///< the memoized Degree(v), which this class's Degree(vars) would otherwise hide
 
 
         int Degree(VariableGroup const& vars) const override;
@@ -621,12 +625,13 @@ namespace node{
         /**
          Differentiates with the power rule.
          */
-        std::shared_ptr<Node> Differentiate(std::shared_ptr<Variable> const& v = nullptr) const override;
+        std::shared_ptr<Node> DifferentiateImpl(std::shared_ptr<Variable> const& v) const override;
 
         /**
          Compute the degree of a node.  For power functions, the degree depends on the degree of the power.  If the exponent is constant, then the degree is actually a number.  If the exponent is non-constant, then the degree is ill-defined.
          */
-        int Degree(std::shared_ptr<Variable> const& v = nullptr) const override;
+        int DegreeImpl(std::shared_ptr<Variable> const& v) const override;
+        using Node::Degree;     ///< the memoized Degree(v), which this class's Degree(vars) would otherwise hide
 
         int Degree(VariableGroup const& vars) const override;
 
@@ -749,12 +754,13 @@ namespace node{
         /**
          \brief Differentiate
          */
-        std::shared_ptr<Node> Differentiate(std::shared_ptr<Variable> const& v = nullptr) const override;
+        std::shared_ptr<Node> DifferentiateImpl(std::shared_ptr<Variable> const& v) const override;
 
         /**
          Compute the degree of a node.  For integer power functions, the degree is the product of the degree of the argument, and the power.
          */
-        int Degree(std::shared_ptr<Variable> const& v = nullptr) const override;
+        int DegreeImpl(std::shared_ptr<Variable> const& v) const override;
+        using Node::Degree;     ///< the memoized Degree(v), which this class's Degree(vars) would otherwise hide
 
         int Degree(VariableGroup const& vars) const override;
 
@@ -872,7 +878,7 @@ namespace node{
         /**
          Differentiates the square root function.
          */
-        std::shared_ptr<Node> Differentiate(std::shared_ptr<Variable> const& v = nullptr) const override;
+        std::shared_ptr<Node> DifferentiateImpl(std::shared_ptr<Variable> const& v) const override;
 
 
         virtual ~SqrtOperator() = default;
@@ -942,7 +948,7 @@ namespace node{
         /**
          Differentiates the exponential function.
          */
-        std::shared_ptr<Node> Differentiate(std::shared_ptr<Variable> const& v = nullptr) const override;
+        std::shared_ptr<Node> DifferentiateImpl(std::shared_ptr<Variable> const& v) const override;
 
 
         virtual ~ExpOperator() = default;
@@ -999,7 +1005,7 @@ namespace node{
         /**
          Differentiates the exponential function.
          */
-        std::shared_ptr<Node> Differentiate(std::shared_ptr<Variable> const& v = nullptr) const override;
+        std::shared_ptr<Node> DifferentiateImpl(std::shared_ptr<Variable> const& v) const override;
 
 
         virtual ~LogOperator() = default;

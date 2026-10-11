@@ -20,24 +20,36 @@
 // additional terms in the b2/licenses/ directory.
 
 #include "bertini2/function_tree/gather.hpp"
-#include "bertini2/function_tree/find.hpp"
 #include "bertini2/function_tree.hpp"
+
+#include <algorithm>
 
 namespace bertini {
 namespace node {
 
-    // GatherVariables is the variable-specific case of the general Find (sympy's find): the
-    // one traversal lives in find.cpp, and these delegate to Find<Variable>.
+    // GatherVariables is what Find<Variable> finds -- distinct, sorted by name -- but read from
+    // each node's degree record (Node::Variables), which is made once per node from its
+    // operands' (#505): canonicalization asks it of every operand of every sum and product.
 
     VariableGroup GatherVariables(std::shared_ptr<const Node> const& n)
     {
-        return Find<Variable>(n);
+        if (!n)
+            return {};
+        return n->Variables();
     }
 
     VariableGroup GatherVariables(std::vector<std::shared_ptr<Node>> const& functions)
     {
-        std::vector<std::shared_ptr<const Node>> roots(functions.begin(), functions.end());
-        return Find<Variable>(roots);
+        VariableGroup out;
+        for (auto const& f : functions)
+            if (f)
+                out.insert(out.end(), f->Variables().begin(), f->Variables().end());
+        std::sort(out.begin(), out.end(),
+                  [](std::shared_ptr<Variable> const& a, std::shared_ptr<Variable> const& b) { return a->name() < b->name(); });
+        out.erase(std::unique(out.begin(), out.end(),
+                              [](std::shared_ptr<Variable> const& a, std::shared_ptr<Variable> const& b) { return a.get() == b.get(); }),
+                  out.end());
+        return out;
     }
 
 } // namespace node

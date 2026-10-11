@@ -34,6 +34,8 @@ Block degree contract under test:
   BlendBlock           -- the elementwise max of its operands' degrees
 */
 
+#include <chrono>
+
 #include <boost/test/unit_test.hpp>
 
 #include "bertini2/system/system.hpp"
@@ -416,6 +418,66 @@ BOOST_AUTO_TEST_CASE(non_polynomial_unary_operators_share_one_degree_rule)
         BOOST_CHECK(n->IsPolynomial(xy));
         BOOST_CHECK(n->IsHomogeneous(xy));
     }
+}
+
+// Degree(v) visits each distinct node once per call, as MultiDegree does (#505).  A negation's
+// multidegree is computed from Degree(v) of its operand, once per variable, so before Degree(v)
+// was memoized every negation reopened a walk of the whole expansion beneath it -- 2^26 copies
+// of x here, in an expression of 26 levels.  Canonicalizing every sum and product asks for the
+// multidegree of each operand, so this cost was paid on every construction above a negation.
+BOOST_AUTO_TEST_CASE(degree_visits_each_shared_subexpression_once)
+{
+    Var x = Variable::Make("x"), y = Variable::Make("y"), z = Variable::Make("z");
+    const int levels = 26;
+    std::shared_ptr<node::Node> e = x;
+    for (int i = 0; i < levels; ++i)
+        e = e*y + e*z;                      // x (y + z)^levels, each level using e twice
+    auto negated = -e;
+
+    auto start = std::chrono::steady_clock::now();
+    auto multidegree = negated->MultiDegree(VariableGroup{x, y, z});
+    int degree_in_y = negated->Degree(y);
+    int total_degree = negated->Degree();
+    double seconds = std::chrono::duration<double>(std::chrono::steady_clock::now() - start).count();
+    BOOST_CHECK_MESSAGE(seconds < 2.0, "the degrees took " << seconds << " s: a shared "
+                        "subexpression is being visited once per path to it");
+
+    BOOST_CHECK_EQUAL(multidegree.size(), 3);
+    BOOST_CHECK_EQUAL(multidegree[0], 1);
+    BOOST_CHECK_EQUAL(multidegree[1], levels);
+    BOOST_CHECK_EQUAL(multidegree[2], levels);
+    BOOST_CHECK_EQUAL(degree_in_y, levels);
+    BOOST_CHECK_EQUAL(total_degree, levels + 1);
+}
+
+// A node's degree record answers every variable it does not mention with one value, and that
+// value is not always 0: a power with a negative constant exponent is not a polynomial, so it
+// reports -1 in every variable, including ones it does not contain -- and so does a sum or
+// product over it.  The record must keep that answer, not assume 0.
+BOOST_AUTO_TEST_CASE(an_unmentioned_variable_gets_the_degree_rules_answer)
+{
+    Var x = Variable::Make("x"), y = Variable::Make("y"), z = Variable::Make("z");
+    auto inverse_square = pow(x, Integer::Make(-2));      // a generic power, not an integer power
+    BOOST_CHECK_EQUAL(inverse_square->Degree(x), -1);
+    BOOST_CHECK_EQUAL(inverse_square->Degree(z), -1);     // z is not in it
+    auto md = inverse_square->MultiDegree(VariableGroup{x, y, z});
+    BOOST_CHECK_EQUAL(md[0], -1);
+    BOOST_CHECK_EQUAL(md[1], -1);
+    BOOST_CHECK_EQUAL(md[2], -1);
+
+    auto sum = inverse_square + y;
+    BOOST_CHECK_EQUAL(sum->Degree(y), -1);
+    BOOST_CHECK_EQUAL(sum->Degree(z), -1);
+
+    // and a polynomial answers 0 for a variable it does not contain
+    auto poly = x*x*y + y;
+    BOOST_CHECK_EQUAL(poly->Degree(z), 0);
+    BOOST_CHECK_EQUAL(poly->Degree(x), 2);
+    BOOST_CHECK_EQUAL(poly->Degree(), 3);
+    auto pmd = poly->MultiDegree(VariableGroup{z, y, x});
+    BOOST_CHECK_EQUAL(pmd[0], 0);
+    BOOST_CHECK_EQUAL(pmd[1], 1);
+    BOOST_CHECK_EQUAL(pmd[2], 2);
 }
 
 BOOST_AUTO_TEST_SUITE_END()

@@ -120,7 +120,7 @@ namespace bertini{
             .def("canonical_encoding",
                 +[](SystemBaseT const& self){ return self.CanonicalEncodingText(); },
                 (arg("self")),
-                "The exact canonical encoding text of the system: the text content_digest() is the SHA-256 of, and the text the records archive stores for every system and homotopy.  Versioned (its first word is the format version, e.g. b2sysenc/2) and complete: variable groups, path variable, every block with its exact coefficients, the patch, and operand systems inside randomization and blend blocks.  System.from_canonical(text) rebuilds an equal system from it.")
+                "The exact canonical encoding text of the system: the text content_digest() is the SHA-256 of, and the text the records archive stores for every system and homotopy.  Versioned (its first word is the format version, e.g. b2sysenc/3) and complete: variable groups, path variable, every block with its exact coefficients, the patch, and operand systems inside randomization and blend blocks.  System.from_canonical(text) rebuilds an equal system from it.")
             .def("from_canonical",
                 +[](std::string const& text){ return std::make_shared<System>(System::FromCanonicalEncoding(text)); },
                 (arg("text")),

@@ -67,10 +67,11 @@ namespace node{
         The degree of a number is always 0.  It's a number.
         */
         inline
-        int Degree(std::shared_ptr<Variable> const& /*v*/ = nullptr) const override
+        int DegreeImpl(std::shared_ptr<Variable> const& /*v*/) const override
         {
             return 0;
         }
+        using Node::Degree;     ///< the memoized Degree(v), which this class's Degree(vars) would otherwise hide
 
         /**
         \brief Get the degree of this node.
@@ -118,7 +119,7 @@ namespace node{
         /**
         \brief Differentiate a number.
          */
-        std::shared_ptr<Node> Differentiate(std::shared_ptr<Variable> const& v = nullptr) const override;
+        std::shared_ptr<Node> DifferentiateImpl(std::shared_ptr<Variable> const& v) const override;
 
     protected:
 

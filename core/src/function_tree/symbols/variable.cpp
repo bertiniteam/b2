@@ -42,7 +42,7 @@ Variable::Variable(std::string new_name) : NamedSymbol(new_name)
 Variable::Variable() : NamedSymbol("unnamed_variable_be_scared")
 { }
 
-std::shared_ptr<Node> Variable::Differentiate(std::shared_ptr<Variable> const& v) const
+std::shared_ptr<Node> Variable::DifferentiateImpl(std::shared_ptr<Variable> const& v) const
 {
     if (v==nullptr)
         return Differential::Make(std::static_pointer_cast<Variable const>(shared_from_this()), name());
@@ -58,7 +58,7 @@ std::shared_ptr<Node> Variable::Subs(SubstitutionMap const& substitutions) const
     return std::const_pointer_cast<Node>(shared_from_this());
 }
 
-int Variable::Degree(std::shared_ptr<Variable> const& v) const
+int Variable::DegreeImpl(std::shared_ptr<Variable> const& v) const
 {
     if (v)
     {
