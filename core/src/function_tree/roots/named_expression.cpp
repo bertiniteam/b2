@@ -47,12 +47,12 @@ void NamedExpression::EnsureNotEmpty() const
     }
 }
 
-std::shared_ptr<Node> NamedExpression::Differentiate(std::shared_ptr<Variable> const& v) const
+std::shared_ptr<Node> NamedExpression::DifferentiateImpl(std::shared_ptr<Variable> const& v) const
 {
     return entry_node_->Differentiate(v);
 }
 
-int NamedExpression::Degree(std::shared_ptr<Variable> const& v) const
+int NamedExpression::DegreeImpl(std::shared_ptr<Variable> const& v) const
 {
     return entry_node_->Degree(v);
 }

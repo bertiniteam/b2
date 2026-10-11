@@ -88,10 +88,11 @@ namespace node{
         const std::shared_ptr<Node>& EntryNode() const;
 
         /// differentiate the wrapped expression
-        std::shared_ptr<Node> Differentiate(std::shared_ptr<Variable> const& v = nullptr) const override;
+        std::shared_ptr<Node> DifferentiateImpl(std::shared_ptr<Variable> const& v) const override;
 
         /// the degree is the degree of the wrapped expression
-        int Degree(std::shared_ptr<Variable> const& v = nullptr) const override;
+        int DegreeImpl(std::shared_ptr<Variable> const& v) const override;
+        using Node::Degree;     ///< the memoized Degree(v), which this class's Degree(vars) would otherwise hide
         int Degree(VariableGroup const& vars) const override;
 
         std::vector<int> MultiDegreeImpl(VariableGroup const& vars) const override;

@@ -359,6 +359,7 @@ namespace bertini
         J.rows = functions.size();
         J.cols = variables.size();
         J.entries.reserve(J.rows * J.cols);
+        node::DerivativeScope shared_derivatives;   // subexpressions the functions share, once
         for (auto const& f : functions)
             for (auto const& v : variables)
                 J.entries.push_back(f->Differentiate(v));   // J[i,j] = d f_i / d v_j, row-major

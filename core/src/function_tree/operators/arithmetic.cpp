@@ -540,7 +540,7 @@ void SumOperator::print(std::ostream & target) const
 }
 
 
-std::shared_ptr<Node> SumOperator::Differentiate(std::shared_ptr<Variable> const& v) const
+std::shared_ptr<Node> SumOperator::DifferentiateImpl(std::shared_ptr<Variable> const& v) const
 {
     std::vector<std::pair<std::shared_ptr<Node>, bool>> terms;
     terms.reserve(operands_.size());
@@ -554,7 +554,7 @@ std::shared_ptr<Node> SumOperator::Differentiate(std::shared_ptr<Variable> const
     return SimplifiedSum(terms);
 }
 
-int SumOperator::Degree(std::shared_ptr<Variable> const& v) const
+int SumOperator::DegreeImpl(std::shared_ptr<Variable> const& v) const
 {
     int deg = 0;
 
@@ -736,7 +736,7 @@ void NegateOperator::print(std::ostream & target) const
     PrintOperand(target, operand_, operand_->Precedence() <= PrecNegate);
 }
 
-std::shared_ptr<Node> NegateOperator::Differentiate(std::shared_ptr<Variable> const& v) const
+std::shared_ptr<Node> NegateOperator::DifferentiateImpl(std::shared_ptr<Variable> const& v) const
 {
     return SimplifiedNegate(operand_->Differentiate(v));
 }
@@ -806,7 +806,7 @@ void MultOperator::print(std::ostream & target) const
 
 
 
-std::shared_ptr<Node> MultOperator::Differentiate(std::shared_ptr<Variable> const& v) const
+std::shared_ptr<Node> MultOperator::DifferentiateImpl(std::shared_ptr<Variable> const& v) const
 {
     std::vector<std::pair<std::shared_ptr<Node>, bool>> sum_terms;
     // this loop implements the generic product rule, perhaps inefficiently.
@@ -835,7 +835,7 @@ std::shared_ptr<Node> MultOperator::Differentiate(std::shared_ptr<Variable> cons
     return SimplifiedSum(sum_terms);
 }
 
-int MultOperator::Degree(std::shared_ptr<Variable> const& v) const
+int MultOperator::DegreeImpl(std::shared_ptr<Variable> const& v) const
 {
     int deg = 0;
     for (auto iter = operands_.begin(); iter!= operands_.end(); iter++)
@@ -974,7 +974,7 @@ void PowerOperator::print(std::ostream & target) const
 }
 
 
-std::shared_ptr<Node> PowerOperator::Differentiate(std::shared_ptr<Variable> const& v) const
+std::shared_ptr<Node> PowerOperator::DifferentiateImpl(std::shared_ptr<Variable> const& v) const
 {
     // d/dv (base^exp) = exp * base^(exp-1) * base'.  When the exponent is an integer literal, fold
     // exp-1 to a literal Integer (e.g. 4 -> 3) instead of leaving a computed `exponent - 1` node --
@@ -1008,7 +1008,7 @@ namespace {
     }
 }
 
-int PowerOperator::Degree(std::shared_ptr<Variable> const& v) const
+int PowerOperator::DegreeImpl(std::shared_ptr<Variable> const& v) const
 {
 
     auto base_deg = base_->Degree(v);
@@ -1289,7 +1289,7 @@ void IntegerPowerOperator::print(std::ostream & target) const
 
 
 
-std::shared_ptr<Node> IntegerPowerOperator::Differentiate(std::shared_ptr<Variable> const& v) const
+std::shared_ptr<Node> IntegerPowerOperator::DifferentiateImpl(std::shared_ptr<Variable> const& v) const
 {
     if (exponent_==0)
         return Integer::Make(0);
@@ -1306,7 +1306,7 @@ std::shared_ptr<Node> IntegerPowerOperator::Differentiate(std::shared_ptr<Variab
 }
 
 
-int IntegerPowerOperator::Degree(std::shared_ptr<Variable> const& v) const
+int IntegerPowerOperator::DegreeImpl(std::shared_ptr<Variable> const& v) const
 {
     auto base_deg = operand_->Degree(v);
     if (base_deg<0)
@@ -1357,7 +1357,7 @@ void SqrtOperator::print(std::ostream & target) const
 
 
 
-std::shared_ptr<Node> SqrtOperator::Differentiate(std::shared_ptr<Variable> const& v) const
+std::shared_ptr<Node> SqrtOperator::DifferentiateImpl(std::shared_ptr<Variable> const& v) const
 {
     return SimplifiedMult({
         {Rational::Make(mpq_rational(1,2),0), true},
@@ -1403,7 +1403,7 @@ void ExpOperator::print(std::ostream & target) const
 
 
 
-std::shared_ptr<Node> ExpOperator::Differentiate(std::shared_ptr<Variable> const& v) const
+std::shared_ptr<Node> ExpOperator::DifferentiateImpl(std::shared_ptr<Variable> const& v) const
 {
     return SimplifiedMult({
         {exp(operand_), true},
@@ -1443,7 +1443,7 @@ void LogOperator::print(std::ostream & target) const
 
 
 
-std::shared_ptr<Node> LogOperator::Differentiate(std::shared_ptr<Variable> const& v) const
+std::shared_ptr<Node> LogOperator::DifferentiateImpl(std::shared_ptr<Variable> const& v) const
 {
     return SimplifiedMult({
         {operand_->Differentiate(v), true},

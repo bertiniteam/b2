@@ -31,7 +31,7 @@ namespace bertini{
     namespace node{
         using ::pow;
 
-std::shared_ptr<Node> Number::Differentiate(std::shared_ptr<Variable> const& /*v*/) const
+std::shared_ptr<Node> Number::DifferentiateImpl(std::shared_ptr<Variable> const& /*v*/) const
 {
     return Integer::Make(0);
 }

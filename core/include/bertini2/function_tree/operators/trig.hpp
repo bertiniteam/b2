@@ -106,7 +106,7 @@ namespace node{
         /**
          Differentiates the sine function.
          */
-        std::shared_ptr<Node> Differentiate(std::shared_ptr<Variable> const& v = nullptr) const override;
+        std::shared_ptr<Node> DifferentiateImpl(std::shared_ptr<Variable> const& v) const override;
 
         virtual ~SinOperator() = default;
 
@@ -163,7 +163,7 @@ namespace node{
         /**
          Differentiates the sine function.
          */
-        std::shared_ptr<Node> Differentiate(std::shared_ptr<Variable> const& v = nullptr) const override;
+        std::shared_ptr<Node> DifferentiateImpl(std::shared_ptr<Variable> const& v) const override;
 
         virtual ~ArcSinOperator() = default;
 
@@ -230,7 +230,7 @@ namespace node{
         /**
          Differentiates the cosine function.
          */
-        std::shared_ptr<Node> Differentiate(std::shared_ptr<Variable> const& v = nullptr) const override;
+        std::shared_ptr<Node> DifferentiateImpl(std::shared_ptr<Variable> const& v) const override;
 
         virtual ~CosOperator() = default;
 
@@ -290,7 +290,7 @@ namespace node{
         /**
          Differentiates the cosine function.
          */
-        std::shared_ptr<Node> Differentiate(std::shared_ptr<Variable> const& v = nullptr) const override;
+        std::shared_ptr<Node> DifferentiateImpl(std::shared_ptr<Variable> const& v) const override;
 
 
         virtual ~ArcCosOperator() = default;
@@ -357,7 +357,7 @@ namespace node{
         /**
          Differentiates the tangent function.
          */
-        std::shared_ptr<Node> Differentiate(std::shared_ptr<Variable> const& v = nullptr) const override;
+        std::shared_ptr<Node> DifferentiateImpl(std::shared_ptr<Variable> const& v) const override;
 
         virtual ~TanOperator() = default;
 
@@ -416,7 +416,7 @@ namespace node{
         /**
          Differentiates the tangent function.
          */
-        std::shared_ptr<Node> Differentiate(std::shared_ptr<Variable> const& v = nullptr) const override;
+        std::shared_ptr<Node> DifferentiateImpl(std::shared_ptr<Variable> const& v) const override;
 
         virtual ~ArcTanOperator() = default;
 

@@ -83,7 +83,7 @@ namespace node{
         /**
          Differentiates a number.
          */
-        std::shared_ptr<Node> Differentiate(std::shared_ptr<Variable> const& v = nullptr) const override;
+        std::shared_ptr<Node> DifferentiateImpl(std::shared_ptr<Variable> const& v) const override;
 
         virtual ~Differential() = default;
 
@@ -93,7 +93,8 @@ namespace node{
         /**
         Compute the degree with respect to a single variable.   For differentials, the degree is 0.
         */
-        int Degree(std::shared_ptr<Variable> const& v = nullptr) const override;
+        int DegreeImpl(std::shared_ptr<Variable> const& v) const override;
+        using Node::Degree;     ///< the memoized Degree(v), which this class's Degree(vars) would otherwise hide
 
         int Degree(VariableGroup const& vars) const override;
 

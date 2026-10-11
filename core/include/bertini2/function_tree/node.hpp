@@ -237,11 +237,17 @@ public:
     /**
     \brief Compute the derivative with respect to a single variable.
 
-    Virtual method for differentiating the node.  If no variable is passed, produces a Jacobian tree when all is said and done, which is used for evaluating the Jacobian.
+    If no variable is passed, produces a Jacobian tree when all is said and done, which is used for evaluating the Jacobian.
 
+    Each distinct node is differentiated once per variable, however many paths reach it: the
+    derivative of a subexpression is kept for as long as the outermost call (or an enclosing
+    DerivativeScope) lasts, and every later request for it is answered from there.  A node type
+    supplies its own rule as DifferentiateImpl, which calls this on its operands.
+
+    \param v The variable to differentiate with respect to.
     \return The result of differentiation.  Jacobian or regular Node depending on what you passed in.
     */
-    virtual std::shared_ptr<Node> Differentiate(std::shared_ptr<Variable> const& v = nullptr) const = 0;
+    std::shared_ptr<Node> Differentiate(std::shared_ptr<Variable> const& v = nullptr) const;
 
     /**
     \brief Differentiate repeatedly with respect to a single variable.
@@ -270,10 +276,22 @@ public:
     /**
     Compute the degree, optionally with respect to a single variable.
 
+    DAG-aware in the same way as MultiDegree: memoized by node identity for the duration of one
+    top-level call, so a shared subtree is visited once however many times it is reached.  The
+    per-type work lives in DegreeImpl.  UnaryOperator::MultiDegreeImpl asks this once per
+    variable, so without the memo every negation in an expression reopened the walk of the whole
+    expansion beneath it that MultiDegree exists to avoid (#505).
+
     \param v Shared pointer to variable with respect to which you want to compute the degree of the Node.
     \return The degree.  Will be negative if the Node is non-polynomial.
     */
-    virtual int Degree(std::shared_ptr<Variable> const& v = nullptr) const = 0;
+    int Degree(std::shared_ptr<Variable> const& v = nullptr) const;
+
+    /// \brief Per-node-type degree in one variable.  Recurses through Degree(), so children are
+    /// memoized; never call this directly unless you want the unmemoized walk.
+    /// \param v The variable, or null for the total degree.
+    /// \return The degree.  Negative if the node is non-polynomial.
+    virtual int DegreeImpl(std::shared_ptr<Variable> const& v) const = 0;
 
 
 
@@ -380,6 +398,18 @@ protected:
     /// distinct nodes hash distinctly.  Value/operator nodes override to be structural.
     virtual std::size_t HashImpl() const;
 
+    /**
+    \brief This node type's differentiation rule, applied to this node alone.
+
+    Called by Differentiate only when the derivative is not already known.  Differentiate an
+    operand by calling its Differentiate, never its DifferentiateImpl, so that a subexpression
+    shared by many operands is differentiated once.
+
+    \param v The variable to differentiate with respect to.
+    \return The derivative of this node.
+    */
+    virtual std::shared_ptr<Node> DifferentiateImpl(std::shared_ptr<Variable> const& v) const = 0;
+
     /// Combine an extra value into a running hash (boost::hash_combine recipe).
     static void HashCombine(std::size_t& seed, std::size_t value)
     {
@@ -401,6 +431,34 @@ private:
     }
 
 }; // re: class node
+
+    /**
+    \brief While one of these is alive, every derivative computed on this thread is kept and reused.
+
+    Node::Differentiate opens one for the length of each outermost call, so a subexpression
+    reached by many paths is differentiated once, not once per path: the sub-minors of a
+    determinant built by cofactor expansion used to be differentiated k! times at the top (#505).
+    Open one around a loop that differentiates many expressions, such as a whole Jacobian, so that
+    subexpressions they share are differentiated once among all of them.  Scopes nest: an inner one
+    uses the outer one's derivatives.  It keeps every node it has differentiated, and every
+    derivative, alive until it closes.
+    */
+    class DerivativeScope
+    {
+    public:
+        /// \brief Start keeping derivatives on this thread, unless an enclosing scope already is.
+        DerivativeScope();
+        /// \brief Stop keeping them and release them, if this scope started it.
+        ~DerivativeScope();
+        DerivativeScope(DerivativeScope const&) = delete;
+        DerivativeScope& operator=(DerivativeScope const&) = delete;
+
+        /// \cond DERIVATIVE_SCOPE_DETAIL
+        struct Derivatives;
+        /// \endcond
+    private:
+        std::unique_ptr<Derivatives> owned_;   ///< the derivatives, when this scope is the outermost
+    };
 
     /**
      a single layer of indirection, though which to call the overridden virtual print() method which must be defined for each non-abstract Node type.

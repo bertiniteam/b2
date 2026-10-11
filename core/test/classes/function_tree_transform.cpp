@@ -26,6 +26,7 @@
 #include <iostream>
 #include <sstream>
 
+#include <chrono>
 #include <cstdlib>
 #include <cmath>
 
@@ -403,7 +404,7 @@ BOOST_AUTO_TEST_SUITE_END() // transform
 
 
 // The convenience Differentiate overloads: repeated single-variable, and sequential over a
-// group.  Both fold the virtual one-variable Differentiate, so they are checked by value at a
+// group.  Both fold the one-variable Differentiate, so they are checked by value at a
 // point (distinct non-identity coordinates x=3, y=5 so each term is separable).
 BOOST_AUTO_TEST_SUITE(differentiate_overloads)
 
@@ -462,6 +463,66 @@ BOOST_AUTO_TEST_CASE(empty_group_is_identity)
 }
 
 BOOST_AUTO_TEST_SUITE_END() // differentiate_overloads
+
+
+// Differentiation visits each distinct node once per variable, however many paths reach it
+// (#505).  Each level of e_{i+1} = e_i y + e_i z uses e_i twice, so 26 levels make an expression
+// whose DAG has 26 levels and whose tree has 2^26 copies of x.  Differentiating once per path
+// took minutes; once per node, milliseconds.
+BOOST_AUTO_TEST_SUITE(differentiate_shared_subexpressions)
+
+BOOST_AUTO_TEST_CASE(each_shared_subexpression_is_differentiated_once)
+{
+    auto x = Variable::Make("x");
+    auto y = Variable::Make("y");
+    auto z = Variable::Make("z");
+    const int levels = 26;
+    Nd e = x;
+    for (int i = 0; i < levels; ++i)
+        e = e*y + e*z;                      // e_levels = x (y + z)^levels
+
+    auto start = std::chrono::steady_clock::now();
+    auto ddx = e->Differentiate(x);         // (y + z)^levels
+    auto ddy = e->Differentiate(y);         // levels x (y + z)^(levels - 1)
+    double seconds = std::chrono::duration<double>(std::chrono::steady_clock::now() - start).count();
+    BOOST_CHECK_MESSAGE(seconds < 2.0, "differentiating took " << seconds << " s: a shared "
+                        "subexpression is being differentiated once per path to it");
+
+    std::map<std::string,complex_dbl> pt{ {"x", complex_dbl(3,0)}, {"y", complex_dbl(0.6,0)}, {"z", complex_dbl(0.5,0)} };
+    const double s = 1.1;                   // y + z at pt
+    BOOST_CHECK_CLOSE(std::real(EvalAt<complex_dbl>(ddx, pt)), std::pow(s, levels), 1e-10);
+    BOOST_CHECK_CLOSE(std::real(EvalAt<complex_dbl>(ddy, pt)), levels * 3 * std::pow(s, levels - 1), 1e-10);
+}
+
+// A scope opened around several differentiations keeps one memo for all of them, and nested
+// scopes and calls use the outermost one: the derivatives are those of separate calls.
+BOOST_AUTO_TEST_CASE(a_derivative_scope_gives_the_derivatives_of_separate_calls)
+{
+    auto x = Variable::Make("x");
+    auto y = Variable::Make("y");
+    Nd shared = x*x*y + y;
+    Nd f = shared*shared;
+    Nd g = shared + x;
+
+    Nd df_alone = f->Differentiate(x);
+    Nd dg_alone = g->Differentiate(y);
+    Nd df_scoped, dg_scoped;
+    {
+        bertini::node::DerivativeScope outer;
+        bertini::node::DerivativeScope inner;
+        df_scoped = f->Differentiate(x);
+        dg_scoped = g->Differentiate(y);
+    }
+    std::map<std::string,complex_dbl> pt{ {"x", complex_dbl(3,0)}, {"y", complex_dbl(5,0)} };
+    BOOST_CHECK_SMALL(std::abs(EvalAt<complex_dbl>(df_scoped, pt) - EvalAt<complex_dbl>(df_alone, pt)), 1e-9);
+    BOOST_CHECK_SMALL(std::abs(EvalAt<complex_dbl>(dg_scoped, pt) - EvalAt<complex_dbl>(dg_alone, pt)), 1e-12);
+    // d/dx (x^2 y + y)^2 = 2 (x^2 y + y)(2 x y) at (3, 5): 2 * 50 * 30
+    BOOST_CHECK_SMALL(std::abs(EvalAt<complex_dbl>(df_scoped, pt) - complex_dbl(3000,0)), 1e-9);
+    // d/dy (x^2 y + y + x) = x^2 + 1
+    BOOST_CHECK_SMALL(std::abs(EvalAt<complex_dbl>(dg_scoped, pt) - complex_dbl(10,0)), 1e-12);
+}
+
+BOOST_AUTO_TEST_SUITE_END() // differentiate_shared_subexpressions
 
 
 // Symbolic substitution Node::Subs (variable -> node).  Simultaneous, single-pass; results are

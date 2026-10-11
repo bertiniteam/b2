@@ -48,7 +48,7 @@ std::shared_ptr<Node> UnaryOperator::Operand() const
 // degrees, which equals the total degree only for a single monomial: NegateOperator inherited
 // it and reported -(x^2+y^2) as degree 4, inflating System::DegreeBound() -- the same defect
 // #397 found in PowerOperator.)
-int UnaryOperator::Degree(std::shared_ptr<Variable> const& v) const
+int UnaryOperator::DegreeImpl(std::shared_ptr<Variable> const& v) const
 {
     return operand_->Degree(v) == 0 ? 0 : -1;
 }

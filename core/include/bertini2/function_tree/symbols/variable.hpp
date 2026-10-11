@@ -89,7 +89,7 @@ namespace node{
         /**
          Differentiates a variable.
          */
-        std::shared_ptr<Node> Differentiate(std::shared_ptr<Variable> const& v = nullptr) const override;
+        std::shared_ptr<Node> DifferentiateImpl(std::shared_ptr<Variable> const& v) const override;
 
         /**
          Substitutes this variable: if its name is a key in `substitutions`, returns the associated
@@ -106,7 +106,8 @@ namespace node{
 
         If this is the variable, then the degree is 1.  Otherwise, 0.
         */
-        int Degree(std::shared_ptr<Variable> const& v = nullptr) const override;
+        int DegreeImpl(std::shared_ptr<Variable> const& v) const override;
+        using Node::Degree;     ///< the memoized Degree(v), which this class's Degree(vars) would otherwise hide
 
 
         int Degree(VariableGroup const& vars) const override;

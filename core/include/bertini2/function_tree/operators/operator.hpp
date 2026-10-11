@@ -107,7 +107,8 @@ namespace node{
          -1 otherwise (not a polynomial).  The degree-preserving unaries, NegateOperator and
          IntegerPowerOperator, override.
          */
-        int Degree(std::shared_ptr<Variable> const& v = nullptr) const override;
+        int DegreeImpl(std::shared_ptr<Variable> const& v) const override;
+        using Node::Degree;     ///< the memoized Degree(v), which this class's Degree(vars) would otherwise hide
 
         /// \brief Degree with respect to a variable group, by the same rule as the one-variable form.
         int Degree(VariableGroup const& vars) const override;

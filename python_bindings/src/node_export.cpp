@@ -38,10 +38,10 @@ namespace bertini{
         // Wrapper struct to allow derived classes to overide methods in python
         struct NodeWrap : Node, wrapper<Node>
         {
-            int Degree(std::shared_ptr<Variable> const& v = nullptr) const {return this->get_override("Degree")(v); }
+            int DegreeImpl(std::shared_ptr<Variable> const& v) const override {return this->get_override("Degree")(v); }
             int Degree(VariableGroup const& vars) const {return this->get_override("Degree")(vars); }
 
-            std::shared_ptr<Node> Differentiate(std::shared_ptr<Variable> const& v = nullptr) const {return this->get_override("Differentiate")(v); }
+            std::shared_ptr<Node> DifferentiateImpl(std::shared_ptr<Variable> const& v) const override {return this->get_override("Differentiate")(v); }
 
             std::vector<int> MultiDegree(VariableGroup const& vars) const {return this->get_override("MultiDegree")(vars); }
 

@@ -116,7 +116,73 @@ namespace node{
         return Degree(v)>=0;
     }
 
-    // Convenience: repeated single-variable differentiation.  Folds the virtual one-variable
+    // ---- differentiation, each distinct node once (#505) ----
+
+    // The derivatives kept by the outermost open DerivativeScope on a thread, keyed by
+    // (node, variable).  Each entry holds its node and variable as well as the derivative: a key
+    // is an address, and a node that died while the scope was open could have its address reused
+    // by another node, which would then be answered with the dead node's derivative.
+    struct DerivativeScope::Derivatives
+    {
+        struct Key
+        {
+            Node const* node;
+            Variable const* variable;
+            bool operator==(Key const& other) const { return node == other.node && variable == other.variable; }
+        };
+        struct KeyHash
+        {
+            std::size_t operator()(Key const& k) const
+            {
+                std::size_t seed = std::hash<Node const*>{}(k.node);
+                seed ^= std::hash<Variable const*>{}(k.variable) + 0x9e3779b97f4a7c15ULL + (seed << 6) + (seed >> 2);
+                return seed;
+            }
+        };
+        struct Entry
+        {
+            std::shared_ptr<const Node> node;
+            std::shared_ptr<Variable> variable;
+            std::shared_ptr<Node> derivative;
+        };
+        std::unordered_map<Key, Entry, KeyHash> entries;
+    };
+
+    namespace {
+        thread_local DerivativeScope::Derivatives* open_derivatives = nullptr;
+    }
+
+    DerivativeScope::DerivativeScope()
+    {
+        if (!open_derivatives)
+        {
+            owned_ = std::make_unique<Derivatives>();
+            open_derivatives = owned_.get();
+        }
+    }
+
+    DerivativeScope::~DerivativeScope()
+    {
+        if (owned_)
+            open_derivatives = nullptr;
+    }
+
+    std::shared_ptr<Node> Node::Differentiate(std::shared_ptr<Variable> const& v) const
+    {
+        DerivativeScope scope;
+        auto& entries = open_derivatives->entries;
+        DerivativeScope::Derivatives::Key const key{this, v.get()};
+        auto found = entries.find(key);
+        if (found != entries.end())
+            return found->second.derivative;
+        auto derivative = DifferentiateImpl(v);
+        // the rule differentiated other nodes meanwhile and may have rehashed the table, so
+        // insert afresh rather than through anything found before it ran
+        entries.emplace(key, DerivativeScope::Derivatives::Entry{shared_from_this(), v, derivative});
+        return derivative;
+    }
+
+    // Convenience: repeated single-variable differentiation.  Folds the one-variable
     // Differentiate `count` times; count==0 is the identity (the node itself).
     std::shared_ptr<Node> Node::Differentiate(std::shared_ptr<Variable> const& v, unsigned count) const
     {
@@ -129,7 +195,7 @@ namespace node{
     }
 
     // Convenience: sequential differentiation wrt each variable in the group (mixed partials).
-    // Folds the virtual one-variable Differentiate over `vars` in order; empty is the identity.
+    // Folds the one-variable Differentiate over `vars` in order; empty is the identity.
     std::shared_ptr<Node> Node::Differentiate(VariableGroup const& vars) const
     {
         if (vars.empty())
@@ -216,6 +282,37 @@ namespace node{
         multidegree_memo_vars = &vars;
         struct Guard { ~Guard() { multidegree_memo = nullptr; multidegree_memo_vars = nullptr; } } guard;
         return this->MultiDegreeImpl(vars);
+    }
+
+    namespace {
+        /// Memo for one top-level Degree(v) call, as for MultiDegree: node identity -> degree.
+        thread_local std::unordered_map<Node const*, int>* degree_memo = nullptr;
+        /// The variable the in-flight memo was built for (null is the total degree, itself a
+        /// question of its own); a nested call about another variable computes unmemoized.
+        thread_local Variable const* degree_memo_variable = nullptr;
+    }
+
+    int Node::Degree(std::shared_ptr<Variable> const& v) const
+    {
+        if (degree_memo && degree_memo_variable != v.get())
+            return this->DegreeImpl(v);             // a different variable: do not memoize
+
+        if (degree_memo)                            // inside a traversal: consult the memo
+        {
+            auto found = degree_memo->find(this);
+            if (found != degree_memo->end())
+                return found->second;
+            int computed = this->DegreeImpl(v);
+            (*degree_memo)[this] = computed;
+            return computed;
+        }
+
+        // outermost call: own the memo, and clear it however we leave
+        std::unordered_map<Node const*, int> memo;
+        degree_memo          = &memo;
+        degree_memo_variable = v.get();
+        struct Guard { ~Guard() { degree_memo = nullptr; degree_memo_variable = nullptr; } } guard;
+        return this->DegreeImpl(v);
     }
 
 } // namespace node
