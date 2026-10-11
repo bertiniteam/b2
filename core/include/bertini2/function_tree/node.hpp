@@ -276,54 +276,67 @@ public:
     /**
     Compute the degree, optionally with respect to a single variable.
 
-    DAG-aware in the same way as MultiDegree: memoized by node identity for the duration of one
-    top-level call, so a shared subtree is visited once however many times it is reached.  The
-    per-type work lives in DegreeImpl.  UnaryOperator::MultiDegreeImpl asks this once per
-    variable, so without the memo every negation in an expression reopened the walk of the whole
-    expansion beneath it that MultiDegree exists to avoid (#505).
+    Answered from the node's degree record (see DegreeRecord), which is made once per node from
+    its operands' records, so asking costs a lookup however large the expansion beneath the node.
+    The per-type rule lives in DegreeImpl.
 
     \param v Shared pointer to variable with respect to which you want to compute the degree of the Node.
     \return The degree.  Will be negative if the Node is non-polynomial.
     */
     int Degree(std::shared_ptr<Variable> const& v = nullptr) const;
 
-    /// \brief Per-node-type degree in one variable.  Recurses through Degree(), so children are
-    /// memoized; never call this directly unless you want the unmemoized walk.
+    /// \brief Per-node-type degree in one variable.  Asks its operands through Degree(), so
+    /// their records answer; a node's own record is made by calling this, so it must never ask
+    /// Degree() of its own node.
     /// \param v The variable, or null for the total degree.
     /// \return The degree.  Negative if the node is non-polynomial.
     virtual int DegreeImpl(std::shared_ptr<Variable> const& v) const = 0;
 
-
-
-    /**
-     Compute the multidegree with respect to a variable group.  This is for homogenization, and testing for homogeneity.
-
-     \return A vector containing the degrees.  Negative entries indicate non-polynomiality.
-    */
     /**
      Compute the multidegree with respect to a variable group.
 
-     DAG-AWARE: this is a non-virtual wrapper that memoizes by node identity FOR THE DURATION
-     OF ONE TOP-LEVEL CALL, so a shared subtree is visited once however many times it is
-     reached.  The per-type work lives in MultiDegreeImpl.
+     Answered from the node's degree record, like Degree.  The per-type rule lives in
+     MultiDegreeImpl.
 
-     Why it exists (b2#417): the node graph is hash-consed, so a small DAG can stand for an
-     enormous expansion -- measured, a 46-node expression whose printed form is 196 KB.  A
-     plain recursive walk visits the TREE, so it costs O(expansion) where the structure is
-     O(DAG).  `CanonicalizeNaryOperands` calls this for every operand of every n-ary
-     construction, which is how a 46-node expression came to cost 13 ms to multiply by a
-     variable, and how a cofactor expansion inside a deflation stage came to run for hours
-     with a DAG that never exceeded 1102 nodes.
+     Why it matters (b2#417, #505): the node graph is hash-consed, so a small DAG can stand for
+     an enormous expansion -- measured, a 46-node expression whose printed form is 196 KB.
+     `CanonicalizeNaryOperands` asks this of every operand of every sum and product it builds.
+     A plain recursive walk visits the TREE, so it cost O(expansion), which is how a cofactor
+     expansion inside a deflation stage came to run for hours with a DAG that never exceeded
+     1102 nodes.  A walk memoized within one call (#417) costs O(DAG), and asked once per
+     construction that is still O(DAG^2) for building an expression: the derivative of a 7 x 7
+     determinant took seconds.  The record makes each construction's question O(operands).
 
-     Caching the RESULT between calls does not fix this and was measured 29% SLOWER -- filling
-     such a cache costs the same walk it is trying to avoid, so it only pays from a node's
-     second mention.  The memo has to be inside the traversal, which is what this is.
+     #417 measured a cache of RESULTS between calls 29% slower than the memoized walk, because
+     filling it cost the same walk.  The record does not walk: it is made from the operands'
+     records, which already exist for any operand that has been built into a sum or product.
     */
     std::vector<int> MultiDegree(VariableGroup const& vars) const;
 
-    /// \brief Per-node-type multidegree.  Recurses through MultiDegree(), so children are
-    /// memoized; never call this directly unless you want the unmemoized walk.
+    /// \brief Per-node-type multidegree.  Asks its operands through MultiDegree(), and its own
+    /// node only through DegreeImpl, never Degree() (see DegreeImpl).
+    /// \param vars The variable group.
+    /// \return One degree per variable of the group.
     virtual std::vector<int> MultiDegreeImpl(VariableGroup const& vars) const = 0;
+
+    /**
+    \brief The variables in this expression, distinct and sorted by name (GatherVariables).
+
+    Part of the node's degree record: made once per node, from its operands' variables.
+
+    \return The variables.
+    */
+    VariableGroup const& Variables() const;
+
+    /**
+    \brief This node's content key, the canonical encoding (CanonicalEncoding) of the tree it roots.
+
+    Canonicalization orders the operands of a sum or product by it when their multidegrees tie.
+    Computed on the first request and kept: a node is immutable, so its encoding never changes.
+
+    \return The canonical encoding.
+    */
+    std::string const& ContentKey() const;
 
     /**
      Compute the overall degree with respect to a variable group.
@@ -393,6 +406,34 @@ protected:
     /// Opaque compiled-evaluator cache (a system-layer StraightLineProgram for [this]); see
     /// EvalProgram().  Lazily populated by EvalExpression; transient, not serialized.
     mutable std::shared_ptr<const void> eval_program_;
+
+    /**
+    \brief What Variables, Degree and MultiDegree report about this node, made once per node.
+
+    Its variables; for each variable it mentions (its variables and its differentials'
+    variables), its degree and multidegree entry in that variable; its total degree; and one
+    degree and one multidegree entry for every variable it does not mention.  The last are a
+    single pair because the degree rules compare a variable only with the variables a subtree
+    mentions, so every unmentioned variable is answered alike -- not always 0: a negative
+    constant power reports -1 in every variable.  Made from the operands' records, so it costs
+    O(operands x mentioned variables), never a walk.  Defined in node.cpp.
+    */
+    struct DegreeRecord;
+
+    /// The degree record, once made (see Record()).  Published once, atomically, and never
+    /// replaced, so a reference into it lives as long as the node.  Transient, not serialized.
+    mutable std::shared_ptr<const DegreeRecord> degree_record_;
+
+    /// The content key, once computed (see ContentKey()).  Published like degree_record_.
+    mutable std::shared_ptr<const std::string> content_key_;
+
+    /// \brief This node's degree record, made on first request from its operands' records.
+    /// \return The record.
+    DegreeRecord const& Record() const;
+
+    /// \brief A variable that is in no expression, for the record's answer about unmentioned variables.
+    /// \return The variable.
+    static std::shared_ptr<Variable> const& Unmentioned();
 
     /// Compute this node's structural hash.  Default: identity (the object address), so
     /// distinct nodes hash distinctly.  Value/operator nodes override to be structural.

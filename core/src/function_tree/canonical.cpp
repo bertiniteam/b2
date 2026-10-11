@@ -95,10 +95,12 @@ namespace {
     // subtree is a back-reference after its first mention -- linear in the size of the DAG,
     // not of the expansion.  It used to be the PRINTED form, which walks the tree (a 46-node
     // DAG printed as 196 KB; b2#417) and made every cosmetic printer change a digest event
-    // (ADR-0059).  Printing is for people; identity is the encoding.
-    std::string ContentKeyOf(std::shared_ptr<Node> const& n)
+    // (ADR-0059).  Printing is for people; identity is the encoding.  Each node computes its
+    // own once and keeps it (Node::ContentKey), so an operand compared in many constructions
+    // is encoded once, not once per construction (#505).
+    std::string const& ContentKeyOf(std::shared_ptr<Node> const& n)
     {
-        return CanonicalEncoding(n);
+        return n->ContentKey();
     }
 
     // A product operand decomposed into (base, integer exponent): x -> (x,1), x^k -> (x,k).
@@ -265,17 +267,11 @@ void CanonicalizeNaryOperands(std::vector<std::shared_ptr<Node>>& operands,
 
     // The content key is only the TIE-BREAK, consulted when two operands have equal
     // multidegree.  Most comparisons are decided by the multidegree and never ask, so it is
-    // computed on demand and memoized for the sort -- one encoding per operand at most.
-    std::vector<std::string> content_keys(N);
-    std::vector<bool>        have_key(N, false);
+    // computed on demand -- and kept by the operand, so once per node however many
+    // constructions it is an operand of.
     auto key_of = [&](std::size_t i) -> std::string const&
     {
-        if (!have_key[i])
-        {
-            content_keys[i] = ContentKeyOf(operands[i]);
-            have_key[i]     = true;
-        }
-        return content_keys[i];
+        return ContentKeyOf(operands[i]);
     };
 
     const MonomialOrder order = CurrentMonomialOrder();

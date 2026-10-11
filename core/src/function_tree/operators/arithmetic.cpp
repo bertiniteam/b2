@@ -1101,7 +1101,7 @@ std::vector<int> PowerOperator::MultiDegreeImpl(VariableGroup const& vars) const
     std::vector<int> deg(vars.size(),0);
     for (auto iter = vars.begin(); iter!= vars.end(); ++iter)
     {
-        *(deg.begin()+(iter-vars.begin())) = this->Degree(*iter);
+        *(deg.begin()+(iter-vars.begin())) = this->DegreeImpl(*iter);   // never Degree(): this node's record is being made from this
     }
     return deg;
 }

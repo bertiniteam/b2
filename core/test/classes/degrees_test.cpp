@@ -450,4 +450,34 @@ BOOST_AUTO_TEST_CASE(degree_visits_each_shared_subexpression_once)
     BOOST_CHECK_EQUAL(total_degree, levels + 1);
 }
 
+// A node's degree record answers every variable it does not mention with one value, and that
+// value is not always 0: a power with a negative constant exponent is not a polynomial, so it
+// reports -1 in every variable, including ones it does not contain -- and so does a sum or
+// product over it.  The record must keep that answer, not assume 0.
+BOOST_AUTO_TEST_CASE(an_unmentioned_variable_gets_the_degree_rules_answer)
+{
+    Var x = Variable::Make("x"), y = Variable::Make("y"), z = Variable::Make("z");
+    auto inverse_square = pow(x, Integer::Make(-2));      // a generic power, not an integer power
+    BOOST_CHECK_EQUAL(inverse_square->Degree(x), -1);
+    BOOST_CHECK_EQUAL(inverse_square->Degree(z), -1);     // z is not in it
+    auto md = inverse_square->MultiDegree(VariableGroup{x, y, z});
+    BOOST_CHECK_EQUAL(md[0], -1);
+    BOOST_CHECK_EQUAL(md[1], -1);
+    BOOST_CHECK_EQUAL(md[2], -1);
+
+    auto sum = inverse_square + y;
+    BOOST_CHECK_EQUAL(sum->Degree(y), -1);
+    BOOST_CHECK_EQUAL(sum->Degree(z), -1);
+
+    // and a polynomial answers 0 for a variable it does not contain
+    auto poly = x*x*y + y;
+    BOOST_CHECK_EQUAL(poly->Degree(z), 0);
+    BOOST_CHECK_EQUAL(poly->Degree(x), 2);
+    BOOST_CHECK_EQUAL(poly->Degree(), 3);
+    auto pmd = poly->MultiDegree(VariableGroup{z, y, x});
+    BOOST_CHECK_EQUAL(pmd[0], 0);
+    BOOST_CHECK_EQUAL(pmd[1], 1);
+    BOOST_CHECK_EQUAL(pmd[2], 2);
+}
+
 BOOST_AUTO_TEST_SUITE_END()

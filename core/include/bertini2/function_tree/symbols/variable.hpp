@@ -128,6 +128,9 @@ namespace node{
     private:
 
         friend class boost::serialization::access;
+        // a node's degree record asks about one variable that is in no expression: built with the
+        // default constructor and never interned, so no name a user can give collides with it
+        friend class Node;
 
         template <typename Archive>
         void serialize(Archive& ar, const unsigned /*version*/) {

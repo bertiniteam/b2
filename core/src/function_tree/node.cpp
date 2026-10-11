@@ -20,7 +20,9 @@
 // additional terms in the b2/licenses/ directory.
 
 #include "bertini2/function_tree.hpp"
+#include "bertini2/function_tree/canonical_encoding.hpp"
 
+#include <memory>
 #include <unordered_map>
 #include <vector>
 #include <mutex>
@@ -249,70 +251,152 @@ namespace node{
         return candidate;
     }
 
-    namespace {
-        /// Memo for one top-level MultiDegree call: node identity -> its degrees.  Thread-local
-        /// because node graphs are shared across threads but a traversal is not.  Null when no
-        /// traversal is in flight, which is how the outermost call knows to own the memo.
-        thread_local std::unordered_map<Node const*, std::vector<int>>* multidegree_memo = nullptr;
-        /// The variable group the in-flight memo was built for.  A multidegree is only
-        /// meaningful relative to a variable group, so a nested call asking about a DIFFERENT
-        /// group must not read this memo -- it computes unmemoized instead.  Within one
-        /// traversal the same `vars` reference is handed down, so identity is the right test.
-        thread_local VariableGroup const* multidegree_memo_vars = nullptr;
+    // ---- the degree record: variables, degrees and multidegrees, once per node (#505) ----
+
+    struct Node::DegreeRecord
+    {
+        VariableGroup variables;               ///< distinct, sorted by name (GatherVariables)
+        VariableGroup mentioned;               ///< variables and differentials' variables, sorted by address
+        std::vector<int> degree;               ///< Degree(v) for each mentioned v
+        std::vector<int> multidegree;          ///< the MultiDegree entry for each mentioned v
+        int total_degree = 0;                  ///< Degree(nullptr)
+        int unmentioned_degree = 0;            ///< Degree(v) for any v not mentioned
+        int unmentioned_multidegree = 0;       ///< the MultiDegree entry for any v not mentioned
+
+        // the index of v among the mentioned variables, or -1
+        long IndexOf(Variable const* v) const
+        {
+            auto it = std::lower_bound(mentioned.begin(), mentioned.end(), v,
+                                       [](std::shared_ptr<Variable> const& a, Variable const* b) { return a.get() < b; });
+            return (it != mentioned.end() && it->get() == v) ? it - mentioned.begin() : -1;
+        }
+    };
+
+    // A variable no expression contains: asking a node about it asks about every variable the
+    // node does not mention.  Made with the default constructor and never interned, so no
+    // variable a user makes, whatever its name, is this one.
+    std::shared_ptr<Variable> const& Node::Unmentioned()
+    {
+        static std::shared_ptr<Variable> const unmentioned(new Variable());
+        return unmentioned;
     }
 
-    std::vector<int> Node::MultiDegree(VariableGroup const& vars) const
-    {
-        if (multidegree_memo && multidegree_memo_vars != &vars)
-            return this->MultiDegreeImpl(vars);      // different variable group: do not memoize
+    namespace {
 
-        if (multidegree_memo)                       // inside a traversal: consult the memo
+        // Each operand of n, by the public child accessors (the same descent as Find).
+        template<typename F>
+        void ForEachOperand(Node const& n, F&& f)
         {
-            auto found = multidegree_memo->find(this);
-            if (found != multidegree_memo->end())
-                return found->second;
-            auto computed = this->MultiDegreeImpl(vars);
-            (*multidegree_memo)[this] = computed;
-            return computed;
+            if (auto h = dynamic_cast<NamedExpression const*>(&n))
+                f(h->EntryNode());
+            else if (auto nary = dynamic_cast<NaryOperator const*>(&n))
+                for (auto const& child : nary->Operands())
+                    f(child);
+            else if (auto u = dynamic_cast<UnaryOperator const*>(&n))
+                f(u->Operand());
+            else if (auto p = dynamic_cast<PowerOperator const*>(&n))
+            {
+                f(p->GetBase());
+                f(p->GetExponent());
+            }
         }
 
-        // outermost call: own the memo, and clear it however we leave
-        std::unordered_map<Node const*, std::vector<int>> memo;
-        multidegree_memo      = &memo;
-        multidegree_memo_vars = &vars;
-        struct Guard { ~Guard() { multidegree_memo = nullptr; multidegree_memo_vars = nullptr; } } guard;
-        return this->MultiDegreeImpl(vars);
+        void SortAndDedupe(VariableGroup& vars, bool by_name)
+        {
+            if (by_name)
+                std::sort(vars.begin(), vars.end(),
+                          [](std::shared_ptr<Variable> const& a, std::shared_ptr<Variable> const& b) { return a->name() < b->name(); });
+            else
+                std::sort(vars.begin(), vars.end(),
+                          [](std::shared_ptr<Variable> const& a, std::shared_ptr<Variable> const& b) { return a.get() < b.get(); });
+            vars.erase(std::unique(vars.begin(), vars.end(),
+                                   [](std::shared_ptr<Variable> const& a, std::shared_ptr<Variable> const& b) { return a.get() == b.get(); }),
+                       vars.end());
+        }
     }
 
-    namespace {
-        /// Memo for one top-level Degree(v) call, as for MultiDegree: node identity -> degree.
-        thread_local std::unordered_map<Node const*, int>* degree_memo = nullptr;
-        /// The variable the in-flight memo was built for (null is the total degree, itself a
-        /// question of its own); a nested call about another variable computes unmemoized.
-        thread_local Variable const* degree_memo_variable = nullptr;
+    Node::DegreeRecord const& Node::Record() const
+    {
+        if (auto made = std::atomic_load(&degree_record_))
+            return *made;
+
+        auto record = std::make_shared<DegreeRecord>();
+        ForEachOperand(*this, [&](auto const& operand)
+        {
+            if (!operand)
+                return;
+            auto const& r = operand->Record();
+            record->variables.insert(record->variables.end(), r.variables.begin(), r.variables.end());
+            record->mentioned.insert(record->mentioned.end(), r.mentioned.begin(), r.mentioned.end());
+        });
+        if (dynamic_cast<Variable const*>(this))
+        {
+            auto as_variable = std::const_pointer_cast<Variable>(std::static_pointer_cast<Variable const>(shared_from_this()));
+            record->variables.push_back(as_variable);
+            record->mentioned.push_back(as_variable);
+        }
+        if (auto d = dynamic_cast<Differential const*>(this))
+            if (d->GetVariable())
+                record->mentioned.push_back(std::const_pointer_cast<Variable>(d->GetVariable()));
+        SortAndDedupe(record->variables, true);
+        SortAndDedupe(record->mentioned, false);
+
+        // The rules ask the operands' Degree and MultiDegree, which their records answer, and
+        // never this node's own (DegreeImpl's contract), so nothing here recurses into this.
+        record->degree.reserve(record->mentioned.size());
+        for (auto const& v : record->mentioned)
+            record->degree.push_back(this->DegreeImpl(v));
+        record->total_degree = this->DegreeImpl(nullptr);
+        record->unmentioned_degree = this->DegreeImpl(Unmentioned());
+        record->multidegree = this->MultiDegreeImpl(record->mentioned);
+        record->unmentioned_multidegree = this->MultiDegreeImpl(VariableGroup{Unmentioned()}).front();
+
+        // publish once: a thread that lost the race uses the winner's, so a reference into the
+        // record stays valid for the node's life
+        std::shared_ptr<const DegreeRecord> expected;
+        std::shared_ptr<const DegreeRecord> mine = record;
+        if (!std::atomic_compare_exchange_strong(&degree_record_, &expected, mine))
+            return *expected;
+        return *mine;
+    }
+
+    VariableGroup const& Node::Variables() const
+    {
+        return Record().variables;
     }
 
     int Node::Degree(std::shared_ptr<Variable> const& v) const
     {
-        if (degree_memo && degree_memo_variable != v.get())
-            return this->DegreeImpl(v);             // a different variable: do not memoize
+        auto const& record = Record();
+        if (!v)
+            return record.total_degree;
+        auto index = record.IndexOf(v.get());
+        return index < 0 ? record.unmentioned_degree : record.degree[index];
+    }
 
-        if (degree_memo)                            // inside a traversal: consult the memo
+    std::vector<int> Node::MultiDegree(VariableGroup const& vars) const
+    {
+        auto const& record = Record();
+        std::vector<int> degrees;
+        degrees.reserve(vars.size());
+        for (auto const& v : vars)
         {
-            auto found = degree_memo->find(this);
-            if (found != degree_memo->end())
-                return found->second;
-            int computed = this->DegreeImpl(v);
-            (*degree_memo)[this] = computed;
-            return computed;
+            auto index = record.IndexOf(v.get());
+            degrees.push_back(index < 0 ? record.unmentioned_multidegree : record.multidegree[index]);
         }
+        return degrees;
+    }
 
-        // outermost call: own the memo, and clear it however we leave
-        std::unordered_map<Node const*, int> memo;
-        degree_memo          = &memo;
-        degree_memo_variable = v.get();
-        struct Guard { ~Guard() { degree_memo = nullptr; degree_memo_variable = nullptr; } } guard;
-        return this->DegreeImpl(v);
+    std::string const& Node::ContentKey() const
+    {
+        if (auto made = std::atomic_load(&content_key_))
+            return *made;
+        std::shared_ptr<const std::string> mine =
+            std::make_shared<const std::string>(CanonicalEncoding(std::const_pointer_cast<Node>(shared_from_this())));
+        std::shared_ptr<const std::string> expected;
+        if (!std::atomic_compare_exchange_strong(&content_key_, &expected, mine))
+            return *expected;
+        return *mine;
     }
 
 } // namespace node
