@@ -549,7 +549,7 @@ namespace bertini{
                 if (reinitialize_stepsize_)
                 {
                     real_mp segment_length = abs(start_time-end_time)/Get<Stepping>().min_num_steps;
-                    SetStepSize(min(real_mp(Get<Stepping>().initial_step_size, initial_precision_),segment_length));
+                    SetStepSize(min(real_mp(FirstStepSize(), initial_precision_),segment_length));
                 }
                 current_stepsize_.precision(initial_precision_);
 

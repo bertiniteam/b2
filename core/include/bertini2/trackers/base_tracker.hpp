@@ -206,7 +206,7 @@ namespace bertini{
                 this->template Set<SteppingConfig>(stepping);
                 this->template Set<NewtonConfig>(newton);
 
-                current_stepsize_ = BaseRealT(stepping.initial_step_size);
+                current_stepsize_ = BaseRealT(FirstStepSize());
             }
 
 
@@ -595,6 +595,20 @@ namespace bertini{
             void SetStepSize(RealT const& new_stepsize) const
             {
                 current_stepsize_ = new_stepsize;
+            }
+
+
+            /**
+            \brief The length of a track's first step, before any limit from the length of the track.
+
+            The stepping settings' initial_step_size, but never more than their max_step_size: every
+            step a track takes is at most max_step_size, the first one included (#508).
+            */
+            auto FirstStepSize() const
+            {
+                auto const& stepping = this->template Get<Stepping>();
+                return stepping.max_step_size < stepping.initial_step_size ? stepping.max_step_size
+                                                                           : stepping.initial_step_size;
             }
 
 
