@@ -523,4 +523,69 @@ BOOST_AUTO_TEST_CASE(a_truncation_threshold_set_through_the_config_truncates)
 }
 
 
+namespace {
+// The time after each successful step, as a double.
+template<typename TrackerT>
+struct StepTimeRecorder : public bertini::Observer<TrackerT>
+{
+    using Emitter = typename bertini::tracking::TrackerTraits<TrackerT>::EventEmitterType;
+
+    std::vector<double> times; ///< The real part of the time after each successful step.
+
+    bertini::ObserveResult Observe(bertini::AnyEvent const& e) override
+    {
+        if (auto p = dynamic_cast<const bertini::tracking::SuccessfulStep<Emitter>*>(&e))
+            times.push_back(static_cast<double>(real(p->Get().CurrentTime())));
+        return bertini::ObserveResult::KeepObserving;
+    }
+};
+
+// Tracks y = t from t = 1 to 0 with max_step_size 1/1000 and the default initial_step_size,
+// 1/10, and returns the time after each step.
+template<typename TrackerT, typename ComplexT>
+std::vector<double> StepTimesUnderAMaxStepOfOneThousandth()
+{
+    using namespace bertini::tracking;
+
+    Var y = Variable::Make("y");
+    Var t = Variable::Make("t");
+    System sys;
+    sys.AddFunction(y - t);
+    sys.AddPathVariable(t);
+    sys.AddVariableGroup(VariableGroup{y});
+
+    TrackerT tracker(sys);
+    SteppingConfig stepping;
+    stepping.max_step_size = bertini::mpq_rational(1, 1000);
+    stepping.max_num_steps = 10000;
+    tracker.Setup(Predictor::RKF45, 1e-5, 1e5, stepping, NewtonConfig());
+
+    StepTimeRecorder<TrackerT> recorder;
+    tracker.AddObserver(recorder);
+    Vec<ComplexT> start(1), end_point;
+    start << ComplexT(1);
+    tracker.TrackPath(end_point, ComplexT(1), ComplexT(0), start);
+    tracker.RemoveObserver(recorder);
+    return recorder.times;
+}
+}
+
+
+// b2#508: a track's first step was initial_step_size whatever max_step_size said, so a track
+// asked to take steps of at most 1/1000 opened with a step of 1/10.
+BOOST_AUTO_TEST_CASE(the_first_step_is_at_most_the_max_step_size)
+{
+    DefaultPrecision(30);
+    using namespace bertini::tracking;
+
+    auto const in_double = StepTimesUnderAMaxStepOfOneThousandth<DoublePrecisionTracker, complex_dbl>();
+    auto const in_multiple = StepTimesUnderAMaxStepOfOneThousandth<MultiplePrecisionTracker, mpfr>();
+    for (auto const& times : {in_double, in_multiple})
+    {
+        BOOST_REQUIRE(!times.empty());
+        BOOST_CHECK_LE(1 - times.front(), 1e-3 * (1 + 1e-12));
+    }
+}
+
+
 BOOST_AUTO_TEST_SUITE_END()

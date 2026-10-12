@@ -486,7 +486,7 @@ namespace bertini{
                 this->endtime_ = end_time;
                 std::get<Vec<BaseComplexT> >(this->current_space_) = start_point;
                 if (this->reinitialize_stepsize_)
-                    this->SetStepSize(min(BaseRealT(Get<Stepping>().initial_step_size),abs(start_time-end_time)/Get<Stepping>().min_num_steps));
+                    this->SetStepSize(min(BaseRealT(this->FirstStepSize()),abs(start_time-end_time)/Get<Stepping>().min_num_steps));
 
                 ResetCounters();
 
@@ -615,7 +615,7 @@ namespace bertini{
                 this->endtime_ = end_time;
                 std::get<Vec<BaseComplexT> >(this->current_space_) = start_point;
                 if (this->reinitialize_stepsize_)
-                    this->SetStepSize(min(real_mp(Get<Stepping>().initial_step_size),real_mp(abs(start_time-end_time)/Get<Stepping>().min_num_steps)));
+                    this->SetStepSize(min(real_mp(this->FirstStepSize()),real_mp(abs(start_time-end_time)/Get<Stepping>().min_num_steps)));
 
                 ResetCounters();
 

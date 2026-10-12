@@ -1753,4 +1753,67 @@ BOOST_AUTO_TEST_CASE(a_tracker_never_returns_never_started)
     BOOST_CHECK(distinct.size() > 1);                                // and at least one did not
 }
 
+
+namespace {
+// The time after each successful step, as a double.
+struct StepTimeRecorder : public bertini::Observer<bertini::tracking::AMPTracker>
+{
+    using Emitter = bertini::tracking::TrackerTraits<bertini::tracking::AMPTracker>::EventEmitterType;
+
+    std::vector<double> times; ///< The real part of the time after each successful step.
+
+    bertini::ObserveResult Observe(bertini::AnyEvent const& e) override
+    {
+        if (auto p = dynamic_cast<const bertini::tracking::SuccessfulStep<Emitter>*>(&e))
+            times.push_back(static_cast<double>(real(p->Get().CurrentTime())));
+        return bertini::ObserveResult::KeepObserving;
+    }
+};
+}
+
+
+/**
+Every step a track takes is at most max_step_size, the first one included (b2#508).
+
+A track opened with initial_step_size whatever max_step_size said, and max_step_size bounded only
+the step's growth after that: a track asked for steps of at most 1/1000 opened with the default
+1/10, crossing in one step the stretch its caller had asked it to cross in a hundred.
+*/
+BOOST_AUTO_TEST_CASE(every_step_is_at_most_the_max_step_size_the_first_included)
+{
+    using namespace bertini::tracking;
+    using Cmp = bertini::complex_mp;
+    DefaultPrecision(30);
+
+    auto y = Variable::Make("y");
+    auto t = Variable::Make("t");
+    System sys;
+    sys.AddFunction(y - t);
+    sys.AddPathVariable(t);
+    sys.AddVariableGroup(VariableGroup{y});
+
+    AMPTracker tracker(sys);
+    SteppingConfig stepping;
+    stepping.max_step_size = bertini::mpq_rational(1, 1000);
+    stepping.max_num_steps = 10000;
+    tracker.Setup(Predictor::RKF45, 1e-5, 1e5, stepping, NewtonConfig());
+    tracker.PrecisionSetup(AMPConfigFrom(sys));
+
+    StepTimeRecorder recorder;
+    tracker.AddObserver(recorder);
+    bertini::Vec<Cmp> start(1), end_point;
+    start << Cmp(1);
+    auto code = tracker.TrackPath(end_point, Cmp(1), Cmp(0), start);
+    tracker.RemoveObserver(recorder);
+
+    BOOST_CHECK(code == bertini::SuccessCode::Success);
+    BOOST_REQUIRE(!recorder.times.empty());
+    double before = 1;
+    for (double after : recorder.times)
+    {
+        BOOST_CHECK_LE(before - after, 1e-3 * (1 + 1e-12));
+        before = after;
+    }
+}
+
 BOOST_AUTO_TEST_SUITE_END()
