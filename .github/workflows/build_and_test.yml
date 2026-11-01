@@ -163,11 +163,11 @@ jobs:
         if: runner.os == 'Linux'
         run: |
           sudo apt-get update
-          sudo apt-get install -y wget libgmp-dev libmpfr-dev libmpc-dev libeigen3-dev libtool openmpi-bin libopenmpi-dev ccache
+          sudo apt-get install -y wget libgmp-dev libmpfr-dev libmpc-dev libflint-dev libeigen3-dev libtool openmpi-bin libopenmpi-dev ccache
 
       - name: Install system dependencies (macOS)
         if: runner.os == 'macOS'
-        run: brew install gmp mpfr libmpc eigen@3 open-mpi ccache
+        run: brew install gmp mpfr libmpc flint eigen@3 open-mpi ccache
 
       # compiler cache: makes recompiles of unchanged C++ near-free.  the key is
       # deliberately loose (always save fresh, restore newest) -- ccache does its
@@ -251,6 +251,15 @@ jobs:
           echo "::group::ctest with BERTINI_NUM_THREADS=1 (per-solve serial)"
           BERTINI_NUM_THREADS=1 ctest --output-on-failure --timeout 600 --parallel "$jobs"
           echo "::endgroup::"
+
+      # The FLINT spike's cost table is its deliverable; ctest hides a passing test's output,
+      # so run the binary once more where the log can show it.
+      - name: FLINT spike (versions and cost table)
+        working-directory: build
+        env:
+          LD_LIBRARY_PATH: /tmp/boost-base/lib:/tmp/boost-base/lib64
+          DYLD_LIBRARY_PATH: /tmp/boost-base/lib
+        run: ./core/test_flint_spike
 
       # The published wheels ship WITHOUT MPI (we can't know the user's MPI), but this C++ build is
       # MPI-enabled (openmpi is installed above), so we verify the MPI runtime path actually works
@@ -383,6 +392,12 @@ jobs:
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
           Write-Host "::endgroup::"
 
+      # The FLINT spike's cost table is its deliverable (see the unix job).
+      - name: FLINT spike (versions and cost table)
+        shell: pwsh
+        working-directory: build
+        run: .\core\test_flint_spike.exe
+
   # The wheel build is an INDEPENDENT full compile (prebuilt deps image/tarball +
   # cibuildwheel, ccache namespace ccache-wheels-*), sharing nothing with the C++
   # test job (boost-base from source, ccache namespace ccache-cpp-*).  So it does
@@ -480,18 +495,30 @@ jobs:
           # Everything is prebuilt in the image (Boost/Boost.Python + eigenpy at /opt/deps/<tag>;
           # eigen/ccache/patchelf/openmpi installed).  So BEFORE_ALL just asserts the image is the
           # one we expect -- a fast, loud failure if we ever point at the wrong/empty image.
+          # FLINT is not in the prebuilt image yet (this is the spike that decides whether it
+          # joins it), so build it from the release tarball against the image's gmp/mpfr, into
+          # /usr/local.  No --enable-avx2/avx512 and no CFLAGS, so FLINT picks the generic
+          # flags for the architecture rather than the build host's CPU.
           CIBW_BEFORE_ALL_LINUX: >
             ls -1 /opt/deps &&
             command -v patchelf &&
             ccache --version >/dev/null &&
-            command -v mpicc
+            command -v mpicc &&
+            cd /tmp &&
+            curl -fsSL -o flint-3.5.0.tar.gz https://github.com/flintlib/flint/releases/download/v3.5.0/flint-3.5.0.tar.gz &&
+            tar xzf flint-3.5.0.tar.gz &&
+            cd flint-3.5.0 &&
+            ./configure --prefix=/usr/local --disable-static >/tmp/flint-configure.log 2>&1 &&
+            make -j4 >/tmp/flint-make.log 2>&1 &&
+            make install >/tmp/flint-install.log 2>&1 &&
+            ls -l /usr/local/lib/libflint.so* /usr/local/include/flint/flint.h
           # On macOS, Homebrew's boost-python3 / eigenpy bottles track the current
           # Homebrew default Python (now 3.14), so a cp313 wheel that bundles them
           # imports a libboost_python314.dylib into a 3.13 interpreter and segfaults.
           # Install only the Python-version-independent libs from brew here; download
           # Boost & eigenpy sources to /tmp for the per-Python build in BEFORE_BUILD.
           CIBW_BEFORE_ALL_MACOS: >
-            brew install gmp mpfr libmpc eigen@3 ccache &&
+            brew install gmp mpfr libmpc flint eigen@3 ccache &&
             cd /tmp &&
             { [ -f eigenpy-${{ env.EIGENPY_VERSION }}.tar.gz ] || curl -fsSL -o eigenpy-${{ env.EIGENPY_VERSION }}.tar.gz https://github.com/stack-of-tasks/eigenpy/releases/download/v${{ env.EIGENPY_VERSION }}/eigenpy-${{ env.EIGENPY_VERSION }}.tar.gz ; }
 
@@ -557,7 +584,7 @@ jobs:
           # runner with no margin.  The same 4 on the 16 GB arm runner was killed (exit 143, and
           # "runner lost communication") in three of five cold wheel builds, so arm compiles 3 at
           # a time.  Only a cold build feels this; a warm one is mostly ccache hits.  ADR-0004.
-          CIBW_ENVIRONMENT_LINUX: "LD_LIBRARY_PATH=/opt/deps/current/lib:/opt/deps/current/lib64:$LD_LIBRARY_PATH CMAKE_PREFIX_PATH=/opt/deps/current CXXFLAGS=-w CMAKE_BUILD_PARALLEL_LEVEL=${{ runner.arch == 'ARM64' && 3 || 4 }} CCACHE_DIR=/ccache-host CCACHE_MAXSIZE=400M CMAKE_ARGS='-DCMAKE_C_COMPILER_LAUNCHER=ccache -DCMAKE_CXX_COMPILER_LAUNCHER=ccache'"
+          CIBW_ENVIRONMENT_LINUX: "LD_LIBRARY_PATH=/opt/deps/current/lib:/opt/deps/current/lib64:/usr/local/lib:/usr/local/lib64:$LD_LIBRARY_PATH CMAKE_PREFIX_PATH=/opt/deps/current CXXFLAGS=-w CMAKE_BUILD_PARALLEL_LEVEL=${{ runner.arch == 'ARM64' && 3 || 4 }} CCACHE_DIR=/ccache-host CCACHE_MAXSIZE=400M CMAKE_ARGS='-DCMAKE_C_COMPILER_LAUNCHER=ccache -DCMAKE_CXX_COMPILER_LAUNCHER=ccache'"
           # the homebrew prefix differs by architecture (/opt/homebrew on apple silicon,
           # /usr/local on intel), so both are named; the one that is not there is ignored
           CIBW_ENVIRONMENT_MACOS: "MACOSX_DEPLOYMENT_TARGET=$MACOSX_DEPLOYMENT_TARGET CMAKE_PREFIX_PATH=/tmp/deps-py:/opt/homebrew:/usr/local DYLD_FALLBACK_LIBRARY_PATH=/tmp/deps-py/lib:/opt/homebrew/lib:/usr/local/lib CCACHE_DIR=$GITHUB_WORKSPACE/.ccache CCACHE_MAXSIZE=400M CMAKE_ARGS='-DCMAKE_C_COMPILER_LAUNCHER=ccache -DCMAKE_CXX_COMPILER_LAUNCHER=ccache'"
