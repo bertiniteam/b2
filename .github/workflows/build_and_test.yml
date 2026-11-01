@@ -500,19 +500,32 @@ jobs:
           # eigen/ccache/patchelf/openmpi installed).  So BEFORE_ALL just asserts the image is the
           # one we expect -- a fast, loud failure if we ever point at the wrong/empty image.
           # FLINT is not in the prebuilt image yet (this is the spike that decides whether it
-          # joins it), so build it from the release tarball against the image's gmp/mpfr, into
-          # /usr/local.  No --enable-avx2/avx512 and no CFLAGS, so FLINT picks the generic
-          # flags for the architecture rather than the build host's CPU.
+          # joins it), so build it from the release tarball into /usr/local.  FLINT 3.5 needs
+          # GMP >= 6.2.1 and the image (AlmaLinux 9) ships 6.2.0, so GMP 6.3.0 is built first,
+          # fat on x86_64 (CPU code chosen at run time, not the build host's); b2 then links that
+          # GMP too, since /usr/local precedes /usr in CMake's search.  The image's MPFR 4.1.0
+          # satisfies FLINT and is ABI-compatible with the new GMP.  No --enable-avx2/avx512 and
+          # no CFLAGS for FLINT, so it picks the generic flags for the architecture.
           CIBW_BEFORE_ALL_LINUX: >
             ls -1 /opt/deps &&
             command -v patchelf &&
             ccache --version >/dev/null &&
             command -v mpicc &&
+            export LD_LIBRARY_PATH=/usr/local/lib:/usr/local/lib64:$LD_LIBRARY_PATH &&
+            cd /tmp &&
+            curl -fsSL -o gmp-6.3.0.tar.xz https://gmplib.org/download/gmp/gmp-6.3.0.tar.xz &&
+            tar xJf gmp-6.3.0.tar.xz &&
+            cd gmp-6.3.0 &&
+            { [ "$(uname -m)" != x86_64 ] || FAT=--enable-fat; } &&
+            ./configure --prefix=/usr/local --disable-static $FAT >/tmp/gmp-configure.log 2>&1 &&
+            { make -j4 >/tmp/gmp-make.log 2>&1 || { tail -n 80 /tmp/gmp-make.log; false; } ; } &&
+            make install >/tmp/gmp-install.log 2>&1 &&
+            ldconfig &&
             cd /tmp &&
             curl -fsSL -o flint-3.5.0.tar.gz https://github.com/flintlib/flint/releases/download/v3.5.0/flint-3.5.0.tar.gz &&
             tar xzf flint-3.5.0.tar.gz &&
             cd flint-3.5.0 &&
-            ./configure --prefix=/usr/local --disable-static &&
+            ./configure --prefix=/usr/local --disable-static --with-gmp=/usr/local &&
             { make -j4 >/tmp/flint-make.log 2>&1 || { tail -n 80 /tmp/flint-make.log; false; } ; } &&
             make install >/tmp/flint-install.log 2>&1 &&
             ls -l /usr/local/lib/libflint.so* /usr/local/include/flint/flint.h
