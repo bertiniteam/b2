@@ -24,6 +24,8 @@
 
 #include "info.hpp"
 
+#include "bertini2/flint_version.hpp"
+
 namespace bertini{
     namespace python{
 
@@ -44,6 +46,9 @@ namespace bertini{
             def("eigen_version", &bertini::EigenHeaderVersion);
             def("gmp_version", &bertini::GMPVersion);
             def("mpfr_version", &bertini::MPFRVersion);
+            // The FLINT spike (bertiniteam/b2#412): a reference from the extension itself, so
+            // the static libbertini2 pulls in flint_version.o and every wheel really carries FLINT.
+            def("flint_version", &bertini::FlintVersion);
             def("mpi_version", &bertini::MPIVersion);
             def("dependency_versions", &bertini::DependencyVersions);
             def("splash", &bertini::SplashScreen);
