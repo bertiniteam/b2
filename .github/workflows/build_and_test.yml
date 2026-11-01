@@ -122,7 +122,11 @@ jobs:
             # version on both architectures, here and in every workflow, instead of
             # ubuntu-latest, so an image change is a deliberate edit rather than a surprise:
             # the C++ test job compiles with the runner's own GCC and apt packages.
-            OS='["ubuntu-26.04","ubuntu-26.04-arm","macos-14","macos-15-intel"]'; PY='["3.10","3.11","3.12","3.13","3.14"]'
+            # macos-14 images are retired on 2026-11-02 (brownouts cancelled every arm64 job of
+            # the spike's first run); macos-15 is the arm64 runner from here on.  Its prebuilt
+            # deps tarball is named for macos14, so until build-macos-deps.yml is rerun the
+            # wheel job takes the from-source path for Boost and eigenpy.
+            OS='["ubuntu-26.04","ubuntu-26.04-arm","macos-15","macos-15-intel"]'; PY='["3.10","3.11","3.12","3.13","3.14"]'
           else
             OS='["ubuntu-26.04"]'; PY='["3.11"]'
           fi
@@ -131,7 +135,7 @@ jobs:
           case "${{ inputs.os }}" in
             linux)        OS='["ubuntu-26.04","ubuntu-26.04-arm"]' ;;
             linux-arm)    OS='["ubuntu-26.04-arm"]' ;;
-            macos)        OS='["macos-14"]' ;;
+            macos)        OS='["macos-15"]' ;;
             macos-intel)  OS='["macos-15-intel"]'; PY='["3.11"]' ;;   # the #215 experiment
             windows)      OS='[]' ;;   # no unix jobs; only the standalone Windows jobs run
           esac
@@ -508,8 +512,8 @@ jobs:
             curl -fsSL -o flint-3.5.0.tar.gz https://github.com/flintlib/flint/releases/download/v3.5.0/flint-3.5.0.tar.gz &&
             tar xzf flint-3.5.0.tar.gz &&
             cd flint-3.5.0 &&
-            ./configure --prefix=/usr/local --disable-static >/tmp/flint-configure.log 2>&1 &&
-            make -j4 >/tmp/flint-make.log 2>&1 &&
+            ./configure --prefix=/usr/local --disable-static &&
+            { make -j4 >/tmp/flint-make.log 2>&1 || { tail -n 80 /tmp/flint-make.log; false; } ; } &&
             make install >/tmp/flint-install.log 2>&1 &&
             ls -l /usr/local/lib/libflint.so* /usr/local/include/flint/flint.h
           # On macOS, Homebrew's boost-python3 / eigenpy bottles track the current

@@ -125,6 +125,7 @@ set(basics_rootinclude_headers
     include/bertini2/forbid_mixed_arithmetic.hpp
     include/bertini2/double_extensions.hpp
     include/bertini2/random.hpp
+    include/bertini2/flint_version.hpp
     include/bertini2/num_traits.hpp
     include/bertini2/classic.hpp
     include/bertini2/eigen_extensions.hpp
@@ -352,6 +353,7 @@ set(BERTINI2_LIBRARY_HEADERS
 
 set(basics_sources
     src/basics/random.cpp
+    src/basics/flint_version.cpp
     src/basics/have_bertini.cpp
     src/basics/fast_allocator.cpp
     src/basics/stop_request.cpp

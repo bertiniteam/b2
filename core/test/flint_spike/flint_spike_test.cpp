@@ -47,6 +47,7 @@
 
 #include "bertini2/mpfr_extensions.hpp"
 #include "bertini2/mpfr_complex.hpp"
+#include "bertini2/flint_version.hpp"
 
 #include <chrono>
 #include <cmath>
@@ -152,6 +153,7 @@ BOOST_AUTO_TEST_CASE(flint_and_bertini_share_one_gmp_and_one_mpfr)
               << " (runtime " << flint_version << ")\n";
     BOOST_CHECK_EQUAL(std::string(mpfr_get_version()), std::string(MPFR_VERSION_STRING));
     BOOST_CHECK_EQUAL(std::string(flint_version), std::string(FLINT_VERSION));
+    BOOST_CHECK_EQUAL(bertini::FlintVersion(), std::string(FLINT_VERSION)); // the library links FLINT too
 
     mpz_t big, back;
     mpz_init(big); mpz_init(back);
