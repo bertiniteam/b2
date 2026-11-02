@@ -261,7 +261,7 @@ BOOST_AUTO_TEST_CASE(seed_42_homotopy_digest_is_pinned_cross_platform)
     std::cout << "[stage] homotopy:    " << hex << "\n";
 
     // re-pinned for b2sysenc/3 (the content-key tie-break, ADR-0073), which is edited in place
-    // while 4.0.1 is unreleased (ADR-0061), so this moves whenever the encoding does until release
+    // while 4.1.0 is unreleased (ADR-0061), so this moves whenever the encoding does until release
     char const* const pinned = "2508128366cab73dd135a084eeba2a28dec4866bf11205874d32c6fc6e5a1a0a";
     if (hex != pinned)
     {

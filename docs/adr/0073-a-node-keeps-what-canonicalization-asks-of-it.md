@@ -28,7 +28,7 @@ Deflation appends Jacobian minors, so these costs landed on every singular point
 - Do not replace the unmentioned answer with 0, and do not key the sentinel variable by a name.
 - Do not go back to walking an operand to put a sum or product in order, or to a memo that lasts one call: a construction's question should cost O(operands).
 - Do not make `Differentiate` or `Degree(v)` virtual again; override the `Impl`.
-- Where operands tie on multidegree, their canonical order changes, so the system encoding version is `b2sysenc/3` and every system digest moved in 4.0.1: records written by 4.0.0 are asked again, not recalled.  The golden fixture has a recipe whose operands tie (`tied_terms`), so a later change to the tie-break moves the registry's keyspace hash; before it, no recipe had a tie and the registry could not see one.
+- Where operands tie on multidegree, their canonical order changes, so the system encoding version is `b2sysenc/3` and every system digest moved in 4.1.0: records written by 4.0.0 are asked again, not recalled.  The golden fixture has a recipe whose operands tie (`tied_terms`), so a later change to the tie-break moves the registry's keyspace hash; before it, no recipe had a tie and the registry could not see one.
 - Do not order operands by anything that walks them, the full encoding included.  A new tie-break must be made from the operands' keys, or it is a walk again.
 - A collision of two different operands' keys would leave them in input order: a valid expression, not a canonical one.  At SHA-256 that is not a practical concern.
 - Memory: every node that has been an operand of a canonicalized sum or product holds a record, proportional to the variables it mentions, and, if it was ever in a tie, its 64-character content key.
