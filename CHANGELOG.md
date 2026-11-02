@@ -71,6 +71,10 @@ _______________________________________________________________________________
 
 Bug fixes for 4.0.
 
+### Changed
+
+- The arm64 macOS wheels are built on GitHub's `macos-15` runners, and require macOS 15, as the Intel wheels already did.  The `macos-14` runner images were retired on 2026-11-02, and a wheel's minimum macOS follows the runner it is built on, since the Homebrew libraries bundled into it are built for that macOS.  The prebuilt macOS dependency tarballs are rebuilt on the same runners.
+
 ### Fixed
 
 - A `HomotopySolver` solve's records ask now includes its start points (#498).  It named the homotopy, target, settings and seed but not the given start points, so with recording on (the default) a second solve of the same homotopy from different start points was the same ask, and was answered from the record of the first: it silently returned the first solve's endpoints.  The start system now reports the identity of start points it was given (`StartSystem::GivenStartIdentity`, a digest of their exact values), and the solve adds it to its ask.  A solve from given start points therefore has a different run id than in 4.0.0, so records written by 4.0.0 for such solves are asked again rather than recalled.

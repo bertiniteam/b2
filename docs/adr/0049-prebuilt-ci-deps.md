@@ -36,7 +36,7 @@ Prebuild the dependencies **once per toolchain** and have CI *consume* them, per
   layer-caches the pull.
 
 - **macOS → GitHub Release-asset tarballs.** No container, so the analog is prebuilt
-  `deps-macos14-arm64-<cpXY>-<key>.tar.gz` on the `ci-deps` prerelease, built by
+  `deps-macos15-arm64-<cpXY>-<key>.tar.gz` on the `ci-deps` prerelease, built by
   `build-macos-deps.yml`. `CIBW_BEFORE_BUILD_MACOS` downloads the matching bundle (with a
   **build-from-source fallback** if it's absent), extracting to `/tmp/deps-py` so its
   `hardcode-dll-paths` stay valid for delocate. Also off the 10 GB ceiling (release storage).
@@ -71,7 +71,7 @@ matching Windows (which already ships mpi4py).
 - Gotcha fixed here: `test_wheels_linux_macos` *excludes* ubuntu, so an ubuntu-only os matrix
   (a non-develop PR base, or `-f os=linux`/`os=windows`) expanded to zero combinations and
   failed the run with nothing to point at; it is now guarded with
-  `contains(os, 'macos-14')`.
+  `contains(os, 'macos')`.
 - The image is intentionally larger than necessary (Boost headers duplicated per CPython for
   recipe fidelity); a later pass can share the CPython-independent headers to shrink it.
 

@@ -122,7 +122,11 @@ jobs:
             # version on both architectures, here and in every workflow, instead of
             # ubuntu-latest, so an image change is a deliberate edit rather than a surprise:
             # the C++ test job compiles with the runner's own GCC and apt packages.
-            OS='["ubuntu-26.04","ubuntu-26.04-arm","macos-14","macos-15-intel"]'; PY='["3.10","3.11","3.12","3.13","3.14"]'
+            # macos-15 is the arm64 macOS runner: the macos-14 images were retired on 2026-11-02
+            # (brownouts cancelled every arm64 job for days before).  The wheel's deployment
+            # target follows the runner (sw_vers, below), so arm64 wheels require macOS 15 from
+            # here on, as the intel wheels built on macos-15-intel already did.
+            OS='["ubuntu-26.04","ubuntu-26.04-arm","macos-15","macos-15-intel"]'; PY='["3.10","3.11","3.12","3.13","3.14"]'
           else
             OS='["ubuntu-26.04"]'; PY='["3.11"]'
           fi
@@ -131,7 +135,7 @@ jobs:
           case "${{ inputs.os }}" in
             linux)        OS='["ubuntu-26.04","ubuntu-26.04-arm"]' ;;
             linux-arm)    OS='["ubuntu-26.04-arm"]' ;;
-            macos)        OS='["macos-14"]' ;;
+            macos)        OS='["macos-15"]' ;;
             macos-intel)  OS='["macos-15-intel"]'; PY='["3.11"]' ;;   # the #215 experiment
             windows)      OS='[]' ;;   # no unix jobs; only the standalone Windows jobs run
           esac
@@ -523,7 +527,7 @@ jobs:
             # which would 'succeed' and then fail to link.  Only arm64 has a prebuilt bundle
             # today, so intel 404s here and takes the from-source path below.
             case "$(uname -m)" in
-              arm64)  ASSET="deps-macos14-arm64-${PY_TAG}-boost${{ env.BOOST_VERSION }}-eigenpy${{ env.EIGENPY_VERSION }}.tar.gz" ;;
+              arm64)  ASSET="deps-macos15-arm64-${PY_TAG}-boost${{ env.BOOST_VERSION }}-eigenpy${{ env.EIGENPY_VERSION }}.tar.gz" ;;
               *)      ASSET="deps-macos15-$(uname -m)-${PY_TAG}-boost${{ env.BOOST_VERSION }}-eigenpy${{ env.EIGENPY_VERSION }}.tar.gz" ;;
             esac
             URL="https://github.com/${{ github.repository }}/releases/download/ci-deps/${ASSET}"
