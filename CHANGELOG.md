@@ -71,9 +71,17 @@ _______________________________________________________________________________
 
 The arm64 macOS wheels move to macOS 15, and the fixes made since 4.0.0.
 
+### Added
+
+- The random state can be got and set (#518, ADR-0075).  `RandomState` holds everything the calling thread's next draws depend on: the global seed and whether one was chosen, the ordinal of the next `DeriveSolveSeed`, and the thread's `b2rand/1` draw stream.  `GetRandomState()` returns it and `SetRandomState(state)` sets it, so the draws after setting a state are the draws that followed getting it, and a computation written out between its stages continues with the numbers an uninterrupted run would have drawn.  States compare with `==`, and their fields are public.  `ToText()` and `RandomState::FromText(text)` write and read it as versioned plaintext (`b2randstate/1`), refusing any other text with `std::invalid_argument`; Boost.Serialization archives carry that text, so a state can go in an MPI message.  In Python: `bertini.random.RandomState`, `get_random_state()` and `set_random_state(state)`; a state pickles as its text, and a refused text raises `ValueError`.  Per-path and per-worker streams are reseeded from the seed at each use, so they are not part of the state.
+
 ### Changed
 
 - The arm64 macOS wheels are built on GitHub's `macos-15` runners, and require macOS 15, as the Intel wheels already did.  The `macos-14` runner images were retired on 2026-11-02, and a wheel's minimum macOS follows the runner it is built on, since the Homebrew libraries bundled into it are built for that macOS.  The prebuilt macOS dependency tarballs are rebuilt on the same runners.
+
+### Removed
+
+- The thread's `std::mt19937` engine and `ThreadEngine()` (ADR-0075).  Every draw comes from the `b2rand/1` draw stream (ADR-0044), and nothing in the library drew from the engine, so no result changes; a second piece of random state was a trap for anyone saving the state.
 
 ### Fixed
 

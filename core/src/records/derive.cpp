@@ -29,7 +29,10 @@ seed means.
 
 #include "bertini2/records/derive.hpp"
 
+#include <algorithm>
 #include <random>
+#include <sstream>
+#include <stdexcept>
 #include <string>
 
 namespace bertini {
@@ -41,6 +44,41 @@ namespace {
     {
         for (int shift = 56; shift >= 0; shift -= 8)
             s.push_back(static_cast<char>((v >> shift) & 0xff));
+    }
+
+    std::string Hex32(unsigned char const* bytes)
+    {
+        static char const digits[] = "0123456789abcdef";
+        std::string out;
+        for (unsigned ii = 0; ii < 32; ++ii)
+        {
+            out.push_back(digits[bytes[ii] >> 4]);
+            out.push_back(digits[bytes[ii] & 0x0f]);
+        }
+        return out;
+    }
+
+    // 64 lowercase hex digits into 32 bytes; false if the text is anything else
+    bool FromHex32(std::string const& hex, unsigned char* bytes)
+    {
+        if (hex.size() != 64)
+            return false;
+        for (unsigned ii = 0; ii < 64; ++ii)
+        {
+            char const c = hex[ii];
+            unsigned value;
+            if (c >= '0' && c <= '9')
+                value = static_cast<unsigned>(c - '0');
+            else if (c >= 'a' && c <= 'f')
+                value = static_cast<unsigned>(c - 'a' + 10);
+            else
+                return false;
+            if (ii % 2 == 0)
+                bytes[ii / 2] = static_cast<unsigned char>(value << 4);
+            else
+                bytes[ii / 2] = static_cast<unsigned char>(bytes[ii / 2] | value);
+        }
+        return true;
     }
 
 } // unnamed namespace
@@ -81,6 +119,39 @@ unsigned char DrawStream::NextByte()
     if (offset_ >= 32)
         NextBlock();
     return block_[offset_++];
+}
+
+std::string DrawStream::ToText() const
+{
+    // the block is written, not recomputed from the key and counter, so the text says
+    // exactly what the next draws are made of
+    std::ostringstream out;
+    out << (seeded_ ? 1 : 0) << ' ' << Hex32(key_.bytes.data()) << ' ' << counter_ << ' '
+        << Hex32(block_) << ' ' << offset_;
+    return out.str();
+}
+
+DrawStream DrawStream::FromText(std::string const& text)
+{
+    std::istringstream in(text);
+    int seeded;
+    std::string key_hex, block_hex, rest;
+    unsigned offset;
+    DrawStream stream;
+    if (!(in >> seeded >> key_hex >> stream.counter_ >> block_hex >> offset) || (in >> rest)
+        || (seeded != 0 && seeded != 1) || offset > 32
+        || !FromHex32(key_hex, stream.key_.bytes.data()) || !FromHex32(block_hex, stream.block_))
+        throw std::invalid_argument("not a b2rand/1 draw stream: \"" + text + "\"");
+    stream.seeded_ = (seeded == 1);
+    stream.offset_ = offset;
+    return stream;
+}
+
+bool DrawStream::operator==(DrawStream const& other) const
+{
+    return seeded_ == other.seeded_ && key_.bytes == other.key_.bytes
+           && counter_ == other.counter_ && offset_ == other.offset_
+           && std::equal(block_, block_ + 32, other.block_);
 }
 
 std::uint64_t DrawStream::Uint64()
