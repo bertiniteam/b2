@@ -36,6 +36,7 @@
 
 #include <bertini2/endgames.hpp>
 #include <bertini2/nag_algorithms/zero_dim_solve.hpp>
+#include <bertini2/records/solution_metadata_json.hpp>
 #include <bertini2/nag_algorithms/events.hpp>
 #include <bertini2/system/start_systems.hpp>
 #include <bertini2/blackbox/config.hpp>   // blackbox::type::Start (start-system selector enum)
@@ -206,6 +207,17 @@ void ExposeSolutionMetaData(std::string const& class_name){
         "was NOT resolved by re-tracking.  Its success codes may still read Success, but the solver "
         "has warned that this endpoint may be wrong; check this before building on the endpoint.  "
         "See endgame_boundary_metadata() for the whole-solve report.")
+    .def("to_json", +[](MDT const& m){ return records::SolutionMetaDataToJson(m); },
+        "The metadata as exact JSON text, format b2meta/1: every field, doubles as exact decimals, "
+        "multiprecision values at their own precision, success codes by name.  from_json reads it "
+        "back equal in every field.")
+    .def("from_json", +[](std::string const& text){ return records::SolutionMetaDataFromJson<NumT>(text); },
+        (arg("text")),
+        "The metadata a to_json text describes.  Raises ValueError if the text is not b2meta/1 "
+        "metadata of this numeric type.")
+    .staticmethod("from_json")
+    // pickling and copying go through to_json / from_json: bertini/config.py's enhancement of the
+    // metadata classes uses them, since they hold every field (the writable ones do not)
     ;
 }
 

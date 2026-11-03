@@ -45,6 +45,7 @@ homotopy identical, so recalled and computed results are directly comparable.
 #include "bertini2/records/load_system.hpp"
 #include "bertini2/records/solver_recording.hpp"
 #include "bertini2/records/config_encoding.hpp"
+#include "bertini2/records/solution_metadata_json.hpp"
 
 #include "test/utility/encoding_registry.hpp"
 
@@ -964,6 +965,125 @@ BOOST_AUTO_TEST_CASE(the_accuracy_estimates_are_recorded_under_names_that_say_th
     auto const from_earlier = records::DecodeFullPathResult<complex_dbl>(earlier, 3);
     BOOST_CHECK_EQUAL(from_earlier.accuracy_estimate_internal_coords, 3.5e-12);
     BOOST_CHECK_EQUAL(from_earlier.accuracy_estimate_user_coords, 7.25e-8);
+}
+
+BOOST_AUTO_TEST_SUITE_END()
+
+
+// ---- a solution's metadata as exact JSON, and back (bertiniteam/b2#521) ----
+
+BOOST_AUTO_TEST_SUITE(solution_metadata_json)
+
+BOOST_AUTO_TEST_CASE(a_solves_metadata_reads_back_equal_in_every_field)
+{
+    SetGlobalSeed(42);
+    auto sys = TwoQuadrics();
+    ZD solver(sys);
+    solver.DefaultSetup();
+    solver.Solve();
+
+    auto const& metadata = solver.SolutionMetadata();
+    BOOST_REQUIRE_EQUAL(metadata.size(), 4u);
+    for (auto m : metadata)
+    {
+        auto const text = records::SolutionMetaDataToJson(m);
+        auto metadata_loaded = records::SolutionMetaDataFromJson<complex_dbl>(text);
+        BOOST_CHECK(metadata_loaded == m);
+        BOOST_CHECK_EQUAL(metadata_loaded.path_time_seconds, m.path_time_seconds);   // not part of ==
+        BOOST_CHECK_EQUAL(records::SolutionMetaDataToJson(metadata_loaded), text);
+    }
+}
+
+BOOST_AUTO_TEST_CASE(multiprecision_metadata_reads_back_at_its_own_precision)
+{
+    DefaultPrecision(30);
+    algorithm::SolutionMetaData<complex_mp> m;
+    m.path_index = 7;
+    m.solution_index = 5;
+    m.precision_changed = true;
+    m.time_of_first_prec_increase = complex_mp(
+        real_mp("0.123456789012345678901234567890123456789012345678901234567", 60),
+        real_mp("-0.25", 60));
+    m.time_of_first_prec_increase.precision(60);
+    m.max_precision_used = 60;
+    m.path_time_seconds = 0.013671875;
+    m.num_successful_steps = 21;
+    m.num_failed_steps = 3;
+    m.wall_clock_limit_seconds = 2.5;
+    m.latest_path_point = Vec<complex_mp>(2);
+    m.latest_path_point(0) = m.time_of_first_prec_increase;
+    m.latest_path_point(1) = complex_mp(real_mp("1.75", 60), real_mp("3.0e-41", 60));
+    m.latest_path_point(1).precision(60);
+    m.pre_endgame_success_code = SuccessCode::MaxPrecisionReached;
+    m.condition_number = 144181.98972868928;
+    m.singular_values = Vec<double>(2);
+    m.singular_values << 3.25, 1.5e-9;
+    m.newton_residual = 2.5e-31;
+    m.final_time_used = complex_mp(real_mp("0.0625", 60), real_mp("0", 60));
+    m.final_time_used.precision(60);
+    m.accuracy_estimate_internal_coords = 1.990268618987469e-12;
+    m.accuracy_estimate_user_coords = 7.25e-8;
+    m.cycle_num = 2;
+    m.precision_digits = 60;
+    m.accuracy_digits = 11;
+    m.endgame_success_code = SuccessCode::CycleNumTooHigh;
+    m.function_residual = 6.5e-29;
+    m.multiplicity = 3;
+    m.multiplicity_representative = false;
+    m.is_real = true;
+    m.is_finite = true;
+    m.is_singular = true;
+    m.crossing_unresolved = true;
+    m.is_nonsolution = true;
+
+    auto metadata_loaded =
+        records::SolutionMetaDataFromJson<complex_mp>(records::SolutionMetaDataToJson(m));
+    BOOST_CHECK(metadata_loaded == m);
+    BOOST_CHECK_EQUAL(metadata_loaded.path_time_seconds, m.path_time_seconds);
+    BOOST_CHECK_EQUAL(metadata_loaded.time_of_first_prec_increase.precision(), 60u);
+    BOOST_CHECK_EQUAL(metadata_loaded.latest_path_point(0).real().str(0, std::ios::scientific),
+                      m.latest_path_point(0).real().str(0, std::ios::scientific));
+    BOOST_CHECK_EQUAL(metadata_loaded.latest_path_point(1).precision(), 60u);
+}
+
+BOOST_AUTO_TEST_CASE(text_that_is_not_such_metadata_is_refused)
+{
+    algorithm::SolutionMetaData<complex_dbl> m;
+    m.path_index = 1;
+    m.solution_index = 1;
+    m.time_of_first_prec_increase = complex_dbl(0.5, 0);
+    m.condition_number = 4.5;
+    m.newton_residual = 1.5e-15;
+    m.final_time_used = complex_dbl(0, 0);
+    m.accuracy_estimate_internal_coords = 2.5e-13;
+    m.accuracy_estimate_user_coords = 2.5e-13;
+    m.cycle_num = 1;
+    m.function_residual = 3.5e-16;
+    auto const object = records::EncodeSolutionMetaData(m);
+
+    auto with = [&object](char const* key, boost::json::value value) {
+        auto changed = object;
+        changed[key] = std::move(value);
+        return boost::json::serialize(changed);
+    };
+    auto without = [&object](char const* key) {
+        auto changed = object;
+        changed.erase(key);
+        return boost::json::serialize(changed);
+    };
+
+    BOOST_CHECK_THROW(records::SolutionMetaDataFromJson<complex_dbl>("not json"), std::invalid_argument);
+    BOOST_CHECK_THROW(records::SolutionMetaDataFromJson<complex_dbl>(with("format", "b2meta/2")),
+                      std::invalid_argument);
+    BOOST_CHECK_THROW(records::SolutionMetaDataFromJson<complex_mp>(boost::json::serialize(object)),
+                      std::invalid_argument);
+    BOOST_CHECK_THROW(records::SolutionMetaDataFromJson<complex_dbl>(without("cycle_num")),
+                      std::invalid_argument);
+    BOOST_CHECK_THROW(records::SolutionMetaDataFromJson<complex_dbl>(with("is_real", "yes")),
+                      std::invalid_argument);
+    BOOST_CHECK_THROW(records::SolutionMetaDataFromJson<complex_dbl>(
+                          with("endgame_success_code", "Succeeded")),
+                      std::invalid_argument);
 }
 
 BOOST_AUTO_TEST_SUITE_END()

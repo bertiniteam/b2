@@ -228,7 +228,25 @@ def _reconstruct_enhanced(cls, mapping):
     return cls.from_dict(mapping)
 
 
-def _make_reduce():
+def _reconstruct_from_json(cls, text):
+    """Pickle reconstructor for a class that writes itself exactly: rebuild from its JSON text."""
+    return cls.from_json(text)
+
+
+def _writes_itself_exactly(cls):
+    """Whether the class has its own exact text form (``to_json`` / ``from_json``), as a
+    solution's metadata does (#521).  Such a class pickles and copies through it: the
+    writable-field dict misses its read-only fields (a metadata's singular values and the
+    point a failed path stopped at), so a pickle through the dict silently dropped them."""
+    return callable(getattr(cls, 'to_json', None)) and callable(getattr(cls, 'from_json', None))
+
+
+def _make_reduce(exact=False):
+    if exact:
+        def __reduce__(self):
+            return (_reconstruct_from_json, (type(self), self.to_json()))
+        return __reduce__
+
     def __reduce__(self):
         # Pickle via the (to_dict / from_dict) round-trip.  Works for any enhanced class; the field
         # values must themselves be picklable (numbers, including multiprec.Complex/Float).
@@ -236,7 +254,18 @@ def _make_reduce():
     return __reduce__
 
 
-def _make_copy():
+def _make_copy(exact=False):
+    if exact:
+        def __copy__(self):
+            return type(self).from_json(self.to_json())
+
+        def __deepcopy__(self, memo):
+            new = type(self).from_json(self.to_json())
+            memo[id(self)] = new
+            return new
+
+        return __copy__, __deepcopy__
+
     # copy.copy / copy.deepcopy rebuild through the same to_dict/from_dict round-trip as pickle.
     # Defining __deepcopy__ explicitly is load-bearing: the generic copy.deepcopy fallback would
     # deep-copy the to_dict() mapping's *values* (the multiprecision scalars), which aliases/corrupts
@@ -269,8 +298,9 @@ def _enhance_config_class(cls):
         cls.__eq__ = _make_eq(fields)
         # Make the class picklable (copy.copy/deepcopy too) via to_dict/from_dict, overriding the
         # Boost.Python "pickling not enabled" default.
-        cls.__reduce__ = _make_reduce()
-        cls.__copy__, cls.__deepcopy__ = _make_copy()
+        exact = _writes_itself_exactly(cls)
+        cls.__reduce__ = _make_reduce(exact)
+        cls.__copy__, cls.__deepcopy__ = _make_copy(exact)
     except (TypeError, AttributeError):
         # some bound types may refuse dunder assignment; the rest still apply
         pass
