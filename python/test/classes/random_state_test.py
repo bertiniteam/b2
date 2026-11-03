@@ -61,6 +61,13 @@ def test_a_state_holds_the_seed_and_ordinal_and_compares_by_its_fields():
     assert get_random_state() != state
 
 
+def test_a_state_prints_its_seed_and_ordinal():
+    bertini.random.set_random_seed(5)
+    bertini.random.derive_solve_seed()
+    assert repr(get_random_state()) == '<RandomState: global seed 5, solve ordinal 1>'
+    assert repr(RandomState()) == '<RandomState: no seed chosen>'
+
+
 def test_a_state_built_field_by_field_draws_as_one_got():
     bertini.random.set_random_seed(11)
     _draws_from_here()
