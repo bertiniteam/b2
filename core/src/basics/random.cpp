@@ -68,7 +68,7 @@ constexpr uint64_t kDomainPath   = 0x9a7400000000ULL; // "path"   -- per-path tr
 constexpr uint64_t kDomainWorker = 0x107ce000000ULL;  // "worker" -- per-rank child seeds (MPI)
 constexpr uint64_t kDomainSolve  = 0x501e000000000ULL; // "solve"  -- effective per-solve seeds
 
-// Ordinal of the next DeriveSolveSeed call under the current master; reset by SetGlobalSeed
+// Ordinal the next AdvanceSolveSeed call takes under the current master; reset by SetGlobalSeed
 // so (master, ordinal) is well-defined.  Since a solve rekeys to its own effective seed,
 // consecutive seedless solves form a deterministic seed CHAIN from the initial master.
 std::atomic<uint64_t> g_solve_ordinal{0};
@@ -134,7 +134,7 @@ unsigned long DerivedWorkerSeed(uint64_t worker_index)
     return static_cast<unsigned long>(h);
 }
 
-unsigned long DeriveSolveSeed()
+unsigned long AdvanceSolveSeed()
 {
     // (master, solve ordinal) -> child seed, pure integer arithmetic (splitmix64):
     // identical on every platform, and DELIBERATELY independent of the thread-local

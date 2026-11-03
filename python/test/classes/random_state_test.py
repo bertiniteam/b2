@@ -12,7 +12,7 @@ from bertini.random import RandomState, get_random_state, set_random_state
 def _draws_from_here():
     """A homotopy's worth of draws of every kind: vectors, a solve seed, a matrix."""
     return (repr(list(bertini.random.random_vector(3))),
-            bertini.random.derive_solve_seed(),
+            bertini.random.advance_solve_seed(),
             repr(bertini.random.random_matrix(2, 3, orthonormal=False).tolist()),
             repr(bertini.random.random_real()))
 
@@ -53,7 +53,7 @@ def test_a_solve_after_setting_a_state_finds_what_the_solve_after_getting_it_fou
 
 def test_a_state_holds_the_seed_and_ordinal_and_compares_by_its_fields():
     bertini.random.set_random_seed(5)
-    bertini.random.derive_solve_seed()
+    bertini.random.advance_solve_seed()
     state = get_random_state()
     assert (state.global_seed, state.seed_chosen, state.solve_ordinal) == (5, True, 1)
     assert get_random_state() == state
@@ -63,9 +63,19 @@ def test_a_state_holds_the_seed_and_ordinal_and_compares_by_its_fields():
 
 def test_a_state_prints_its_seed_and_ordinal():
     bertini.random.set_random_seed(5)
-    bertini.random.derive_solve_seed()
+    bertini.random.advance_solve_seed()
     assert repr(get_random_state()) == '<RandomState: global seed 5, solve ordinal 1>'
     assert repr(RandomState()) == '<RandomState: no seed chosen>'
+
+
+def test_the_former_name_derive_solve_seed_warns_and_advances_the_same_chain():
+    bertini.random.set_random_seed(42)
+    first = bertini.random.advance_solve_seed()
+    second = bertini.random.advance_solve_seed()
+    bertini.random.set_random_seed(42)
+    with pytest.warns(DeprecationWarning, match='advance_solve_seed'):
+        assert bertini.random.derive_solve_seed() == first
+    assert bertini.random.advance_solve_seed() == second
 
 
 def test_a_state_built_field_by_field_draws_as_one_got():

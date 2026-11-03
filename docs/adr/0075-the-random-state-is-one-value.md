@@ -5,7 +5,7 @@
 
 ## Context
 
-A long computation that is written out between its stages must continue, after a restart, with the numbers an uninterrupted run would have drawn (#518).  The cellular decomposition of the Barth decic on the 3-sphere runs for many hours in eight stages, and its stages draw from b2's global random state: `random_vector`, `DeriveSolveSeed`, the gammas and patches of every solve.  b2 could set a seed and read it back, but could not get the state the draws had reached, nor set it.
+A long computation that is written out between its stages must continue, after a restart, with the numbers an uninterrupted run would have drawn (#518).  The cellular decomposition of the Barth decic on the 3-sphere runs for many hours in eight stages, and its stages draw from b2's global random state: `random_vector`, `AdvanceSolveSeed` (formerly `DeriveSolveSeed`), the gammas and patches of every solve.  b2 could set a seed and read it back, but could not get the state the draws had reached, nor set it.
 
 The state was split across interfaces.  ADR-0044 moved every draw onto the pinned `b2rand/1` draw stream but kept the thread's `std::mt19937` engine "for any non-identity consumer", seeded alongside the stream; nothing drew from it any more, yet `SetGlobalSeed`, `ReseedThisThread` and the solve's `ScopedSessionState` still seeded, saved and restored it.  A caller saving "the random state" had to know to take both, and the global seed and the solve-seed ordinal besides.
 

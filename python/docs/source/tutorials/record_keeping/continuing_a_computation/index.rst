@@ -34,12 +34,12 @@ Solves draw from the same state, so a solve after setting a state builds the sam
 What the state holds
 ====================
 
-A :class:`~bertini.random.RandomState` holds everything the thread's next draws depend on: the global seed, whether one has been chosen, the ordinal of the next solve seed (:func:`~bertini.random.derive_solve_seed`), and the thread's draw stream. Two states are equal when all of these are:
+A :class:`~bertini.random.RandomState` holds everything the thread's next draws depend on: the global seed, whether one has been chosen, the ordinal of the next solve seed (:func:`~bertini.random.advance_solve_seed`), and the thread's draw stream. Two states are equal when all of these are:
 
 .. testcode::
 
    bertini.random.set_random_seed(5)
-   bertini.random.derive_solve_seed()
+   bertini.random.advance_solve_seed()
    state = bertini.random.get_random_state()
    print(state.global_seed, state.seed_chosen, state.solve_ordinal)
    assert bertini.random.get_random_state() == state

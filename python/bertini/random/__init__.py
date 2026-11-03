@@ -1,7 +1,19 @@
+import warnings as _warnings
+
 import numpy as _np
 
 from bertini._pybertini import random as _pybrand
 from bertini._pybertini.random import *
+
+
+def derive_solve_seed():
+    """The former name of :func:`advance_solve_seed`, which read as a derivative; removed in 5.0.
+
+    Returns what :func:`advance_solve_seed` returns, and warns with a ``DeprecationWarning``.
+    """
+    _warnings.warn("derive_solve_seed is advance_solve_seed; the old name is removed in 5.0",
+                   DeprecationWarning, stacklevel=2)
+    return _pybrand.advance_solve_seed()
 
 
 def random_real(symbolic=False):
@@ -143,4 +155,4 @@ def random_matrix(rows, cols, real=False, units=False, orthonormal=True, symboli
     return M
 
 
-__all__ = dir(_pybrand) + ['random_matrix']
+__all__ = dir(_pybrand) + ['random_matrix', 'derive_solve_seed']

@@ -110,12 +110,12 @@ void ExportRandom(){
     def("get_random_seed", &bertini::GetGlobalSeed,
         "Return the global RNG seed in effect.  If none has been set, draws one from entropy "
         "on the first call and keeps it.");
-    def("derive_solve_seed", &bertini::DeriveSolveSeed,
-        "Capture the session stream's current position as an effective per-solve seed: "
-        "one draw off the current stream (advancing it), nonzero, 32-bit portable. "
-        "bertini.solve uses this when no explicit seed is given, so a recorded run's "
-        "seed reproduces that run standalone -- deterministic from the session master "
-        "when one was set, random for a never-seeded session.");
+    def("advance_solve_seed", &bertini::AdvanceSolveSeed,
+        "Advance the solve-seed chain one step and return its new seed: the seed for the next "
+        "seedless solve, nonzero and 32-bit portable.  The chain is rooted at the global seed "
+        "(set_random_seed restarts it), and each call takes the next link, so the call after "
+        "returns the next seed; it draws no random numbers.  bertini.solve uses this when no "
+        "explicit seed is given, so a recorded run's seed reproduces that run standalone.");
     using bertini::records::DrawStream;
     class_<DrawStream>("DrawStream",
         "A b2rand/1 draw stream at a position: the source of every random draw.  Compared with ==; "
@@ -140,7 +140,7 @@ void ExportRandom(){
         .def_readwrite("seed_chosen", &bertini::RandomState::seed_chosen,
                        "Whether a global seed has been chosen yet.")
         .def_readwrite("solve_ordinal", &bertini::RandomState::solve_ordinal,
-                       "The ordinal of the next derive_solve_seed().")
+                       "The ordinal the next advance_solve_seed() takes.")
         .def_readwrite("draw_stream", &bertini::RandomState::draw_stream,
                        "The thread's draw stream, the source of every draw.")
         .def("to_text", &bertini::RandomState::ToText,

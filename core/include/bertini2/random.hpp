@@ -94,7 +94,9 @@ namespace bertini
     unsigned long DerivedWorkerSeed(uint64_t worker_index);
 
     /**
-    Derive an EFFECTIVE PER-SOLVE SEED from the current master.
+    Advance the solve-seed chain one step and return its new seed: the EFFECTIVE PER-SOLVE SEED
+    for the next seedless solve.  Each call takes the next solve ordinal, so the call after it
+    returns the next seed of the chain.
 
     A seedless solve's setup draws (gamma, patch, start coefficients) come sequentially
     off the session stream, so they depend on everything drawn before -- recording the
@@ -114,7 +116,14 @@ namespace bertini
 
     \return A nonzero seed for this solve, ready for SetGlobalSeed and the ask record.
     */
-    unsigned long DeriveSolveSeed();
+    unsigned long AdvanceSolveSeed();
+
+    /**
+    The former name of AdvanceSolveSeed, which read as a derivative; removed in 5.0.
+    \return What AdvanceSolveSeed returns.
+    */
+    [[deprecated("DeriveSolveSeed is AdvanceSolveSeed; the old name is removed in 5.0")]]
+    inline unsigned long DeriveSolveSeed() { return AdvanceSolveSeed(); }
 
     /**
     \brief The random state of a thread: everything its next draws depend on.
@@ -131,7 +140,7 @@ namespace bertini
     {
         unsigned long global_seed = 0;      ///< The global seed (GetGlobalSeed).
         bool seed_chosen = false;           ///< Whether a global seed has been chosen yet.
-        std::uint64_t solve_ordinal = 0;    ///< The ordinal of the next DeriveSolveSeed.
+        std::uint64_t solve_ordinal = 0;    ///< The ordinal the next AdvanceSolveSeed takes.
         records::DrawStream draw_stream;    ///< The thread's `b2rand/1` draw stream, the source of every draw.
 
         /**

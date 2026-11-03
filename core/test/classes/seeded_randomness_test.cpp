@@ -106,33 +106,47 @@ BOOST_AUTO_TEST_CASE(seeded_session_draws_are_pinned)
 
 // ---- reproducibility semantics ----
 
-// The effective per-solve seed: DeriveSolveSeed captures the session stream's current
-// position, so a seedless solve records a seed that reproduces it STANDALONE instead
+// The effective per-solve seed: AdvanceSolveSeed takes the next link of a chain rooted at
+// the master seed, so a seedless solve records a seed that reproduces it STANDALONE instead
 // of a session master that silently under-determines a mid-session run.
-BOOST_AUTO_TEST_CASE(derived_solve_seeds_capture_the_stream_deterministically)
+BOOST_AUTO_TEST_CASE(solve_seeds_advance_along_a_chain_from_the_master_seed)
 {
     SetGlobalSeed(42);
-    auto const s1 = DeriveSolveSeed();
-    auto const s2 = DeriveSolveSeed();
+    auto const s1 = AdvanceSolveSeed();
+    auto const s2 = AdvanceSolveSeed();
     BOOST_CHECK(s1 != 0u);                       // 0 means "entropy" to a classic input file
     BOOST_CHECK(s1 != s2);                       // consecutive solves get distinct seeds
     BOOST_CHECK(s1 <= 0xFFFFFFFFul);             // 32-bit portable (Windows unsigned long)
     BOOST_CHECK(s2 <= 0xFFFFFFFFul);
 
     SetGlobalSeed(42);                           // same master =>
-    BOOST_CHECK_EQUAL(DeriveSolveSeed(), s1);    // the same derived seeds, in order
-    BOOST_CHECK_EQUAL(DeriveSolveSeed(), s2);
+    BOOST_CHECK_EQUAL(AdvanceSolveSeed(), s1);   // the same seeds, in order
+    BOOST_CHECK_EQUAL(AdvanceSolveSeed(), s2);
 
     // DELIBERATELY independent of the draw streams: a multithreaded solve leaves the
     // calling thread's stream at a scheduling-dependent position, so the derivation
     // must not read it -- intervening draws change nothing
     SetGlobalSeed(42);
     (void)RandomRat();
-    BOOST_CHECK_EQUAL(DeriveSolveSeed(), s1);
+    BOOST_CHECK_EQUAL(AdvanceSolveSeed(), s1);
 
     SetGlobalSeed(43);                           // different master, different chain
-    BOOST_CHECK(DeriveSolveSeed() != s1);
+    BOOST_CHECK(AdvanceSolveSeed() != s1);
 }
+
+// the former name advances the same chain until it is removed in 5.0
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
+BOOST_AUTO_TEST_CASE(the_former_name_derive_solve_seed_advances_the_same_chain)
+{
+    SetGlobalSeed(42);
+    auto const first = AdvanceSolveSeed();
+    auto const second = AdvanceSolveSeed();
+    SetGlobalSeed(42);
+    BOOST_CHECK_EQUAL(DeriveSolveSeed(), first);
+    BOOST_CHECK_EQUAL(AdvanceSolveSeed(), second);
+}
+#pragma GCC diagnostic pop
 
 BOOST_AUTO_TEST_CASE(same_seed_same_draws_different_seed_different_draws)
 {
@@ -292,7 +306,7 @@ std::string DrawsFromHere()
 {
     std::ostringstream out;
     out << RandomMp(30) << ' ' << records::ThreadDrawStream().Bits(21) << ' '
-        << RandReal() << ' ' << DeriveSolveSeed() << ' ' << RandomMp(60);
+        << RandReal() << ' ' << AdvanceSolveSeed() << ' ' << RandomMp(60);
     return out.str();
 }
 
