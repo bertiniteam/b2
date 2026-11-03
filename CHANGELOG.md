@@ -71,6 +71,10 @@ _______________________________________________________________________________
 
 The arm64 macOS wheels move to macOS 15, and the fixes made since 4.0.0.
 
+### Added
+
+- FLINT 3 (which carries Arb, arbitrary-precision ball arithmetic) is a dependency of the library, the groundwork for interval evaluation and certification (#412).  Wheels bundle it; a source build needs `libflint` (Homebrew `flint`, conda-forge `libflint`, apt `libflint-dev`).  `bertini.info.flint_version()` reports the linked version.
+
 ### Changed
 
 - The arm64 macOS wheels are built on GitHub's `macos-15` runners, and require macOS 15, as the Intel wheels already did.  The `macos-14` runner images were retired on 2026-11-02, and a wheel's minimum macOS follows the runner it is built on, since the Homebrew libraries bundled into it are built for that macOS.  The prebuilt macOS dependency tarballs are rebuilt on the same runners.

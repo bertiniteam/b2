@@ -65,6 +65,8 @@ list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/../cmake")
 find_package(GMP REQUIRED)
 find_package(MPFR REQUIRED)
 find_package(MPC REQUIRED)
+# FLINT 3 carries Arb, the ball arithmetic behind b2's interval types (bertiniteam/b2#412).
+find_package(FLINT 3.0.0 REQUIRED)
 
 # include_directories(${GMP_INCLUDES})
 # include_directories(${MPC_INCLUDES})
@@ -123,6 +125,7 @@ set(basics_rootinclude_headers
     include/bertini2/forbid_mixed_arithmetic.hpp
     include/bertini2/double_extensions.hpp
     include/bertini2/random.hpp
+    include/bertini2/flint_version.hpp
     include/bertini2/num_traits.hpp
     include/bertini2/classic.hpp
     include/bertini2/eigen_extensions.hpp
@@ -350,6 +353,7 @@ set(BERTINI2_LIBRARY_HEADERS
 
 set(basics_sources
     src/basics/random.cpp
+    src/basics/flint_version.cpp
     src/basics/have_bertini.cpp
     src/basics/fast_allocator.cpp
     src/basics/stop_request.cpp
@@ -461,6 +465,7 @@ target_include_directories(bertini2
     ${GMP_INCLUDES}
     ${MPFR_INCLUDES}
     ${MPC_INCLUDES}
+    ${FLINT_INCLUDES}
     # Treat Boost/Eigen headers as system so their (and their template
     # instantiations') warnings stay out of our build output. Boost is linked
     # below via raw ${Boost_LIBRARIES} (no include propagation), so its include
@@ -505,6 +510,7 @@ target_include_directories(bertini2 PRIVATE "${CMAKE_CURRENT_BINARY_DIR}/generat
 target_link_libraries(bertini2 PUBLIC ${GMP_LIBRARIES})
 target_link_libraries(bertini2 PUBLIC ${MPFR_LIBRARIES})
 target_link_libraries(bertini2 PUBLIC ${MPC_LIBRARIES})
+target_link_libraries(bertini2 PUBLIC ${FLINT_LIBRARIES})
 target_link_libraries(bertini2 PUBLIC Eigen3::Eigen)
 target_link_libraries(bertini2 PUBLIC ${Boost_LIBRARIES})
 
@@ -1000,6 +1006,22 @@ if (ENABLE_UNIT_TESTING)
     target_include_directories(test_tracking_basics PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}")
     target_link_libraries(test_tracking_basics ${Boost_LIBRARIES} bertini2)
     add_test(NAME test_tracking_basics COMMAND ${CMAKE_BINARY_DIR}/core/test_tracking_basics)
+
+    # What b2 relies on from FLINT, checked on every platform: rigorous enclosures, exact
+    # mpfr <-> arf conversion, one GMP shared with b2, a zero-filled acb being an exact zero.
+    set(B2_FLINT_TEST
+        test/flint/flint_test.cpp
+    )
+
+    add_executable(test_flint ${B2_FLINT_TEST})
+    target_include_directories(test_flint PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}")
+    target_link_libraries(test_flint ${Boost_LIBRARIES} bertini2)
+    if(NOT MSVC)
+        # Boost.Interval's directed rounding is rigorous only if the optimizer respects the
+        # FPU rounding mode; this flag tells GCC and Clang not to assume round-to-nearest.
+        set_source_files_properties(${B2_FLINT_TEST} PROPERTIES COMPILE_OPTIONS "-frounding-math")
+    endif()
+    add_test(NAME test_flint COMMAND ${CMAKE_BINARY_DIR}/core/test_flint)
 
     enable_testing()
 

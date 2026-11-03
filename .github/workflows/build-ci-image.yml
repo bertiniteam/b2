@@ -16,7 +16,9 @@ name: Build CI deps image 🐳
 on:
   workflow_dispatch:
   push:
-    branches: [develop]
+    # An integration branch (ADR-0074) that changes the image publishes its own tag, which its
+    # wheel jobs pin; develop's tag is untouched.
+    branches: [develop, 'integration/**']
     paths:
       - 'docker/manylinux-deps/**'
       - '.github/workflows/build-ci-image.yml'
@@ -63,6 +65,10 @@ jobs:
             echo "BOOST_VERSION=$BOOST_VERSION"
             echo "EIGEN_VERSION=$EIGEN_VERSION"
             echo "EIGENPY_VERSION=$EIGENPY_VERSION"
+            echo "GMP_VERSION=$GMP_VERSION"
+            echo "MPFR_VERSION=$MPFR_VERSION"
+            echo "MPC_VERSION=$MPC_VERSION"
+            echo "FLINT_VERSION=$FLINT_VERSION"
           } >> "$GITHUB_ENV"
       - name: Build Boost+eigenpy for ${{ matrix.pytag }} (manylinux)
         run: |
@@ -104,6 +110,10 @@ jobs:
             echo "BOOST_VERSION=$BOOST_VERSION"
             echo "EIGEN_VERSION=$EIGEN_VERSION"
             echo "EIGENPY_VERSION=$EIGENPY_VERSION"
+            echo "GMP_VERSION=$GMP_VERSION"
+            echo "MPFR_VERSION=$MPFR_VERSION"
+            echo "MPC_VERSION=$MPC_VERSION"
+            echo "FLINT_VERSION=$FLINT_VERSION"
           } >> "$GITHUB_ENV"
 
       - name: Collect prebuilt deps into the build context
@@ -116,7 +126,7 @@ jobs:
       - name: Compute toolchain tag
         id: tag
         run: |
-          key="boost${BOOST_VERSION}-eigen${EIGEN_VERSION}-eigenpy${EIGENPY_VERSION}-${MANYLINUX_TAG}${{ matrix.suffix }}"
+          key="boost${BOOST_VERSION}-eigen${EIGEN_VERSION}-eigenpy${EIGENPY_VERSION}-flint${FLINT_VERSION}-${MANYLINUX_TAG}${{ matrix.suffix }}"
           echo "key=$key" >> "$GITHUB_OUTPUT"
           echo "Image: $IMAGE:$key"
           ls -lh docker/manylinux-deps/deps
@@ -141,3 +151,7 @@ jobs:
             BOOST_VERSION=${{ env.BOOST_VERSION }}
             EIGEN_VERSION=${{ env.EIGEN_VERSION }}
             EIGENPY_VERSION=${{ env.EIGENPY_VERSION }}
+            GMP_VERSION=${{ env.GMP_VERSION }}
+            MPFR_VERSION=${{ env.MPFR_VERSION }}
+            MPC_VERSION=${{ env.MPC_VERSION }}
+            FLINT_VERSION=${{ env.FLINT_VERSION }}

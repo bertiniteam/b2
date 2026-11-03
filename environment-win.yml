@@ -12,6 +12,7 @@ dependencies:
   - gmp
   - mpfr
   - mpc
+  - libflint
   - libboost-devel
   - eigen
   - eigenpy
