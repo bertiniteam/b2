@@ -67,9 +67,13 @@ _______________________________________________________________________________
 
 _______________________________________________________________________________
 
-## [4.0.1] - unreleased
+## [4.1.0] - unreleased
 
-Bug fixes for 4.0.
+The arm64 macOS wheels move to macOS 15, and the fixes made since 4.0.0.
+
+### Changed
+
+- The arm64 macOS wheels are built on GitHub's `macos-15` runners, and require macOS 15, as the Intel wheels already did.  The `macos-14` runner images were retired on 2026-11-02, and a wheel's minimum macOS follows the runner it is built on, since the Homebrew libraries bundled into it are built for that macOS.  The prebuilt macOS dependency tarballs are rebuilt on the same runners.
 
 ### Fixed
 

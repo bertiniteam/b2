@@ -44,7 +44,7 @@ jobs:
         # intel cannot use the arm64 one.  `name` is the asset's toolchain key, and must match
         # what build_and_test.yml's CIBW_BEFORE_BUILD_MACOS asks for on each runner.
         target:
-          - {runner: macos-14, arch: arm64, name: macos14-arm64}
+          - {runner: macos-15, arch: arm64, name: macos15-arm64}
           - {runner: macos-15-intel, arch: x86_64, name: macos15-x86_64}
     steps:
       - uses: actions/checkout@v5
