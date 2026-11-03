@@ -29,7 +29,10 @@ seed means.
 
 #include "bertini2/records/derive.hpp"
 
+#include <boost/algorithm/hex.hpp>
+
 #include <algorithm>
+#include <iterator>
 #include <random>
 #include <sstream>
 #include <stdexcept>
@@ -46,38 +49,31 @@ namespace {
             s.push_back(static_cast<char>((v >> shift) & 0xff));
     }
 
-    std::string Hex32(unsigned char const* bytes)
+    // the stream's key and its current block are 32 bytes each, written as lowercase hex
+    constexpr std::size_t kStreamBytes = 32;
+
+    std::string AsHex(unsigned char const* bytes)
     {
-        static char const digits[] = "0123456789abcdef";
         std::string out;
-        for (unsigned ii = 0; ii < 32; ++ii)
-        {
-            out.push_back(digits[bytes[ii] >> 4]);
-            out.push_back(digits[bytes[ii] & 0x0f]);
-        }
+        boost::algorithm::hex_lower(bytes, bytes + kStreamBytes, std::back_inserter(out));
         return out;
     }
 
-    // 64 lowercase hex digits into 32 bytes; false if the text is anything else
-    bool FromHex32(std::string const& hex, unsigned char* bytes)
+    // false if the text is not exactly 32 bytes of hex
+    bool ReadHex(std::string const& hex, unsigned char* bytes)
     {
-        if (hex.size() != 64)
-            return false;
-        for (unsigned ii = 0; ii < 64; ++ii)
+        std::string decoded;
+        try
         {
-            char const c = hex[ii];
-            unsigned value;
-            if (c >= '0' && c <= '9')
-                value = static_cast<unsigned>(c - '0');
-            else if (c >= 'a' && c <= 'f')
-                value = static_cast<unsigned>(c - 'a' + 10);
-            else
-                return false;
-            if (ii % 2 == 0)
-                bytes[ii / 2] = static_cast<unsigned char>(value << 4);
-            else
-                bytes[ii / 2] = static_cast<unsigned char>(bytes[ii / 2] | value);
+            boost::algorithm::unhex(hex, std::back_inserter(decoded));
         }
+        catch (boost::algorithm::hex_decode_error const&)
+        {
+            return false;
+        }
+        if (decoded.size() != kStreamBytes)
+            return false;
+        std::copy(decoded.begin(), decoded.end(), bytes);
         return true;
     }
 
@@ -126,8 +122,8 @@ std::string DrawStream::ToText() const
     // the block is written, not recomputed from the key and counter, so the text says
     // exactly what the next draws are made of
     std::ostringstream out;
-    out << (seeded_ ? 1 : 0) << ' ' << Hex32(key_.bytes.data()) << ' ' << counter_ << ' '
-        << Hex32(block_) << ' ' << offset_;
+    out << (seeded_ ? 1 : 0) << ' ' << AsHex(key_.bytes.data()) << ' ' << counter_ << ' '
+        << AsHex(block_) << ' ' << offset_;
     return out.str();
 }
 
@@ -140,7 +136,7 @@ DrawStream DrawStream::FromText(std::string const& text)
     DrawStream stream;
     if (!(in >> seeded >> key_hex >> stream.counter_ >> block_hex >> offset) || (in >> rest)
         || (seeded != 0 && seeded != 1) || offset > 32
-        || !FromHex32(key_hex, stream.key_.bytes.data()) || !FromHex32(block_hex, stream.block_))
+        || !ReadHex(key_hex, stream.key_.bytes.data()) || !ReadHex(block_hex, stream.block_))
         throw std::invalid_argument("not a b2rand/1 draw stream: \"" + text + "\"");
     stream.seeded_ = (seeded == 1);
     stream.offset_ = offset;
