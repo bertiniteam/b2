@@ -120,6 +120,19 @@ if(USE_CCACHE)
     set(CMAKE_CXX_COMPILER_LAUNCHER "${CCACHE_PROGRAM}")
     set(CMAKE_C_COMPILER_LAUNCHER   "${CCACHE_PROGRAM}")
     message(STATUS "ccache enabled: ${CCACHE_PROGRAM}")
+    # clang-cl: CMake's Windows-Clang platform module prefers clang's gcc-style dependency
+    # files, passed through as -clang:-MD -clang:-MT<obj> -clang:-MF<depfile>, and ccache
+    # (4.14.1 and later, by design) refuses every /clang: option, so with that form NOTHING is
+    # ever cached -- the Windows CI jobs reported 0 of 149 calls cacheable, "Unsupported
+    # compiler option", and compiled cold on every run.  ccache does support cl's /showIncludes,
+    # so with clang-cl and ccache use that form, exactly as CMake's Windows-MSVC module sets it.
+    if(CMAKE_CXX_COMPILER_ID STREQUAL "Clang" AND CMAKE_CXX_COMPILER_FRONTEND_VARIANT STREQUAL "MSVC")
+      foreach(lang C CXX)
+        set(CMAKE_DEPFILE_FLAGS_${lang} "/showIncludes")
+        set(CMAKE_${lang}_DEPFILE_FORMAT msvc)
+      endforeach()
+      message(STATUS "ccache with clang-cl: dependency files via /showIncludes, not -clang:-MD")
+    endif()
   endif()
 endif()
 
