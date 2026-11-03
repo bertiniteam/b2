@@ -10,6 +10,11 @@ on:
     branches:
       - develop
       - main
+      # An integration branch (`integration/<topic>`) is a line of work that stays off
+      # develop until it has earned its merge; PRs target it instead.  Merges into it run
+      # the full matrix like develop, which also saves the caches its PRs restore (a PR
+      # restores caches from its base branch, never from another PR).
+      - 'integration/**'
     paths-ignore:
       - 'python/docs/**'
       - 'doc_resources/**'
@@ -116,7 +121,9 @@ jobs:
           # which runs intel alone at one python version, for asking again later.
           if [[ "${{ inputs.minimal }}" == "true" ]]; then
             OS='["ubuntu-26.04"]'; PY='["3.11"]'
-          elif [[ "${{ github.ref }}" == "refs/heads/main" || "${{ github.ref }}" == "refs/heads/develop" || "${{ github.ref }}" == refs/tags/* || "${{ inputs.full_matrix }}" == "true" || "${{ github.event.pull_request.base.ref }}" == "develop" || "${{ github.event.pull_request.base.ref }}" == "main" ]]; then
+          # A PR into an integration branch (`integration/<topic>`, see the push trigger) is held
+          # to develop's bar: the full matrix, not the one-platform subset other bases get.
+          elif [[ "${{ github.ref }}" == "refs/heads/main" || "${{ github.ref }}" == "refs/heads/develop" || "${{ github.ref }}" == refs/heads/integration/* || "${{ github.ref }}" == refs/tags/* || "${{ inputs.full_matrix }}" == "true" || "${{ github.event.pull_request.base.ref }}" == "develop" || "${{ github.event.pull_request.base.ref }}" == "main" || "${{ github.event.pull_request.base.ref }}" == integration/* ]]; then
             # ubuntu-26.04-arm is linux-aarch64 (#474): a full member, C++ tests and every wheel,
             # on a native arm runner rather than under emulation.  Linux names its Ubuntu
             # version on both architectures, here and in every workflow, instead of
