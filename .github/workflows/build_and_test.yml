@@ -366,6 +366,14 @@ jobs:
           # build, never a break.
           $env:CCACHE_DIR = "${{ github.workspace }}\.ccache"
           $env:CCACHE_MAXSIZE = '400M'
+          # ccache declines a compile that uses a precompiled header (CMake's cmake_pch) unless
+          # told to be sloppy about PCH defines and time macros, and it must know the compiler
+          # is clang-cl.  The reason every call was uncacheable until 2026-11-04 (0 of 149) was
+          # CMake's -clang:-MD dependency flags, which the root CMakeLists now replaces by
+          # /showIncludes when ccache drives clang-cl; the verbose stats below show hits and
+          # name any remaining refusal.
+          $env:CCACHE_SLOPPINESS = 'pch_defines,time_macros'
+          $env:CCACHE_COMPILERTYPE = 'clang-cl'
           ccache --zero-stats 2>$null
 
           cmake -B build `
@@ -376,7 +384,8 @@ jobs:
             -DCMAKE_DISABLE_FIND_PACKAGE_Doxygen=ON `
             -DCMAKE_BUILD_TYPE=Release
           cmake --build build --parallel
-          ccache --show-stats
+          ccache --show-stats -v
+          ccache --version
 
       # Run under both per-solve thread settings (see the unix C++ test job for the rationale).
       - name: Test (threaded + BERTINI_NUM_THREADS=1)
@@ -689,11 +698,20 @@ jobs:
           # A cold cache is just a normal build, so this can only help -- never break.
           $env:CCACHE_DIR = "${{ github.workspace }}\.ccache"
           $env:CCACHE_MAXSIZE = '400M'
+          # ccache declines a compile that uses a precompiled header (CMake's cmake_pch) unless
+          # told to be sloppy about PCH defines and time macros, and it must know the compiler
+          # is clang-cl.  The reason every call was uncacheable until 2026-11-04 (0 of 149) was
+          # CMake's -clang:-MD dependency flags, which the root CMakeLists now replaces by
+          # /showIncludes when ccache drives clang-cl; the verbose stats below show hits and
+          # name any remaining refusal.
+          $env:CCACHE_SLOPPINESS = 'pch_defines,time_macros'
+          $env:CCACHE_COMPILERTYPE = 'clang-cl'
           cd ${{ github.workspace }}
           pip install build delvewheel
           ccache --zero-stats 2>$null
           python -m build --wheel --no-isolation
-          ccache --show-stats
+          ccache --show-stats -v
+          ccache --version
 
           $wheelPath = (Get-ChildItem dist/*.whl | Select-Object -First 1).FullName
           if (-not $wheelPath) { Write-Error "No wheel found in dist/"; exit 1 }
