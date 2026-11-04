@@ -44,7 +44,7 @@ draw routes:
   dependency-free header (`records/draw_functions.hpp`) breaks the include cycle
   `num_traits → random.hpp → derive.hpp → num_traits`.
 - The `mt19937` engine and its seeding remain for any non-identity consumer, but no
-  identity-relevant draw touches it.  (Removed by ADR-0075: no draw used it, and a second
+  identity-relevant draw touches it.  (Removed by ADR-0077: no draw used it, and a second
   piece of random state was a trap for anyone saving the state.)
 
 ## Consequences

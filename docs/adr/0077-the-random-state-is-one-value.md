@@ -1,4 +1,4 @@
-# ADR-0075: The random state is one value, and every draw comes from one stream
+# ADR-0077: The random state is one value, and every draw comes from one stream
 
 **Status:** Accepted
 **Date:** 2026-11-03
