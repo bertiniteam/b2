@@ -37,10 +37,6 @@
 
 namespace bertini{
 
-// Forward declaration — full definition in random.hpp / random.cpp.
-// Avoids pulling mpfr_complex.hpp into the Boost.Multiprecision include chain.
-std::mt19937& ThreadEngine();
-
     // The two double-precision scalar types, named to parallel real_mp / complex_mp.
     // real_dbl is an explicit alias for double so a future change lives in one place.
     using real_dbl = double;  ///< The double-precision real number type.

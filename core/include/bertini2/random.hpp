@@ -34,20 +34,15 @@
 #include "bertini2/mpfr_complex.hpp"
 #include "bertini2/records/derive.hpp"
 #include <boost/random.hpp>
+#include <boost/serialization/split_member.hpp>
+#include <boost/serialization/string.hpp>
 #include <random>
 #include <cstdint>
+#include <string>
 
 
 namespace bertini
 {
-
-    /**
-    Returns this thread's canonical mt19937 engine.  Every random draw of every
-    type routes through here — integer/rational (RandomInt/RandomRat), double
-    (rand_complex/RandReal), and multiprecision (RandomMp and everything built on
-    it) — so SetGlobalSeed()/ReseedThisThread() control them all uniformly.
-    */
-    std::mt19937& ThreadEngine();
 
     /**
     Set the global RNG seed.  Every value is a seed, 0 included, as in numpy and Python's
@@ -83,7 +78,7 @@ namespace bertini
     unsigned long GetGlobalSeed();
 
     /**
-    Reseed this thread's engine deterministically from the global seed mixed with
+    Reseed this thread's draw stream deterministically from the global seed mixed with
     stream_key.  Call at the top of each TrackSinglePath* with soln_ind as the key
     so per-step random draws (condition-number probe, PSEG rand-vector) are
     path-indexed and mode-independent.
@@ -99,7 +94,9 @@ namespace bertini
     unsigned long DerivedWorkerSeed(uint64_t worker_index);
 
     /**
-    Derive an EFFECTIVE PER-SOLVE SEED from the current master.
+    Advance the solve-seed chain one step and return its new seed: the EFFECTIVE PER-SOLVE SEED
+    for the next seedless solve.  Each call takes the next solve ordinal, so the call after it
+    returns the next seed of the chain.
 
     A seedless solve's setup draws (gamma, patch, start coefficients) come sequentially
     off the session stream, so they depend on everything drawn before -- recording the
@@ -119,7 +116,87 @@ namespace bertini
 
     \return A nonzero seed for this solve, ready for SetGlobalSeed and the ask record.
     */
-    unsigned long DeriveSolveSeed();
+    unsigned long AdvanceSolveSeed();
+
+    /**
+    The former name of AdvanceSolveSeed, which read as a derivative; removed in 5.0.
+    \return What AdvanceSolveSeed returns.
+    */
+    [[deprecated("DeriveSolveSeed is AdvanceSolveSeed; the old name is removed in 5.0")]]
+    inline unsigned long DeriveSolveSeed() { return AdvanceSolveSeed(); }
+
+    /**
+    \brief The random state of a thread: everything its next draws depend on.
+
+    GetRandomState returns the calling thread's, and SetRandomState returns the thread to one, so
+    the draws after setting a state are the draws that followed getting it -- a computation
+    written out between its stages continues with the numbers an uninterrupted run would have
+    drawn (bertiniteam/b2#518).
+
+    Per-path and per-worker streams are not part of it: each is reseeded from the global seed
+    and its index when it is used (ReseedThisThread, DerivedWorkerSeed).
+    */
+    struct RandomState
+    {
+        unsigned long global_seed = 0;      ///< The global seed (GetGlobalSeed).
+        bool seed_chosen = false;           ///< Whether a global seed has been chosen yet.
+        std::uint64_t solve_ordinal = 0;    ///< The ordinal the next AdvanceSolveSeed takes.
+        records::DrawStream draw_stream;    ///< The thread's `b2rand/1` draw stream, the source of every draw.
+
+        /**
+        \brief The state as versioned plaintext, lines beginning `b2randstate/1`, which
+        FromText reads back.
+        */
+        std::string ToText() const;
+
+        /**
+        \brief The state a ToText text describes.
+        \param text The text ToText returned.
+        \throws std::invalid_argument if `text` is not such a text, of this version.
+        */
+        static RandomState FromText(std::string const& text);
+
+        /// \brief Whether the two states make the same draws: every field equal.
+        /// \param other The state to compare with.
+        bool operator==(RandomState const& other) const;
+
+        /// \brief Whether the two states differ in any field.
+        /// \param other The state to compare with.
+        bool operator!=(RandomState const& other) const { return !(*this == other); }
+
+        /// Write the state to a Boost.Serialization archive -- for MPI, and beside a system in an
+        /// archive -- as its ToText text, so every archive carries the one versioned form and a
+        /// load refuses a state of another version.
+        template <typename Archive>
+        void save(Archive& ar, const unsigned /*version*/) const
+        {
+            std::string const text = ToText();
+            ar & text;
+        }
+
+        /// Read a state an archive holds (see save); throws std::invalid_argument as FromText does.
+        template <typename Archive>
+        void load(Archive& ar, const unsigned /*version*/)
+        {
+            std::string text;
+            ar & text;
+            *this = FromText(text);
+        }
+
+        BOOST_SERIALIZATION_SPLIT_MEMBER()
+    };
+
+    /**
+    \brief The calling thread's random state.
+    */
+    RandomState GetRandomState();
+
+    /**
+    \brief Set the calling thread's random state, so its next draws are the ones that followed
+    getting `state`.
+    \param state A state GetRandomState returned, or RandomState::FromText read.
+    */
+    void SetRandomState(RandomState const& state);
 
 
     /**

@@ -291,6 +291,16 @@ def _decomposition_repr(self):
     return _described(self, '%dx%d' % (rows, cols))
 
 
+# ----- the random state --------------------------------------------------------------
+
+def _random_state_repr(self):
+    if not _ask(lambda: self.seed_chosen, False):
+        return _described(self, 'no seed chosen')
+    return _described(self, 'global seed %s, solve ordinal %s'
+                      % (_ask(lambda: self.global_seed, '?'),
+                         _ask(lambda: self.solve_ordinal, '?')))
+
+
 # ----- the rest ----------------------------------------------------------------------
 
 def _midpath_report_repr(self):
@@ -459,6 +469,9 @@ def _install_containers(native):
 
 
 def _install_remainder(native):
+    _attach(getattr(native.random, 'RandomState', None), _random_state_repr)
+    # a draw stream's position is a key and a counter, nothing a person reads; to_text() has them
+    _attach(getattr(native.random, 'DrawStream', None), _bare_repr)
     _attach(getattr(native.nag_algorithms, 'MidpathCheckReport', None), _midpath_report_repr)
     _attach(getattr(native.nag_algorithms, 'UserStartSystem', None), _user_start_system_repr)
     _each(_classes(native.nag_algorithms, ('StartSystemFactory', 'AnyZeroDim')), _bare_repr)

@@ -56,6 +56,7 @@ Draw specifications (exact, forever):
 #pragma once
 
 #include <cstdint>
+#include <string>
 
 #include "bertini2/detail/sha256.hpp"
 #include "bertini2/mpfr_extensions.hpp"   // mpz_int / real_mp (NOT num_traits: that would cycle through random.hpp)
@@ -103,6 +104,24 @@ public:
     /// \brief Uniform on [0,1) at `digits` decimal digits: ldexp(Bits(k), -k) with
     /// k = ceil(digits*log2(10)) + 1, materialized at `digits` digits of precision.
     real_mp UnitRealMp(unsigned digits);
+
+    /// \brief The stream as one line of text: whether it is seeded, its key, its block
+    /// counter, its current block and the offset into it, the key and block in hex.
+    std::string ToText() const;
+
+    /// \brief The stream a ToText line describes, at the same position.
+    /// \param text The line ToText returned.
+    /// \throws std::invalid_argument if `text` is not such a line.
+    static DrawStream FromText(std::string const& text);
+
+    /// \brief Whether the two streams make the same draws: same key, counter, block and
+    /// offset, and both seeded or both not.
+    /// \param other The stream to compare with.
+    bool operator==(DrawStream const& other) const;
+
+    /// \brief Whether the two streams differ.
+    /// \param other The stream to compare with.
+    bool operator!=(DrawStream const& other) const { return !(*this == other); }
 
 private:
     // Refill block_ with SHA-256(key || counter) and advance the counter.
