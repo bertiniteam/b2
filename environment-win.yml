@@ -26,7 +26,6 @@ dependencies:
   - python-build
   - scikit-build-core
   - pkg-config
-  - git
   - msmpi
   - mpi4py
   - pip
