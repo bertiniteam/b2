@@ -403,7 +403,18 @@ jobs:
           $env:CCACHE_COMPILERTYPE = 'clang-cl'
           ccache --zero-stats 2>$null
 
+          # Link with the Visual Studio the STL comes from (ADR-0078): link.exe and lib.exe from its
+          # MSVC tools, rc.exe and mt.exe from the Windows SDK.  Otherwise CMake takes them from the
+          # runner's own LLVM (C:\Program Files\LLVM), which nothing here pins.  Full paths, because
+          # Git's link.exe can come first on PATH.
+          $msvcBin = Join-Path $env:VCToolsInstallDir 'bin\Hostx64\x64'
+          $sdkBin = Join-Path $env:WindowsSdkVerBinPath 'x64'
+          $msvcTools = @{ CMAKE_LINKER = "$msvcBin\link.exe"; CMAKE_AR = "$msvcBin\lib.exe"; CMAKE_RC_COMPILER = "$sdkBin\rc.exe"; CMAKE_MT = "$sdkBin\mt.exe" }
+          foreach ($tool in $msvcTools.Values) { if (-not (Test-Path $tool)) { Write-Error "MSVC tool not found: $tool"; exit 1 } }
+          $msvcToolArgs = $msvcTools.GetEnumerator() | ForEach-Object { "-D$($_.Key)=$($_.Value.Replace('\', '/'))" }
+
           cmake -B build `
+            @msvcToolArgs `
             -DCMAKE_PREFIX_PATH="$env:CONDA_PREFIX\Library" `
             -DBUILD_PYTHON_BINDINGS=OFF `
             -DENABLE_UNIT_TESTING=ON `
@@ -733,6 +744,15 @@ jobs:
           # name any remaining refusal.
           $env:CCACHE_SLOPPINESS = 'pch_defines,time_macros'
           $env:CCACHE_COMPILERTYPE = 'clang-cl'
+
+          # Link with the Visual Studio the STL comes from, as test_cpp_windows does (see there).
+          # scikit-build-core splits CMAKE_ARGS as a POSIX shell would: forward slashes, quoted.
+          $msvcBin = Join-Path $env:VCToolsInstallDir 'bin\Hostx64\x64'
+          $sdkBin = Join-Path $env:WindowsSdkVerBinPath 'x64'
+          $msvcTools = @{ CMAKE_LINKER = "$msvcBin\link.exe"; CMAKE_AR = "$msvcBin\lib.exe"; CMAKE_RC_COMPILER = "$sdkBin\rc.exe"; CMAKE_MT = "$sdkBin\mt.exe" }
+          foreach ($tool in $msvcTools.Values) { if (-not (Test-Path $tool)) { Write-Error "MSVC tool not found: $tool"; exit 1 } }
+          $env:CMAKE_ARGS = ($msvcTools.GetEnumerator() | ForEach-Object { "-D$($_.Key)=`"$($_.Value.Replace('\', '/'))`"" }) -join ' '
+          Write-Host "CMAKE_ARGS=$env:CMAKE_ARGS"
           cd ${{ github.workspace }}
           pip install build delvewheel
           ccache --zero-stats 2>$null
