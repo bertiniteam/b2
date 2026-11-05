@@ -12,6 +12,8 @@ dependencies:
   - clang
   - ninja
   - numpy
+  # numpy's and scipy's BLAS: OpenBLAS (a few MB) rather than MKL (109 MB).  b2 itself links no BLAS.
+  - libblas=*=*openblas
   - gmp
   - mpfr
   - mpc
