@@ -1,4 +1,4 @@
-# ADR-0078: The Windows CI jobs share one cache of conda package archives
+# ADR-0078: The Windows CI jobs cache conda package archives, keyed by what was installed
 
 **Status:** Accepted
 **Date:** 2026-11-05
@@ -16,13 +16,16 @@ Three things made the folders large and many:
 ## Decision
 
 - `environment-win.yml` asks for `clang >=20` (clang-cl) instead of `compilers`, drops git, and pins numpy's BLAS to OpenBLAS (`libblas=*=*openblas`).  The download is ~320 MB.  The Clang floor is the one Visual Studio 2026's STL demands (STL1000), so the builds no longer define `_ALLOW_COMPILER_AND_STL_VERSION_MISMATCH`.
-- Every Windows job uses one cache, `windows-conda-archives-<hash of environment-win.yml>-<yyyy-MM>`, of the package archives only (`conda_pkgs/*.conda`, `conda_pkgs/*.tar.bz2`); conda unpacks an archive it finds.  The C++ test job and the wheel jobs restore it and, on a miss, save it; whichever saves first wins, and the others download their few Python-specific packages.  The wheel tests restore it and save nothing.
-- The key names the environment file and the month, not the workflow, so a workflow edit keeps the cache and a new month brings in conda-forge's updates (a hit saves nothing, so without the month new package versions would be downloaded on every run for good).
+- The cache holds the package archives only (`conda_pkgs/*.conda`, `conda_pkgs/*.tar.bz2`); conda unpacks an archive it finds.
+- The key is what was installed: `windows-conda-archives-<python>-<SHA-256 of the sorted conda list --explicit --md5>`, with `cpp` for the C++ test job.  Each job restores the newest cache for its Python by prefix, installs (conda reuses what it finds and downloads what changed), records the installed packages, prunes the folder to their archives, and saves under the record's hash.  An unchanged environment finds its key taken and saves nothing; a conda-forge release, or an edit to `environment-win.yml`, makes a new key, and the superseded cache ages out after 7 days unused.  The wheel tests restore the cache of their Python and save nothing.
+- One cache per Python version (~320 MB each, ~1.9 GB for the six) rather than one shared cache: the shared part (282 MB of 320) is stored six times, but a shared cache keyed by contents needs a job that solves all six before any Windows job starts, on the critical path of every run.
+- The workflow file is not in the key, so editing the workflow keeps the cache.  A key that hit forever would be wrong the other way: a hit saves nothing, so every conda-forge release since the save would be downloaded on every run.
 
 ## Consequences
 
-- Do not go back to a cache per Python version or per job of the whole package folder: at ~2.6 GB apiece they crowd the other platforms out of the 10 GB.
-- Do not put the workflow file back into the conda key; put the environment file, and anything else that changes what conda installs, there instead.
+- Do not go back to caching the whole package folder: at ~2.6 GB per Python version it crowds the other platforms out of the 10 GB.
+- Do not put the workflow file, the environment file or a date into the conda key; the record of what was installed already changes exactly when the contents do.
+- Do not drop the pruning step: without it the restored archives of superseded versions are saved again, and the cache grows with every release.
 - Do not reinstate `compilers` to get clang-cl; ask for `clang`.  If the STL raises its Clang floor, raise the pin.
-- A package added to `environment-win.yml` changes the key, so the next run saves a new cache; the old one ages out.
+- In the wheel jobs the record comes after the build, because the build's `conda install python=... --update-deps` can change the environment.
 - The cibuildwheel key of the Linux and macOS wheel jobs still hashes the workflow file; it caches downloads only and is small, so it was left alone.

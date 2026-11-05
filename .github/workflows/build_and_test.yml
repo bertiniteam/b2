@@ -313,30 +313,26 @@ jobs:
     steps:
       - uses: actions/checkout@v5
 
-      # One cache of conda package ARCHIVES serves every Windows job and every Python version: of a
-      # ~320 MB solve, ~40 MB depends on the Python version and the rest is shared, so whichever job
-      # saves it first leaves the others a few packages to download.  Only the archives are cached;
-      # the unpacked copies beside them doubled the size, and conda unpacks an archive it finds.
-      # The key names the environment file and the month, NOT this workflow, so editing the workflow
-      # keeps the cache, and a new month picks up conda-forge's updates.  Don't go back to a cache
-      # per Python version of the whole folder: at ~2.6 GB apiece they evicted every other
-      # platform's caches from the repository's 10 GB.
-      - name: Name the month for the conda cache key
-        id: month
-        shell: pwsh
-        run: '"month=$(Get-Date -Format yyyy-MM)" >> $env:GITHUB_OUTPUT'
-
-      - name: Cache conda package archives
-        uses: actions/cache@v5
+      # The conda package ARCHIVES are cached, keyed by exactly what was installed (ADR-0078):
+      # restore the newest cache for this Python by prefix, install (conda reuses the archives it
+      # finds and downloads what changed), record the installed packages with `conda list --explicit`,
+      # prune the folder to those archives, and save under the hash of that record.  An unchanged
+      # environment finds its key taken and saves nothing; a conda-forge release makes a new key.
+      # Only archives: the unpacked copies beside them doubled the size.  Never the workflow file in
+      # the key: editing the workflow must keep the cache.  Don't go back to caching the whole
+      # package folder: at ~2.6 GB per Python version it evicted every other platform's caches from
+      # the repository's 10 GB.
+      - name: Restore conda package archives
+        id: conda_restore
+        uses: actions/cache/restore@v5
         continue-on-error: true
         with:
           path: |
             conda_pkgs/*.conda
             conda_pkgs/*.tar.bz2
-          key: windows-conda-archives-${{ hashFiles('environment-win.yml') }}-${{ steps.month.outputs.month }}
+          key: windows-conda-archives-cpp-${{ github.sha }}
           restore-keys: |
-            windows-conda-archives-${{ hashFiles('environment-win.yml') }}-
-            windows-conda-archives-
+            windows-conda-archives-cpp-
 
       - uses: conda-incubator/setup-miniconda@v4
         with:
@@ -344,6 +340,25 @@ jobs:
           environment-file: environment-win.yml
           auto-activate: false
           channel-priority: strict
+
+      - name: Record the installed conda packages, and keep only their archives
+        id: conda_contents
+        shell: pwsh
+        run: |
+          conda list -n b2-windows --explicit --md5 | Where-Object { $_ -match '^https://' } | Sort-Object | Set-Content conda_contents.txt
+          $keep = Get-Content conda_contents.txt | ForEach-Object { ($_ -split '#')[0].Split('/')[-1] }
+          Get-ChildItem conda_pkgs -File | Where-Object { ($_.Name -like '*.conda' -or $_.Name -like '*.tar.bz2') -and $keep -notcontains $_.Name } | Remove-Item
+          "key=windows-conda-archives-cpp-$((Get-FileHash conda_contents.txt -Algorithm SHA256).Hash)" >> $env:GITHUB_OUTPUT
+
+      - name: Save conda package archives
+        if: steps.conda_restore.outputs.cache-matched-key != steps.conda_contents.outputs.key
+        uses: actions/cache/save@v5
+        continue-on-error: true
+        with:
+          path: |
+            conda_pkgs/*.conda
+            conda_pkgs/*.tar.bz2
+          key: ${{ steps.conda_contents.outputs.key }}
 
       # Persist the compiler cache for the C++ test build (mirrors the Unix test jobs and the
       # Windows wheel job).  Loose key -- always save fresh, restore newest; ccache self-invalidates.
@@ -651,23 +666,21 @@ jobs:
       - uses: actions/checkout@v5
         with:
           persist-credentials: false
-      # The one cache of conda package archives, shared with test_cpp_windows (see there).
-      - name: Name the month for the conda cache key
-        id: month
-        shell: pwsh
-        run: '"month=$(Get-Date -Format yyyy-MM)" >> $env:GITHUB_OUTPUT'
-
-      - name: Cache conda package archives
-        uses: actions/cache@v5
+      # The conda package archives, keyed by exactly what was installed, as in test_cpp_windows
+      # (see there).  This job's record and save come after the build, whose `conda install
+      # python=... --update-deps` can change the environment.
+      - name: Restore conda package archives
+        id: conda_restore
+        uses: actions/cache/restore@v5
         continue-on-error: true
         with:
           path: |
             conda_pkgs/*.conda
             conda_pkgs/*.tar.bz2
-          key: windows-conda-archives-${{ hashFiles('environment-win.yml') }}-${{ steps.month.outputs.month }}
+          key: windows-conda-archives-${{ matrix.python-version }}-${{ github.sha }}
           restore-keys: |
-            windows-conda-archives-${{ hashFiles('environment-win.yml') }}-
-            windows-conda-archives-
+            windows-conda-archives-${{ matrix.python-version }}-
+
       - uses: conda-incubator/setup-miniconda@v4
         with:
           activate-environment: b2-windows
@@ -732,6 +745,25 @@ jobs:
           delvewheel repair $wheelPath -w repaired/ --add-path "$env:CONDA_PREFIX\Library\bin"
           Remove-Item dist/*.whl
           Move-Item repaired/*.whl dist/
+
+      - name: Record the installed conda packages, and keep only their archives
+        id: conda_contents
+        shell: pwsh
+        run: |
+          conda list -n b2-windows --explicit --md5 | Where-Object { $_ -match '^https://' } | Sort-Object | Set-Content conda_contents.txt
+          $keep = Get-Content conda_contents.txt | ForEach-Object { ($_ -split '#')[0].Split('/')[-1] }
+          Get-ChildItem conda_pkgs -File | Where-Object { ($_.Name -like '*.conda' -or $_.Name -like '*.tar.bz2') -and $keep -notcontains $_.Name } | Remove-Item
+          "key=windows-conda-archives-${{ matrix.python-version }}-$((Get-FileHash conda_contents.txt -Algorithm SHA256).Hash)" >> $env:GITHUB_OUTPUT
+
+      - name: Save conda package archives
+        if: steps.conda_restore.outputs.cache-matched-key != steps.conda_contents.outputs.key
+        uses: actions/cache/save@v5
+        continue-on-error: true
+        with:
+          path: |
+            conda_pkgs/*.conda
+            conda_pkgs/*.tar.bz2
+          key: ${{ steps.conda_contents.outputs.key }}
 
       - uses: actions/upload-artifact@v6
         with:
@@ -806,13 +838,8 @@ jobs:
     steps:
       - uses: actions/checkout@v5
 
-      # Restores the one cache of conda package archives (see test_cpp_windows) and saves nothing:
-      # the build jobs keep it.
-      - name: Name the month for the conda cache key
-        id: month
-        shell: pwsh
-        run: '"month=$(Get-Date -Format yyyy-MM)" >> $env:GITHUB_OUTPUT'
-
+      # Restores the conda package archives the wheel job of this Python version saved (see
+      # test_cpp_windows) and saves nothing: the build jobs keep them.
       - name: Restore conda package archives
         uses: actions/cache/restore@v5
         continue-on-error: true
@@ -820,10 +847,9 @@ jobs:
           path: |
             conda_pkgs/*.conda
             conda_pkgs/*.tar.bz2
-          key: windows-conda-archives-${{ hashFiles('environment-win.yml') }}-${{ steps.month.outputs.month }}
+          key: windows-conda-archives-${{ matrix.python-version }}-${{ github.sha }}
           restore-keys: |
-            windows-conda-archives-${{ hashFiles('environment-win.yml') }}-
-            windows-conda-archives-
+            windows-conda-archives-${{ matrix.python-version }}-
 
       - uses: conda-incubator/setup-miniconda@v4
         with:
