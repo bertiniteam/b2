@@ -8,8 +8,9 @@ dependencies:
   - cxx-compiler
   # clang provides clang-cl, the compiler the Windows builds use.  Not `compilers`, which brought
   # clang only as a dependency of its Fortran compiler (flang) and added ~600 MB of LLVM tools
-  # and flang to every Windows CI cache.
-  - clang
+  # and flang to every Windows CI cache.  At least 20: the Windows runners' Visual Studio 2026 STL
+  # refuses an older Clang (STL1000).
+  - clang >=20
   - ninja
   - numpy
   # numpy's and scipy's BLAS: OpenBLAS (a few MB) rather than MKL (109 MB).  b2 itself links no BLAS.
