@@ -321,7 +321,8 @@ jobs:
       # Only archives: the unpacked copies beside them doubled the size.  Never the workflow file in
       # the key: editing the workflow must keep the cache.  Don't go back to caching the whole
       # package folder: at ~2.6 GB per Python version it evicted every other platform's caches from
-      # the repository's 10 GB.
+      # the repository's 10 GB.  tools/conda_archive_cache.ps1 does the recording and pruning, and
+      # logs how many archives were reused from the cache and how many downloaded.
       - name: Restore conda package archives
         id: conda_restore
         uses: actions/cache/restore@v5
@@ -334,6 +335,10 @@ jobs:
           restore-keys: |
             windows-conda-archives-cpp-
 
+      - name: List the restored conda archives
+        shell: pwsh
+        run: '& tools\conda_archive_cache.ps1 -Phase before-install'
+
       - uses: conda-incubator/setup-miniconda@v4
         with:
           activate-environment: b2-windows
@@ -344,11 +349,7 @@ jobs:
       - name: Record the installed conda packages, and keep only their archives
         id: conda_contents
         shell: pwsh
-        run: |
-          conda list -n b2-windows --explicit --md5 | Where-Object { $_ -match '^https://' } | Sort-Object | Set-Content conda_contents.txt
-          $keep = Get-Content conda_contents.txt | ForEach-Object { ($_ -split '#')[0].Split('/')[-1] }
-          Get-ChildItem conda_pkgs -File | Where-Object { ($_.Name -like '*.conda' -or $_.Name -like '*.tar.bz2') -and $keep -notcontains $_.Name } | Remove-Item
-          "key=windows-conda-archives-cpp-$((Get-FileHash conda_contents.txt -Algorithm SHA256).Hash)" >> $env:GITHUB_OUTPUT
+        run: '& tools\conda_archive_cache.ps1 -Phase after-install -KeyPrefix windows-conda-archives-cpp -Prune'
 
       - name: Save conda package archives
         if: steps.conda_restore.outputs.cache-matched-key != steps.conda_contents.outputs.key
@@ -403,14 +404,9 @@ jobs:
           $env:CCACHE_COMPILERTYPE = 'clang-cl'
           ccache --zero-stats 2>$null
 
-          # Link with the Visual Studio the STL comes from (ADR-0078): link.exe and lib.exe from its
-          # MSVC tools, rc.exe and mt.exe from the Windows SDK.  Otherwise CMake takes them from the
-          # runner's own LLVM (C:\Program Files\LLVM), which nothing here pins.  Full paths, because
-          # Git's link.exe can come first on PATH.
-          $msvcBin = Join-Path $env:VCToolsInstallDir 'bin\Hostx64\x64'
-          $sdkBin = Join-Path $env:WindowsSdkVerBinPath 'x64'
-          $msvcTools = @{ CMAKE_LINKER = "$msvcBin\link.exe"; CMAKE_AR = "$msvcBin\lib.exe"; CMAKE_RC_COMPILER = "$sdkBin\rc.exe"; CMAKE_MT = "$sdkBin\mt.exe" }
-          foreach ($tool in $msvcTools.Values) { if (-not (Test-Path $tool)) { Write-Error "MSVC tool not found: $tool"; exit 1 } }
+          # Link with the Visual Studio the STL comes from, not the runner's own LLVM, which CMake
+          # takes otherwise (ADR-0078; tools/msvc_link_tools.ps1 says how they are found).
+          $msvcTools = & "${{ github.workspace }}\tools\msvc_link_tools.ps1"
           $msvcToolArgs = $msvcTools.GetEnumerator() | ForEach-Object { "-D$($_.Key)=$($_.Value.Replace('\', '/'))" }
 
           cmake -B build `
@@ -421,9 +417,16 @@ jobs:
             -DINSTALL_DOCUMENTATION=OFF `
             -DCMAKE_DISABLE_FIND_PACKAGE_Doxygen=ON `
             -DCMAKE_BUILD_TYPE=Release
+          # What the build was configured with: the compiler and the four link tools CMake will use.
+          clang-cl --version
+          Select-String -Path build\CMakeCache.txt -Pattern '^CMAKE_(C|CXX)_COMPILER:|^CMAKE_(LINKER|AR|RC_COMPILER|MT):' | ForEach-Object Line
           cmake --build build --parallel
+          # A native command's exit code does not stop a pwsh step: keep the build's, print the
+          # stats, then fail here rather than as "Not Run" in the test step.
+          $buildExitCode = $LASTEXITCODE
           ccache --show-stats -v
           ccache --version
+          if ($buildExitCode -ne 0) { Write-Error "the build failed (exit code $buildExitCode)"; exit $buildExitCode }
 
       # Run under both per-solve thread settings (see the unix C++ test job for the rationale).
       - name: Test (threaded + BERTINI_NUM_THREADS=1)
@@ -692,6 +695,10 @@ jobs:
           restore-keys: |
             windows-conda-archives-${{ matrix.python-version }}-
 
+      - name: List the restored conda archives
+        shell: pwsh
+        run: '& tools\conda_archive_cache.ps1 -Phase before-install'
+
       - uses: conda-incubator/setup-miniconda@v4
         with:
           activate-environment: b2-windows
@@ -747,18 +754,21 @@ jobs:
 
           # Link with the Visual Studio the STL comes from, as test_cpp_windows does (see there).
           # scikit-build-core splits CMAKE_ARGS as a POSIX shell would: forward slashes, quoted.
-          $msvcBin = Join-Path $env:VCToolsInstallDir 'bin\Hostx64\x64'
-          $sdkBin = Join-Path $env:WindowsSdkVerBinPath 'x64'
-          $msvcTools = @{ CMAKE_LINKER = "$msvcBin\link.exe"; CMAKE_AR = "$msvcBin\lib.exe"; CMAKE_RC_COMPILER = "$sdkBin\rc.exe"; CMAKE_MT = "$sdkBin\mt.exe" }
-          foreach ($tool in $msvcTools.Values) { if (-not (Test-Path $tool)) { Write-Error "MSVC tool not found: $tool"; exit 1 } }
+          $msvcTools = & "${{ github.workspace }}\tools\msvc_link_tools.ps1"
           $env:CMAKE_ARGS = ($msvcTools.GetEnumerator() | ForEach-Object { "-D$($_.Key)=`"$($_.Value.Replace('\', '/'))`"" }) -join ' '
           Write-Host "CMAKE_ARGS=$env:CMAKE_ARGS"
           cd ${{ github.workspace }}
           pip install build delvewheel
           ccache --zero-stats 2>$null
           python -m build --wheel --no-isolation
+          # A native command's exit code does not stop a pwsh step: keep the build's, print what it
+          # was configured with and the cache stats, then fail.
+          $buildExitCode = $LASTEXITCODE
+          clang-cl --version
+          Select-String -Path bld\CMakeCache.txt -Pattern '^CMAKE_(C|CXX)_COMPILER:|^CMAKE_(LINKER|AR|RC_COMPILER|MT):' -ErrorAction Continue | ForEach-Object Line
           ccache --show-stats -v
           ccache --version
+          if ($buildExitCode -ne 0) { Write-Error "the wheel build failed (exit code $buildExitCode)"; exit $buildExitCode }
 
           $wheelPath = (Get-ChildItem dist/*.whl | Select-Object -First 1).FullName
           if (-not $wheelPath) { Write-Error "No wheel found in dist/"; exit 1 }
@@ -768,12 +778,9 @@ jobs:
 
       - name: Record the installed conda packages, and keep only their archives
         id: conda_contents
+        if: ${{ !cancelled() }}   # report the cache's use even when the build failed; the save stays success-only
         shell: pwsh
-        run: |
-          conda list -n b2-windows --explicit --md5 | Where-Object { $_ -match '^https://' } | Sort-Object | Set-Content conda_contents.txt
-          $keep = Get-Content conda_contents.txt | ForEach-Object { ($_ -split '#')[0].Split('/')[-1] }
-          Get-ChildItem conda_pkgs -File | Where-Object { ($_.Name -like '*.conda' -or $_.Name -like '*.tar.bz2') -and $keep -notcontains $_.Name } | Remove-Item
-          "key=windows-conda-archives-${{ matrix.python-version }}-$((Get-FileHash conda_contents.txt -Algorithm SHA256).Hash)" >> $env:GITHUB_OUTPUT
+        run: '& tools\conda_archive_cache.ps1 -Phase after-install -KeyPrefix windows-conda-archives-${{ matrix.python-version }} -Prune'
 
       - name: Save conda package archives
         if: steps.conda_restore.outputs.cache-matched-key != steps.conda_contents.outputs.key
@@ -871,6 +878,10 @@ jobs:
           restore-keys: |
             windows-conda-archives-${{ matrix.python-version }}-
 
+      - name: List the restored conda archives
+        shell: pwsh
+        run: '& tools\conda_archive_cache.ps1 -Phase before-install'
+
       - uses: conda-incubator/setup-miniconda@v4
         with:
           activate-environment: b2-windows
@@ -878,6 +889,10 @@ jobs:
           python-version: ${{ matrix.python-version }}
           auto-activate: false
           channel-priority: strict
+
+      - name: Report the conda archives reused and downloaded
+        shell: pwsh
+        run: '& tools\conda_archive_cache.ps1 -Phase after-install'
 
       - name: Download wheels artifact
         uses: actions/download-artifact@v7
