@@ -6,7 +6,10 @@ dependencies:
   - cmake
   - ccache
   - cxx-compiler
-  - compilers
+  # clang provides clang-cl, the compiler the Windows builds use.  Not `compilers`, which brought
+  # clang only as a dependency of its Fortran compiler (flang) and added ~600 MB of LLVM tools
+  # and flang to every Windows CI cache.
+  - clang
   - ninja
   - numpy
   - gmp
