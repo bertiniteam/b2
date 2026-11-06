@@ -308,37 +308,12 @@ jobs:
                           # warm, but a cache-cold rerun on a slow runner legitimately
                           # needs ~40 (observed 2026-07-05: all tests PASSED, then the
                           # 40-min axe fell during post-job cache packing)
-    env:
-      CONDA_PKGS_DIRS: ${{ github.workspace }}\conda_pkgs
     steps:
       - uses: actions/checkout@v5
 
-      # The conda package ARCHIVES are cached, keyed by exactly what was installed (ADR-0078):
-      # restore the newest cache for this Python by prefix, install (conda reuses the archives it
-      # finds and downloads what changed), record the installed packages with `conda list --explicit`,
-      # prune the folder to those archives, and save under the hash of that record.  An unchanged
-      # environment finds its key taken and saves nothing; a conda-forge release makes a new key.
-      # Only archives: the unpacked copies beside them doubled the size.  Never the workflow file in
-      # the key: editing the workflow must keep the cache.  Don't go back to caching the whole
-      # package folder: at ~2.6 GB per Python version it evicted every other platform's caches from
-      # the repository's 10 GB.  tools/conda_archive_cache.ps1 does the recording and pruning, and
-      # logs how many archives were reused from the cache and how many downloaded.
-      - name: Restore conda package archives
-        id: conda_restore
-        uses: actions/cache/restore@v5
-        continue-on-error: true
-        with:
-          path: |
-            conda_pkgs/*.conda
-            conda_pkgs/*.tar.bz2
-          key: windows-conda-archives-cpp-${{ github.sha }}
-          restore-keys: |
-            windows-conda-archives-cpp-
-
-      - name: List the restored conda archives
-        shell: pwsh
-        run: '& tools\conda_archive_cache.ps1 -Phase before-install'
-
+      # The conda environment is not cached (ADR-0078): measured, a restored cache of its package
+      # archives saved no time (conda fetched every package again), and downloading the whole
+      # ~325 MB environment from conda-forge takes about as long as restoring a cache of it.
       - uses: conda-incubator/setup-miniconda@v4
         with:
           activate-environment: b2-windows
@@ -346,20 +321,9 @@ jobs:
           auto-activate: false
           channel-priority: strict
 
-      - name: Record the installed conda packages, and keep only their archives
-        id: conda_contents
+      - name: Versions of the main conda packages
         shell: pwsh
-        run: '& tools\conda_archive_cache.ps1 -Phase after-install -KeyPrefix windows-conda-archives-cpp -Prune'
-
-      - name: Save conda package archives
-        if: steps.conda_restore.outputs.cache-matched-key != steps.conda_contents.outputs.key
-        uses: actions/cache/save@v5
-        continue-on-error: true
-        with:
-          path: |
-            conda_pkgs/*.conda
-            conda_pkgs/*.tar.bz2
-          key: ${{ steps.conda_contents.outputs.key }}
+        run: conda list -n b2-windows '^(python|clang|libboost-devel|eigen|eigenpy|numpy|scipy|libblas|cmake|ninja|ccache|msmpi|vs2022_win-64)$'
 
       # Persist the compiler cache for the C++ test build (mirrors the Unix test jobs and the
       # Windows wheel job).  Loose key -- always save fresh, restore newest; ccache self-invalidates.
@@ -408,6 +372,7 @@ jobs:
           # takes otherwise (ADR-0078; tools/msvc_link_tools.ps1 says how they are found).
           $msvcTools = & "${{ github.workspace }}\tools\msvc_link_tools.ps1"
           $msvcToolArgs = $msvcTools.GetEnumerator() | ForEach-Object { "-D$($_.Key)=$($_.Value.Replace('\', '/'))" }
+          Get-Command cmake, ninja, clang-cl, ccache | ForEach-Object { "$($_.Name) = $($_.Source)" }
 
           cmake -B build `
             @msvcToolArgs `
@@ -670,8 +635,6 @@ jobs:
     needs: [doc_lint]
     if: ${{ inputs.minimal != true && !failure() && !cancelled() && (inputs.os == '' || inputs.os == 'all' || inputs.os == 'windows') }}
     runs-on: windows-latest
-    env:
-      CONDA_PKGS_DIRS: ${{ github.workspace }}\conda_pkgs
     strategy:
       fail-fast: false
       matrix:
@@ -680,25 +643,7 @@ jobs:
       - uses: actions/checkout@v5
         with:
           persist-credentials: false
-      # The conda package archives, keyed by exactly what was installed, as in test_cpp_windows
-      # (see there).  This job's record and save come after the build, whose `conda install
-      # python=... --update-deps` can change the environment.
-      - name: Restore conda package archives
-        id: conda_restore
-        uses: actions/cache/restore@v5
-        continue-on-error: true
-        with:
-          path: |
-            conda_pkgs/*.conda
-            conda_pkgs/*.tar.bz2
-          key: windows-conda-archives-${{ matrix.python-version }}-${{ github.sha }}
-          restore-keys: |
-            windows-conda-archives-${{ matrix.python-version }}-
-
-      - name: List the restored conda archives
-        shell: pwsh
-        run: '& tools\conda_archive_cache.ps1 -Phase before-install'
-
+      # Not cached, as in test_cpp_windows (see there; ADR-0078).
       - uses: conda-incubator/setup-miniconda@v4
         with:
           activate-environment: b2-windows
@@ -757,6 +702,7 @@ jobs:
           $msvcTools = & "${{ github.workspace }}\tools\msvc_link_tools.ps1"
           $env:CMAKE_ARGS = ($msvcTools.GetEnumerator() | ForEach-Object { "-D$($_.Key)=`"$($_.Value.Replace('\', '/'))`"" }) -join ' '
           Write-Host "CMAKE_ARGS=$env:CMAKE_ARGS"
+          Get-Command cmake, ninja, clang-cl, ccache | ForEach-Object { "$($_.Name) = $($_.Source)" }
           cd ${{ github.workspace }}
           pip install build delvewheel
           ccache --zero-stats 2>$null
@@ -776,21 +722,12 @@ jobs:
           Remove-Item dist/*.whl
           Move-Item repaired/*.whl dist/
 
-      - name: Record the installed conda packages, and keep only their archives
-        id: conda_contents
-        if: ${{ !cancelled() }}   # report the cache's use even when the build failed; the save stays success-only
+      # After the build, whose `conda install python=... --update-deps` can change the environment;
+      # also when the build failed.
+      - name: Versions of the main conda packages
+        if: ${{ !cancelled() }}
         shell: pwsh
-        run: '& tools\conda_archive_cache.ps1 -Phase after-install -KeyPrefix windows-conda-archives-${{ matrix.python-version }} -Prune'
-
-      - name: Save conda package archives
-        if: steps.conda_restore.outputs.cache-matched-key != steps.conda_contents.outputs.key
-        uses: actions/cache/save@v5
-        continue-on-error: true
-        with:
-          path: |
-            conda_pkgs/*.conda
-            conda_pkgs/*.tar.bz2
-          key: ${{ steps.conda_contents.outputs.key }}
+        run: conda list -n b2-windows '^(python|clang|libboost-devel|eigen|eigenpy|numpy|scipy|libblas|cmake|ninja|ccache|msmpi|vs2022_win-64)$'
 
       - uses: actions/upload-artifact@v6
         with:
@@ -859,28 +796,9 @@ jobs:
       fail-fast: false
       matrix:
         python-version: ['3.10', '3.11', '3.12', '3.13', '3.14']
-    env:
-      CONDA_PKGS_DIRS: ${{ github.workspace }}\conda_pkgs
 
     steps:
       - uses: actions/checkout@v5
-
-      # Restores the conda package archives the wheel job of this Python version saved (see
-      # test_cpp_windows) and saves nothing: the build jobs keep them.
-      - name: Restore conda package archives
-        uses: actions/cache/restore@v5
-        continue-on-error: true
-        with:
-          path: |
-            conda_pkgs/*.conda
-            conda_pkgs/*.tar.bz2
-          key: windows-conda-archives-${{ matrix.python-version }}-${{ github.sha }}
-          restore-keys: |
-            windows-conda-archives-${{ matrix.python-version }}-
-
-      - name: List the restored conda archives
-        shell: pwsh
-        run: '& tools\conda_archive_cache.ps1 -Phase before-install'
 
       - uses: conda-incubator/setup-miniconda@v4
         with:
@@ -889,10 +807,6 @@ jobs:
           python-version: ${{ matrix.python-version }}
           auto-activate: false
           channel-priority: strict
-
-      - name: Report the conda archives reused and downloaded
-        shell: pwsh
-        run: '& tools\conda_archive_cache.ps1 -Phase after-install'
 
       - name: Download wheels artifact
         uses: actions/download-artifact@v7
