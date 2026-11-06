@@ -323,7 +323,7 @@ jobs:
 
       - name: Versions of the main conda packages
         shell: pwsh
-        run: conda list -n b2-windows '^(python|clang|libboost-devel|eigen|eigenpy|numpy|scipy|libblas|cmake|ninja|ccache|msmpi|vs2022_win-64)$'
+        run: conda list -n b2-windows '^(python|clang|libboost-devel|libboost-headers|gmp|mpfr|mpc|eigen|eigenpy|numpy|scipy|libblas|cmake|ninja|ccache|msmpi|vs2022_win-64|vc14_runtime|ucrt)$'
 
       # Persist the compiler cache for the C++ test build (mirrors the Unix test jobs and the
       # Windows wheel job).  Loose key -- always save fresh, restore newest; ccache self-invalidates.
@@ -374,6 +374,8 @@ jobs:
           $msvcToolArgs = $msvcTools.GetEnumerator() | ForEach-Object { "-D$($_.Key)=$($_.Value.Replace('\', '/'))" }
           Get-Command cmake, ninja, clang-cl, ccache | ForEach-Object { "$($_.Name) = $($_.Source)" }
 
+          # Debug information in the objects (/Z7, which ccache can cache; /Zi it cannot) and a PDB
+          # per binary, so a crash in the test step has a stack with names (see the cdb step).
           cmake -B build `
             @msvcToolArgs `
             -DCMAKE_PREFIX_PATH="$env:CONDA_PREFIX\Library" `
@@ -381,6 +383,9 @@ jobs:
             -DENABLE_UNIT_TESTING=ON `
             -DINSTALL_DOCUMENTATION=OFF `
             -DCMAKE_DISABLE_FIND_PACKAGE_Doxygen=ON `
+            -DCMAKE_C_FLAGS=/Z7 `
+            -DCMAKE_CXX_FLAGS=/Z7 `
+            -DCMAKE_EXE_LINKER_FLAGS=/DEBUG `
             -DCMAKE_BUILD_TYPE=Release
           # What the build was configured with: the compiler and the four link tools CMake will use.
           clang-cl --version
@@ -408,6 +413,51 @@ jobs:
           ctest --output-on-failure --timeout 600 --parallel
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
           Write-Host "::endgroup::"
+
+      # Windows reports a crash as a bare exit code (0xc0000374 is heap corruption), with no stack
+      # and with the test's buffered stdout lost.  When a suite failed, rerun it under cdb, Boost.Test
+      # naming each test case on stderr as it starts, under both thread settings, so the log says
+      # which test died and where; and list what the binary imports, in case two C runtimes meet.
+      - name: On a failed suite, rerun it under cdb for the stack
+        if: ${{ failure() }}
+        timeout-minutes: 20
+        shell: pwsh
+        working-directory: build\core
+        run: |
+          $failedLog = '..\Testing\Temporary\LastTestsFailed.log'
+          if (-not (Test-Path $failedLog)) { Write-Host "no $failedLog: the failure was not a test"; exit 0 }
+          $failed = Select-String -Path $failedLog -Pattern '^\d+:(\S+)' | ForEach-Object { $_.Matches[0].Groups[1].Value }
+          Write-Host "failed suites: $failed"
+
+          $cdb = 'C:\Program Files (x86)\Windows Kits\10\Debuggers\x64\cdb.exe'
+          if (-not (Test-Path $cdb)) {
+            Write-Host "no cdb at $cdb; installing WinDbg with winget"
+            winget install --id Microsoft.WinDbg --exact --silent --accept-source-agreements --accept-package-agreements | Out-Host
+            $cdb = (Get-Command cdb.exe -ErrorAction SilentlyContinue).Source
+            if (-not $cdb) { Write-Host "no cdb after the install either; the suites run plainly" }
+          }
+          $env:_NT_SYMBOL_PATH = "srv*$env:TEMP\symbols*https://msdl.microsoft.com/download/symbols"
+
+          $msvcTools = & "${{ github.workspace }}\tools\msvc_link_tools.ps1"
+          $dumpbin = Join-Path (Split-Path $msvcTools.CMAKE_LINKER) 'dumpbin.exe'
+
+          foreach ($suite in $failed) {
+            $exe = Join-Path (Get-Location) "$suite.exe"
+            Write-Host "::group::$suite imports"
+            & $dumpbin /dependents $exe | Select-String -Pattern '\.dll' | ForEach-Object Line
+            Write-Host "::endgroup::"
+            foreach ($threads in @('', '1')) {
+              if ($threads) { $env:BERTINI_NUM_THREADS = $threads } else { Remove-Item Env:\BERTINI_NUM_THREADS -ErrorAction SilentlyContinue }
+              Write-Host "::group::$suite with BERTINI_NUM_THREADS='$threads'"
+              if ($cdb) {
+                & $cdb -g -G -lines -c '!analyze -v; ~*kv 40; q' $exe --log_level=test_suite --log_sink=stderr
+              } else {
+                & $exe --log_level=test_suite --log_sink=stderr
+              }
+              Write-Host "exit code $LASTEXITCODE"
+              Write-Host "::endgroup::"
+            }
+          }
 
   # The wheel build is an INDEPENDENT full compile (prebuilt deps image/tarball +
   # cibuildwheel, ccache namespace ccache-wheels-*), sharing nothing with the C++
