@@ -327,8 +327,8 @@ jobs:
 
       # Persist the compiler cache for the C++ test build (mirrors the Unix test jobs and the
       # Windows wheel job).  Loose key -- always save fresh, restore newest; ccache self-invalidates.
-      - name: Cache ccache (Windows C++ tests)
-        uses: actions/cache@v5
+      - name: Restore ccache (Windows C++ tests)
+        uses: actions/cache/restore@v5
         with:
           path: ${{ github.workspace }}\.ccache
           key: ccache-win-cpp-${{ github.sha }}
@@ -398,6 +398,15 @@ jobs:
           ccache --version
           if ($buildExitCode -ne 0) { Write-Error "the build failed (exit code $buildExitCode)"; exit $buildExitCode }
 
+      # Saved here rather than in actions/cache's post step, which a failed job skips: what compiled
+      # is worth keeping when a test then fails, or the next attempt compiles cold again.
+      - name: Save ccache (Windows C++ tests)
+        if: ${{ !cancelled() }}
+        uses: actions/cache/save@v5
+        with:
+          path: ${{ github.workspace }}\.ccache
+          key: ccache-win-cpp-${{ github.sha }}
+
       # Run under both per-solve thread settings (see the unix C++ test job for the rationale).
       - name: Test (threaded + BERTINI_NUM_THREADS=1)
         shell: pwsh
@@ -425,7 +434,7 @@ jobs:
         working-directory: build\core
         run: |
           $failedLog = '..\Testing\Temporary\LastTestsFailed.log'
-          if (-not (Test-Path $failedLog)) { Write-Host "no $failedLog: the failure was not a test"; exit 0 }
+          if (-not (Test-Path $failedLog)) { Write-Host "no ${failedLog}: the failure was not a test"; exit 0 }
           $failed = Select-String -Path $failedLog -Pattern '^\d+:(\S+)' | ForEach-Object { $_.Matches[0].Groups[1].Value }
           Write-Host "failed suites: $failed"
 
@@ -456,6 +465,20 @@ jobs:
               }
               Write-Host "exit code $LASTEXITCODE"
               Write-Host "::endgroup::"
+            }
+            # Heap corruption is reported when the heap next looks, often far from the bad write.
+            # Full page heap puts a guard page after every allocation, so the write itself faults.
+            if ($cdb) {
+              $imageOptions = "HKLM:\SOFTWARE\Microsoft\Windows NT\CurrentVersion\Image File Execution Options\$suite.exe"
+              New-Item -Path $imageOptions -Force | Out-Null
+              New-ItemProperty -Path $imageOptions -Name GlobalFlag -Value 0x02000000 -PropertyType DWord -Force | Out-Null
+              New-ItemProperty -Path $imageOptions -Name PageHeapFlags -Value 3 -PropertyType DWord -Force | Out-Null
+              Remove-Item Env:\BERTINI_NUM_THREADS -ErrorAction SilentlyContinue
+              Write-Host "::group::$suite under full page heap"
+              & $cdb -g -G -lines -c '!analyze -v; ~*kv 40; q' $exe --log_level=test_suite --log_sink=stderr
+              Write-Host "exit code $LASTEXITCODE"
+              Write-Host "::endgroup::"
+              Remove-Item -Path $imageOptions -Recurse
             }
           }
 
