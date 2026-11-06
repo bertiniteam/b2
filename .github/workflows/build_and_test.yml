@@ -374,8 +374,6 @@ jobs:
           $msvcToolArgs = $msvcTools.GetEnumerator() | ForEach-Object { "-D$($_.Key)=$($_.Value.Replace('\', '/'))" }
           Get-Command cmake, ninja, clang-cl, ccache | ForEach-Object { "$($_.Name) = $($_.Source)" }
 
-          # Debug information in the objects (/Z7, which ccache can cache; /Zi it cannot) and a PDB
-          # per binary, so a crash in the test step has a stack with names (see the cdb step).
           cmake -B build `
             @msvcToolArgs `
             -DCMAKE_PREFIX_PATH="$env:CONDA_PREFIX\Library" `
@@ -383,9 +381,6 @@ jobs:
             -DENABLE_UNIT_TESTING=ON `
             -DINSTALL_DOCUMENTATION=OFF `
             -DCMAKE_DISABLE_FIND_PACKAGE_Doxygen=ON `
-            -DCMAKE_C_FLAGS=/Z7 `
-            -DCMAKE_CXX_FLAGS=/Z7 `
-            -DCMAKE_EXE_LINKER_FLAGS=/DEBUG `
             -DCMAKE_BUILD_TYPE=Release
           # What the build was configured with: the compiler and the four link tools CMake will use.
           clang-cl --version
@@ -427,6 +422,9 @@ jobs:
       # and with the test's buffered stdout lost.  When a suite failed, rerun it under cdb, Boost.Test
       # naming each test case on stderr as it starts, under both thread settings, so the log says
       # which test died and where; and list what the binary imports, in case two C runtimes meet.
+      # For names inside our own code, add /Z7 to the compile flags and /DEBUG to the link flags for
+      # one run: that is how ADR-0079's crash was found.  cdb runs under the debug heap, which fills
+      # freed memory, so a read of freed memory that normally goes unnoticed can fail here.
       - name: On a failed suite, rerun it under cdb for the stack
         if: ${{ failure() }}
         timeout-minutes: 20
