@@ -153,6 +153,7 @@ set(detail_headers
     include/bertini2/records/output_directory.hpp
     include/bertini2/records/load_system.hpp
     include/bertini2/records/draw_functions.hpp
+    include/bertini2/records/solution_metadata_json.hpp
 )
 
 set(function_tree_headers
