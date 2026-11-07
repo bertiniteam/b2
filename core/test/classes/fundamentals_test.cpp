@@ -293,7 +293,7 @@ BOOST_AUTO_TEST_CASE(RandomMP_nondefault_precision_100)
 }
 
 // The multiprecision RandomMp generator now draws from the single per-thread
-// engine (ThreadEngine) shared by every random type, so SetGlobalSeed controls
+// draw stream shared by every random type, so SetGlobalSeed controls
 // it.  Before this it used a private, unseedable independent_bits_engine.  These
 // tests pin that contract: same seed -> identical mp draws; different seed ->
 // different draws.

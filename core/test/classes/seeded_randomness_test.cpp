@@ -31,6 +31,10 @@ draw reproducibility.
 #include <sstream>
 
 #include <boost/test/unit_test.hpp>
+#include <boost/archive/binary_iarchive.hpp>
+#include <boost/archive/binary_oarchive.hpp>
+#include <boost/archive/text_iarchive.hpp>
+#include <boost/archive/text_oarchive.hpp>
 
 #include "bertini2/records/derive.hpp"
 #include "bertini2/random.hpp"
@@ -52,9 +56,16 @@ System ParseCircleLine()
 }
 
 // build the whole random cascade for one seed: TD start + gamma homotopy + patch
+System HomotopyFromTheCurrentState();
 System SeededHomotopy(unsigned long seed)
 {
     SetGlobalSeed(seed);
+    return HomotopyFromTheCurrentState();
+}
+
+// ... drawing from wherever the random state is now
+System HomotopyFromTheCurrentState()
+{
     auto sys = ParseCircleLine();
     sys.Homogenize();
     sys.AutoPatch();
@@ -95,33 +106,47 @@ BOOST_AUTO_TEST_CASE(seeded_session_draws_are_pinned)
 
 // ---- reproducibility semantics ----
 
-// The effective per-solve seed: DeriveSolveSeed captures the session stream's current
-// position, so a seedless solve records a seed that reproduces it STANDALONE instead
+// The effective per-solve seed: AdvanceSolveSeed takes the next link of a chain rooted at
+// the master seed, so a seedless solve records a seed that reproduces it STANDALONE instead
 // of a session master that silently under-determines a mid-session run.
-BOOST_AUTO_TEST_CASE(derived_solve_seeds_capture_the_stream_deterministically)
+BOOST_AUTO_TEST_CASE(solve_seeds_advance_along_a_chain_from_the_master_seed)
 {
     SetGlobalSeed(42);
-    auto const s1 = DeriveSolveSeed();
-    auto const s2 = DeriveSolveSeed();
+    auto const s1 = AdvanceSolveSeed();
+    auto const s2 = AdvanceSolveSeed();
     BOOST_CHECK(s1 != 0u);                       // 0 means "entropy" to a classic input file
     BOOST_CHECK(s1 != s2);                       // consecutive solves get distinct seeds
     BOOST_CHECK(s1 <= 0xFFFFFFFFul);             // 32-bit portable (Windows unsigned long)
     BOOST_CHECK(s2 <= 0xFFFFFFFFul);
 
     SetGlobalSeed(42);                           // same master =>
-    BOOST_CHECK_EQUAL(DeriveSolveSeed(), s1);    // the same derived seeds, in order
-    BOOST_CHECK_EQUAL(DeriveSolveSeed(), s2);
+    BOOST_CHECK_EQUAL(AdvanceSolveSeed(), s1);   // the same seeds, in order
+    BOOST_CHECK_EQUAL(AdvanceSolveSeed(), s2);
 
     // DELIBERATELY independent of the draw streams: a multithreaded solve leaves the
     // calling thread's stream at a scheduling-dependent position, so the derivation
     // must not read it -- intervening draws change nothing
     SetGlobalSeed(42);
     (void)RandomRat();
-    BOOST_CHECK_EQUAL(DeriveSolveSeed(), s1);
+    BOOST_CHECK_EQUAL(AdvanceSolveSeed(), s1);
 
     SetGlobalSeed(43);                           // different master, different chain
-    BOOST_CHECK(DeriveSolveSeed() != s1);
+    BOOST_CHECK(AdvanceSolveSeed() != s1);
 }
+
+// the former name advances the same chain until it is removed in 5.0
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
+BOOST_AUTO_TEST_CASE(the_former_name_derive_solve_seed_advances_the_same_chain)
+{
+    SetGlobalSeed(42);
+    auto const first = AdvanceSolveSeed();
+    auto const second = AdvanceSolveSeed();
+    SetGlobalSeed(42);
+    BOOST_CHECK_EQUAL(DeriveSolveSeed(), first);
+    BOOST_CHECK_EQUAL(AdvanceSolveSeed(), second);
+}
+#pragma GCC diagnostic pop
 
 BOOST_AUTO_TEST_CASE(same_seed_same_draws_different_seed_different_draws)
 {
@@ -269,6 +294,143 @@ BOOST_AUTO_TEST_CASE(seed_42_homotopy_digest_is_pinned_cross_platform)
                   << "-----8<-----\n" << homotopy.CanonicalEncodingText() << "\n-----8<-----\n";
     }
     BOOST_CHECK_EQUAL(hex, pinned);
+}
+
+// ---- getting and setting the random state (bertiniteam/b2#518) ----
+
+namespace {
+
+// a mix of every kind of draw: multiprecision numbers, a double, the stream's raw bytes
+// (21 bits, so the position ends partway into a block), and the solve-seed chain
+std::string DrawsFromHere()
+{
+    std::ostringstream out;
+    out << RandomMp(30) << ' ' << records::ThreadDrawStream().Bits(21) << ' '
+        << RandReal() << ' ' << AdvanceSolveSeed() << ' ' << RandomMp(60);
+    return out.str();
+}
+
+} // unnamed namespace
+
+BOOST_AUTO_TEST_CASE(a_state_set_again_draws_what_followed_getting_it)
+{
+    SetGlobalSeed(1042);
+    DrawsFromHere();
+    auto const state = GetRandomState();
+    auto const after_getting_it = DrawsFromHere();
+
+    SetGlobalSeed(77);              // another seed, another solve ordinal, other positions
+    DrawsFromHere();
+    SetRandomState(state);
+    BOOST_CHECK_EQUAL(DrawsFromHere(), after_getting_it);
+    BOOST_CHECK_EQUAL(GetGlobalSeed(), 1042ul);
+}
+
+BOOST_AUTO_TEST_CASE(a_homotopy_built_after_setting_a_state_is_the_one_built_after_getting_it)
+{
+    SetGlobalSeed(42);
+    DrawsFromHere();
+    auto const state = GetRandomState();
+    auto const after_getting_it = HomotopyFromTheCurrentState().ContentDigest().Hex();
+
+    HomotopyFromTheCurrentState();
+    SetRandomState(state);
+    BOOST_CHECK_EQUAL(HomotopyFromTheCurrentState().ContentDigest().Hex(), after_getting_it);
+}
+
+BOOST_AUTO_TEST_CASE(a_state_holds_the_seed_and_ordinal_and_compares_by_its_fields)
+{
+    SetGlobalSeed(5);
+    DrawsFromHere();
+    auto const state = GetRandomState();
+    BOOST_CHECK_EQUAL(state.global_seed, 5ul);
+    BOOST_CHECK(state.seed_chosen);
+    BOOST_CHECK_EQUAL(state.solve_ordinal, 1u);
+    BOOST_CHECK(GetRandomState() == state);
+
+    DrawsFromHere();
+    BOOST_CHECK(GetRandomState() != state);
+    auto moved_stream = state;
+    moved_stream.draw_stream.Uint64();
+    BOOST_CHECK(moved_stream != state);
+}
+
+BOOST_AUTO_TEST_CASE(a_state_built_field_by_field_draws_as_one_got)
+{
+    SetGlobalSeed(11);
+    DrawsFromHere();
+    auto const got = GetRandomState();
+    auto const from_got = DrawsFromHere();
+
+    RandomState built;
+    built.global_seed = got.global_seed;
+    built.seed_chosen = got.seed_chosen;
+    built.solve_ordinal = got.solve_ordinal;
+    built.draw_stream = got.draw_stream;
+    SetGlobalSeed(12);
+    SetRandomState(built);
+    BOOST_CHECK_EQUAL(DrawsFromHere(), from_got);
+}
+
+BOOST_AUTO_TEST_CASE(a_state_written_as_text_reads_back_equal)
+{
+    SetGlobalSeed(5);
+    DrawsFromHere();
+    auto const state = GetRandomState();
+    auto const text = state.ToText();
+    BOOST_CHECK_EQUAL(text.rfind("b2randstate/1\nglobal_seed 5\nseed_chosen 1\nsolve_ordinal 1\n"
+                                 "draw_stream 1 ", 0), 0u);
+    BOOST_CHECK(RandomState::FromText(text) == state);
+    BOOST_CHECK_EQUAL(RandomState::FromText(text).ToText(), text);
+}
+
+BOOST_AUTO_TEST_CASE(a_text_that_is_not_a_state_is_refused)
+{
+    SetGlobalSeed(9);
+    DrawsFromHere();
+    auto const text = GetRandomState().ToText();
+
+    std::string other_version = text;
+    other_version.replace(0, std::string("b2randstate/1").size(), "b2randstate/2");
+    std::string short_key = text;
+    auto const at = short_key.find("draw_stream 1 ") + std::string("draw_stream 1 ").size();
+    short_key.erase(at, 2);
+    std::string no_stream = text.substr(0, text.find("draw_stream"));
+
+    for (auto const& bad : {std::string(), std::string("global_seed 9"), other_version, short_key,
+                            no_stream, text + "more\n"})
+        BOOST_CHECK_THROW(RandomState::FromText(bad), std::invalid_argument);
+}
+
+BOOST_AUTO_TEST_CASE(a_state_goes_through_text_and_binary_archives)
+{
+    SetGlobalSeed(13);
+    DrawsFromHere();
+    auto const state = GetRandomState();
+
+    std::stringstream text_archive;
+    {
+        boost::archive::text_oarchive out(text_archive);
+        out << state;
+    }
+    RandomState from_text;
+    {
+        boost::archive::text_iarchive in(text_archive);
+        in >> from_text;
+    }
+    BOOST_CHECK(from_text == state);
+
+    std::stringstream binary_archive;
+    {
+        boost::archive::binary_oarchive out(binary_archive);
+        out << state;
+    }
+    RandomState from_binary;
+    {
+        boost::archive::binary_iarchive in(binary_archive);
+        in >> from_binary;
+    }
+    BOOST_CHECK(from_binary == state);
 }
 
 BOOST_AUTO_TEST_SUITE_END()

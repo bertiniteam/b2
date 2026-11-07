@@ -15,3 +15,4 @@ them.  I hope you like it!
 
    automatic_record_keeping/index
    chained_homotopies/index
+   continuing_a_computation/index

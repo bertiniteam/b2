@@ -34,6 +34,23 @@ Particularly includes Boost.Serialize code for the real_mp, gmp_rational, and gm
 
 #include <boost/multiprecision/mpfr.hpp>
 
+// Boost frees MPFR's per-thread caches from a thread_local destructor.  On Windows, MPFR is built
+// by gcc and keeps those caches in libgcc's emulated TLS, and in an executable that destructor runs
+// after the DLLs have detached from the thread, so MPFR reads memory already freed: heap corruption
+// when a worker thread exits.  So on Windows that destructor is never registered, and a thread
+// frees its own caches with bertini::ReleaseThreadMpfrCaches (ADR-0079).  Only the thread_local
+// half is dropped: this keeps Boost's process-wide cleanup, and this header must stay the one
+// place b2 reaches Boost's MPFR backend from.
+#if defined(_WIN32)
+namespace boost { namespace multiprecision { namespace backends { namespace detail {
+    template <>
+    inline void mpfr_cleanup<true>::force_instantiate()
+    {
+        init.force_instantiate();
+    }
+}}}}
+#endif
+
 #ifdef B2_FORBID_MIXED_ARITHMETIC
     #include "bertini2/forbid_mixed_arithmetic.hpp"
 #endif
@@ -78,6 +95,19 @@ namespace bertini{
     inline void Precision(real_mp & num, unsigned prec)
     {
         num.precision(prec);
+    }
+
+    /**
+    \brief Free the calling thread's MPFR caches (constants, Bernoulli numbers).
+
+    A thread b2 starts calls this as the last thing it does, while its thread-local storage is
+    still alive.  Calling it from a thread_local destructor defeats the purpose (ADR-0079).
+    */
+    inline void ReleaseThreadMpfrCaches()
+    {
+#if MPFR_VERSION_MAJOR >= 4
+        mpfr_free_cache2(MPFR_FREE_LOCAL_CACHE);
+#endif
     }
 
 }

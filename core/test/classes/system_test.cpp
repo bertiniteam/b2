@@ -1285,7 +1285,7 @@ BOOST_AUTO_TEST_CASE(system_estimate_coeff_bound_homogenized_quartic)
 
     // AutoPatch coefficients come from RandomMp; seeding makes this test's draws
     // (and hence the <10 threshold below) deterministic regardless of which other
-    // tests ran first.  RandomMp now honors SetGlobalSeed (it shares ThreadEngine).
+    // tests ran first.  RandomMp honors SetGlobalSeed (it draws from the thread's draw stream).
     bertini::SetGlobalSeed(1u);
 
     bertini::System sys;

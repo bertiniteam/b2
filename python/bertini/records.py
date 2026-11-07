@@ -438,7 +438,7 @@ def solve(system, seed=None, directory=None, mptype='adaptive', precision=None, 
         the run id -- a claim ticket, safe to drop.
     """
     from bertini import nag_algorithm as _nag
-    from bertini.random import set_random_seed as _set_seed, derive_solve_seed as _derive_seed
+    from bertini.random import set_random_seed as _set_seed, advance_solve_seed as _advance_seed
 
     if (homotopy is None) != (start is None):
         raise ValueError("solve: homotopy= and start= go together (a chained solve "
@@ -453,7 +453,7 @@ def solve(system, seed=None, directory=None, mptype='adaptive', precision=None, 
         # history.  (A chained solve's homotopy was built before this line -- its
         # exact coefficients are archived in definitions/ by the run header, so
         # nothing is lost there either.)
-        seed = _derive_seed()
+        seed = _advance_seed()
     _set_seed(seed)
 
     # precision= is an integer number of digits (applied via default_precision); mptype= is the

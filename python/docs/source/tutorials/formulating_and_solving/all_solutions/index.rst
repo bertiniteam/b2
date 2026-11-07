@@ -111,6 +111,23 @@ is then a one-line filter on the frame, and you have the metadata right alongsid
 :mod:`pandas` is an optional dependency: ``to_dataframe()`` raises a helpful :class:`ImportError`
 if it is not installed, and the point accessors above are the no-pandas path.
 
+Keeping what the solver knew about a solution
+=============================================
+
+Each solution comes with its metadata -- its accuracy, condition number, cycle number, multiplicity, whether it is real, finite or singular. A program that keeps solutions between runs can keep their metadata too: ``to_json()`` writes it as exact JSON, every field, and ``from_json`` reads it back equal.
+
+.. testcode::
+
+    import pickle
+
+    metadata = solver.solution_metadata()[0]
+    text = metadata.to_json()
+    metadata_loaded = type(metadata).from_json(text)
+    assert metadata_loaded.to_json() == text
+    assert pickle.loads(pickle.dumps(metadata)).to_json() == text
+
+Doubles are written as their exact decimals and multiprecision values at their own precision, so nothing is rounded on the way out. A pickle of the metadata goes through the same text.
+
 A note on precision
 ===================
 

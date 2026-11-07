@@ -32,6 +32,9 @@
 #include <atomic>
 #include <cstdint>
 #include <mutex>
+#include <sstream>
+#include <stdexcept>
+#include <string>
 
 namespace bertini {
 
@@ -65,31 +68,12 @@ constexpr uint64_t kDomainPath   = 0x9a7400000000ULL; // "path"   -- per-path tr
 constexpr uint64_t kDomainWorker = 0x107ce000000ULL;  // "worker" -- per-rank child seeds (MPI)
 constexpr uint64_t kDomainSolve  = 0x501e000000000ULL; // "solve"  -- effective per-solve seeds
 
-// Ordinal of the next DeriveSolveSeed call under the current master; reset by SetGlobalSeed
+// Ordinal the next AdvanceSolveSeed call takes under the current master; reset by SetGlobalSeed
 // so (master, ordinal) is well-defined.  Since a solve rekeys to its own effective seed,
 // consecutive seedless solves form a deterministic seed CHAIN from the initial master.
 std::atomic<uint64_t> g_solve_ordinal{0};
 
-// Seed the engine from the FULL (master, domain, index) tuple via std::seed_seq.  Using the whole
-// 64-bit words (not a uint32_t truncation) means distinct tuples set distinct mt19937 states, so
-// streams cannot collide modulo 2^32 (the old bug).
-inline void SeedEngine(std::mt19937& eng, uint64_t master, uint64_t domain, uint64_t index)
-{
-    std::seed_seq seq{
-        static_cast<uint32_t>(master),        static_cast<uint32_t>(master >> 32),
-        static_cast<uint32_t>(domain),        static_cast<uint32_t>(domain >> 32),
-        static_cast<uint32_t>(index),         static_cast<uint32_t>(index >> 32)
-    };
-    eng.seed(seq);
-}
-
 } // anon namespace
-
-// one mt19937 per thread — seeded from entropy on first use (overwritten deterministically by
-// SetGlobalSeed / ReseedThisThread before any draw in a seeded run).
-thread_local std::mt19937 g_thread_engine{std::random_device{}()};
-
-std::mt19937& ThreadEngine() { return g_thread_engine; }
 
 unsigned long GetGlobalSeed()
 {
@@ -128,9 +112,7 @@ void SetGlobalSeed(unsigned long seed)
     g_solve_ordinal.store(0, std::memory_order_relaxed);   // (master, ordinal) restarts here
     // the setup stream: domain = setup, index = 0.  Path/worker streams use other domains, so none
     // of them can ever reproduce this stream (the old ReseedThisThread(0) == SetGlobalSeed collision).
-    SeedEngine(g_thread_engine, static_cast<uint64_t>(seed), kDomainSetup, 0);
-    // the pinned stream (b2rand/1, ADR-0044) is the actual source of identity-relevant
-    // draws; the mt19937 engine above remains only for legacy/non-identity consumers
+    // The pinned stream (b2rand/1, ADR-0044) is the source of every draw.
     records::ThreadDrawStream().Reseed(static_cast<uint64_t>(seed), kDomainSetup, 0);
 }
 
@@ -138,7 +120,6 @@ void ReseedThisThread(uint64_t stream_key)
 {
     // per-path / per-thread stream: domain = path, index = stream_key.  Deterministic from the global
     // seed and distinct for every stream_key (and distinct from the setup stream).
-    SeedEngine(g_thread_engine, static_cast<uint64_t>(GetGlobalSeed()), kDomainPath, stream_key);
     records::ThreadDrawStream().Reseed(static_cast<uint64_t>(GetGlobalSeed()), kDomainPath, stream_key);
 }
 
@@ -153,7 +134,7 @@ unsigned long DerivedWorkerSeed(uint64_t worker_index)
     return static_cast<unsigned long>(h);
 }
 
-unsigned long DeriveSolveSeed()
+unsigned long AdvanceSolveSeed()
 {
     // (master, solve ordinal) -> child seed, pure integer arithmetic (splitmix64):
     // identical on every platform, and DELIBERATELY independent of the thread-local
@@ -171,6 +152,96 @@ unsigned long DeriveSolveSeed()
     if (s == 0) s = 1;                                     // so a recorded seed replays through a classic
                                                            // input file, where randomseed 0 means entropy
     return s;
+}
+
+namespace {
+
+constexpr char RandomStateVersion[] = "b2randstate/1";
+
+// the rest of `line` after `label` and one space, or false if the line is not labelled so
+bool AfterLabel(std::string const& line, std::string const& label, std::string& rest)
+{
+    if (line.compare(0, label.size() + 1, label + ' ') != 0)
+        return false;
+    rest = line.substr(label.size() + 1);
+    return true;
+}
+
+} // anon namespace
+
+std::string RandomState::ToText() const
+{
+    std::ostringstream out;
+    out << RandomStateVersion << '\n'
+        << "global_seed " << global_seed << '\n'
+        << "seed_chosen " << (seed_chosen ? 1 : 0) << '\n'
+        << "solve_ordinal " << solve_ordinal << '\n'
+        << "draw_stream " << draw_stream.ToText() << '\n';
+    return out.str();
+}
+
+RandomState RandomState::FromText(std::string const& text)
+{
+    auto refuse = [](std::string const& why) {
+        throw std::invalid_argument(std::string("not a ") + RandomStateVersion
+                                    + " random state: " + why);
+    };
+    std::istringstream in(text);
+    std::string line, rest;
+    if (!std::getline(in, line) || line != RandomStateVersion)
+        refuse("the first line is \"" + line + "\"");
+
+    RandomState state;
+    int chosen;
+    if (!std::getline(in, line) || !AfterLabel(line, "global_seed", rest)
+        || !(std::istringstream(rest) >> state.global_seed))
+        refuse("expected the line \"global_seed <number>\", read \"" + line + "\"");
+    if (!std::getline(in, line) || !AfterLabel(line, "seed_chosen", rest)
+        || !(std::istringstream(rest) >> chosen) || (chosen != 0 && chosen != 1))
+        refuse("expected the line \"seed_chosen <0 or 1>\", read \"" + line + "\"");
+    state.seed_chosen = (chosen == 1);
+    if (!std::getline(in, line) || !AfterLabel(line, "solve_ordinal", rest)
+        || !(std::istringstream(rest) >> state.solve_ordinal))
+        refuse("expected the line \"solve_ordinal <number>\", read \"" + line + "\"");
+
+    if (!std::getline(in, line) || !AfterLabel(line, "draw_stream", rest))
+        refuse("expected the line \"draw_stream ...\", read \"" + line + "\"");
+    try
+    {
+        state.draw_stream = records::DrawStream::FromText(rest);
+    }
+    catch (std::invalid_argument const& e)
+    {
+        refuse(e.what());
+    }
+
+    if (std::getline(in, line) && !line.empty())
+        refuse("unexpected text after the draw_stream line: \"" + line + "\"");
+    return state;
+}
+
+bool RandomState::operator==(RandomState const& other) const
+{
+    return global_seed == other.global_seed && seed_chosen == other.seed_chosen
+           && solve_ordinal == other.solve_ordinal && draw_stream == other.draw_stream;
+}
+
+RandomState GetRandomState()
+{
+    RandomState state;
+    state.global_seed = g_global_seed.load(std::memory_order_relaxed);
+    state.seed_chosen = g_global_seed_chosen.load(std::memory_order_acquire);
+    state.solve_ordinal = g_solve_ordinal.load(std::memory_order_relaxed);
+    state.draw_stream = records::ThreadDrawStream();
+    return state;
+}
+
+void SetRandomState(RandomState const& state)
+{
+    g_global_seed.store(state.global_seed, std::memory_order_relaxed);
+    g_global_seed_chosen.store(state.seed_chosen, std::memory_order_release);
+    g_solve_ordinal.store(state.solve_ordinal, std::memory_order_relaxed);
+    records::ThreadDrawStream() = state.draw_stream;
 }
 
 
