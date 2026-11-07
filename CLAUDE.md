@@ -37,7 +37,7 @@ The build system uses `scikit-build-core` (configured in `pyproject.toml`). The 
 ### macOS Dependencies (Homebrew)
 
 ```bash
-brew install gmp mpfr libmpc eigen@3 eigenpy boost boost-python3
+brew install gmp mpfr libmpc flint eigen@3 eigenpy boost boost-python3
 ```
 
 ### Linux/CI Dependencies (conda)
@@ -185,6 +185,7 @@ Rules that follow:
 ## Key Dependencies
 
 - **GMP/MPFR/MPC** -- Arbitrary-precision arithmetic (found via custom CMake modules in `cmake/`)
+- **FLINT** (>= 3.0; found via `cmake/FindFLINT.cmake`, linked PUBLIC) -- carries Arb, the arbitrary-precision ball arithmetic behind b2's interval types (#412).  `info.flint_version()` reports the linked version.  FLINT needs GMP >= 6.2.1 and the manylinux base (AlmaLinux 9) ships 6.2.0, so the Linux deps image builds GMP (fat on x86_64), MPFR, MPC and FLINT from source into `/usr/local`, stripped -- an unstripped `libflint.so` adds ~25 MB to a wheel; the four versions are pinned in `.github/ci-deps-versions.env` and the image tag carries `-flint<version>`.  macOS takes `flint` from Homebrew, Windows `libflint` from conda-forge, the Ubuntu C++ job `libflint-dev` from apt.  FLINT declares its `mpz`/`mpfr` conversions only when `<gmp.h>`/`<mpfr.h>` are included before its headers.
 - **Eigen 3** -- Linear algebra. **Not** pinned in cmake (`find_package(Eigen3)`, no version floor). In practice the version is coupled to the eigenpy build: the wheel CI builds **eigen 3.4.0** and then builds eigenpy against it (a dev env may use newer, e.g. `eigen=5.0.1`). Newer Eigen is welcome -- we *want* upstream improvements -- but it must be matched by an eigenpy built against the same Eigen (they share Eigen types across the binding ABI).
 - **Boost** (serialization, filesystem, log, graph, regex, timer, chrono, thread, unit_test_framework, python) -- no minimum version pinned in cmake; `boost_system` is conditionally linked for Boost < 1.89 (header-only from 1.89). Boost.Python is ABI-locked to one CPython version, so it is built **per target Python** -- but this now happens **once, up front, in the prebuilt CI deps** (Linux image / macOS tarballs, ADR-0049), *not* recompiled in every wheel run.
 - **eigenpy** -- Eigen/NumPy bridge for Python bindings. **Prebuilt** into the CI deps (image/tarballs), not built-from-source per run, against the chosen Eigen -- eigenpy and bertini must use the *same* Eigen. The version is single-sourced in `.github/ci-deps-versions.env` (`EIGENPY_VERSION`, currently `3.13.0`); eigenpy >= 3.13 sets the Python floor (>= 3.10).  **A wheel is not ABI-coupled to a user's own eigenpy:** `auditwheel`/`delocate` bundle private, renamed copies of eigenpy and Boost.Python (`bertini2.libs/libeigenpy-<hash>.so`, `libboost_python3XX-<hash>.so...`), and Python loads extensions `RTLD_LOCAL`, so a PyPI `eigenpy` in the same process loads its own copies beside ours (verified 2026-09-28: both import orders, no warnings, arrays pass both ways).  Only numpy arrays cross between the two; another library's Boost.Python objects do not convert (a clean `TypeError`).  The coupling that does exist is for **source builds** against shared libraries (conda, Homebrew), which must use the same eigenpy and Eigen as the environment.

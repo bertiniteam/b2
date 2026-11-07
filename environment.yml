@@ -8,6 +8,7 @@ dependencies:
   - gmp
   - mpfr
   - mpc
+  - libflint
   - auditwheel
   - automake
   - autoconf

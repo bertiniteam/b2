@@ -90,6 +90,7 @@ jobs:
       boost: ${{ steps.v.outputs.boost }}
       eigen: ${{ steps.v.outputs.eigen }}
       eigenpy: ${{ steps.v.outputs.eigenpy }}
+      flint: ${{ steps.v.outputs.flint }}
     steps:
       - uses: actions/checkout@v5
       - id: v
@@ -100,6 +101,7 @@ jobs:
             echo "boost=$BOOST_VERSION"
             echo "eigen=$EIGEN_VERSION"
             echo "eigenpy=$EIGENPY_VERSION"
+            echo "flint=$FLINT_VERSION"
           } >> "$GITHUB_OUTPUT"
 
   set_matrix:
@@ -174,11 +176,11 @@ jobs:
         if: runner.os == 'Linux'
         run: |
           sudo apt-get update
-          sudo apt-get install -y wget libgmp-dev libmpfr-dev libmpc-dev libeigen3-dev libtool openmpi-bin libopenmpi-dev ccache
+          sudo apt-get install -y wget libgmp-dev libmpfr-dev libmpc-dev libflint-dev libeigen3-dev libtool openmpi-bin libopenmpi-dev ccache
 
       - name: Install system dependencies (macOS)
         if: runner.os == 'macOS'
-        run: brew install gmp mpfr libmpc eigen@3 open-mpi ccache
+        run: brew install gmp mpfr libmpc flint eigen@3 open-mpi ccache
 
       # compiler cache: makes recompiles of unchanged C++ near-free.  the key is
       # deliberately loose (always save fresh, restore newest) -- ccache does its
@@ -410,6 +412,7 @@ jobs:
       BOOST_VERSION: ${{ needs.set_versions.outputs.boost }}
       EIGEN_VERSION: ${{ needs.set_versions.outputs.eigen }}
       EIGENPY_VERSION: ${{ needs.set_versions.outputs.eigenpy }}
+      FLINT_VERSION: ${{ needs.set_versions.outputs.flint }}
     strategy:
       fail-fast: false
       matrix:
@@ -482,8 +485,8 @@ jobs:
           # yet, cibuildwheel's pull fails loudly (the implicit ABI assert; no silent mismatch).
           # Each runner builds only its own architecture (cibuildwheel's default), so an x86_64
           # runner pulls only the first image and an arm runner only the second.
-          CIBW_MANYLINUX_X86_64_IMAGE: ghcr.io/bertiniteam/b2-manylinux-deps:boost${{ env.BOOST_VERSION }}-eigen${{ env.EIGEN_VERSION }}-eigenpy${{ env.EIGENPY_VERSION }}-mlx2_34
-          CIBW_MANYLINUX_AARCH64_IMAGE: ghcr.io/bertiniteam/b2-manylinux-deps:boost${{ env.BOOST_VERSION }}-eigen${{ env.EIGEN_VERSION }}-eigenpy${{ env.EIGENPY_VERSION }}-mlx2_34-aarch64
+          CIBW_MANYLINUX_X86_64_IMAGE: ghcr.io/bertiniteam/b2-manylinux-deps:boost${{ env.BOOST_VERSION }}-eigen${{ env.EIGEN_VERSION }}-eigenpy${{ env.EIGENPY_VERSION }}-flint${{ env.FLINT_VERSION }}-mlx2_34
+          CIBW_MANYLINUX_AARCH64_IMAGE: ghcr.io/bertiniteam/b2-manylinux-deps:boost${{ env.BOOST_VERSION }}-eigen${{ env.EIGEN_VERSION }}-eigenpy${{ env.EIGENPY_VERSION }}-flint${{ env.FLINT_VERSION }}-mlx2_34-aarch64
           # cibuildwheel COPIES the project into the container (no bind mount), so
           # a cache written under /project is discarded.  mount the host ccache dir
           # explicitly; ignored on macOS (host build, no container).
@@ -495,14 +498,15 @@ jobs:
             ls -1 /opt/deps &&
             command -v patchelf &&
             ccache --version >/dev/null &&
-            command -v mpicc
+            command -v mpicc &&
+            test -f /usr/local/include/flint/flint.h
           # On macOS, Homebrew's boost-python3 / eigenpy bottles track the current
           # Homebrew default Python (now 3.14), so a cp313 wheel that bundles them
           # imports a libboost_python314.dylib into a 3.13 interpreter and segfaults.
           # Install only the Python-version-independent libs from brew here; download
           # Boost & eigenpy sources to /tmp for the per-Python build in BEFORE_BUILD.
           CIBW_BEFORE_ALL_MACOS: >
-            brew install gmp mpfr libmpc eigen@3 ccache &&
+            brew install gmp mpfr libmpc flint eigen@3 ccache &&
             cd /tmp &&
             { [ -f eigenpy-${{ env.EIGENPY_VERSION }}.tar.gz ] || curl -fsSL -o eigenpy-${{ env.EIGENPY_VERSION }}.tar.gz https://github.com/stack-of-tasks/eigenpy/releases/download/v${{ env.EIGENPY_VERSION }}/eigenpy-${{ env.EIGENPY_VERSION }}.tar.gz ; }
 

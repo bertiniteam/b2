@@ -24,6 +24,8 @@
 
 #include "info.hpp"
 
+#include "bertini2/flint_version.hpp"
+
 namespace bertini{
     namespace python{
 
@@ -44,6 +46,10 @@ namespace bertini{
             def("eigen_version", &bertini::EigenHeaderVersion);
             def("gmp_version", &bertini::GMPVersion);
             def("mpfr_version", &bertini::MPFRVersion);
+            // Also the reference that makes the extension depend on FLINT: libbertini2 is a static
+            // library, so the linker drops flint_version.o, and with it the FLINT import the
+            // wheel repair tools bundle, unless something here uses it.
+            def("flint_version", &bertini::FlintVersion);
             def("mpi_version", &bertini::MPIVersion);
             def("dependency_versions", &bertini::DependencyVersions);
             def("splash", &bertini::SplashScreen);
