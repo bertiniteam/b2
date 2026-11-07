@@ -29,7 +29,13 @@ seed means.
 
 #include "bertini2/records/derive.hpp"
 
+#include <boost/algorithm/hex.hpp>
+
+#include <algorithm>
+#include <iterator>
 #include <random>
+#include <sstream>
+#include <stdexcept>
 #include <string>
 
 namespace bertini {
@@ -41,6 +47,34 @@ namespace {
     {
         for (int shift = 56; shift >= 0; shift -= 8)
             s.push_back(static_cast<char>((v >> shift) & 0xff));
+    }
+
+    // the stream's key and its current block are 32 bytes each, written as lowercase hex
+    constexpr std::size_t kStreamBytes = 32;
+
+    std::string AsHex(unsigned char const* bytes)
+    {
+        std::string out;
+        boost::algorithm::hex_lower(bytes, bytes + kStreamBytes, std::back_inserter(out));
+        return out;
+    }
+
+    // false if the text is not exactly 32 bytes of hex
+    bool ReadHex(std::string const& hex, unsigned char* bytes)
+    {
+        std::string decoded;
+        try
+        {
+            boost::algorithm::unhex(hex, std::back_inserter(decoded));
+        }
+        catch (boost::algorithm::hex_decode_error const&)
+        {
+            return false;
+        }
+        if (decoded.size() != kStreamBytes)
+            return false;
+        std::copy(decoded.begin(), decoded.end(), bytes);
+        return true;
     }
 
 } // unnamed namespace
@@ -81,6 +115,39 @@ unsigned char DrawStream::NextByte()
     if (offset_ >= 32)
         NextBlock();
     return block_[offset_++];
+}
+
+std::string DrawStream::ToText() const
+{
+    // the block is written, not recomputed from the key and counter, so the text says
+    // exactly what the next draws are made of
+    std::ostringstream out;
+    out << (seeded_ ? 1 : 0) << ' ' << AsHex(key_.bytes.data()) << ' ' << counter_ << ' '
+        << AsHex(block_) << ' ' << offset_;
+    return out.str();
+}
+
+DrawStream DrawStream::FromText(std::string const& text)
+{
+    std::istringstream in(text);
+    int seeded;
+    std::string key_hex, block_hex, rest;
+    unsigned offset;
+    DrawStream stream;
+    if (!(in >> seeded >> key_hex >> stream.counter_ >> block_hex >> offset) || (in >> rest)
+        || (seeded != 0 && seeded != 1) || offset > 32
+        || !ReadHex(key_hex, stream.key_.bytes.data()) || !ReadHex(block_hex, stream.block_))
+        throw std::invalid_argument("not a b2rand/1 draw stream: \"" + text + "\"");
+    stream.seeded_ = (seeded == 1);
+    stream.offset_ = offset;
+    return stream;
+}
+
+bool DrawStream::operator==(DrawStream const& other) const
+{
+    return seeded_ == other.seeded_ && key_.bytes == other.key_.bytes
+           && counter_ == other.counter_ && offset_ == other.offset_
+           && std::equal(block_, block_ + 32, other.block_);
 }
 
 std::uint64_t DrawStream::Uint64()

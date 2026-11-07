@@ -666,20 +666,17 @@ run the endgame, classify the endpoints, report.  See the forward-declare doc ab
             struct ScopedSessionState
             {
                 unsigned precision_;               ///< The ambient default precision at solve entry.
-                std::mt19937 engine_;              ///< The calling thread's legacy engine state at entry.
                 records::DrawStream stream_;       ///< The calling thread's pinned draw stream at entry.
 
                 /// \brief Capture the ambient session state.
                 ScopedSessionState()
                     : precision_(DefaultPrecision()),
-                      engine_(ThreadEngine()),
                       stream_(records::ThreadDrawStream())
                 {}
                 /// \brief Restore it, whatever the solve did in between.
                 ~ScopedSessionState()
                 {
                     DefaultPrecision(precision_);
-                    ThreadEngine() = engine_;
                     records::ThreadDrawStream() = stream_;
                 }
                 ScopedSessionState(ScopedSessionState const&) = delete;             ///< Non-copyable.

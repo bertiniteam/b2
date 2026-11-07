@@ -74,6 +74,8 @@ Example:
 #include <variant>
 #include <vector>
 
+#include "bertini2/mpfr_extensions.hpp"   // ReleaseThreadMpfrCaches
+
 namespace bertini {
 namespace parallel {
 
@@ -217,20 +219,25 @@ public:
         {
             threads_.emplace_back([this, state_factory, track_fn]() mutable
             {
-                // Build thread-local state once (System copy + Tracker copy).
-                StateT state = state_factory();
-
-                while (true)
                 {
-                    WorkItem item = task_queue_.pop();
+                    // Build thread-local state once (System copy + Tracker copy).
+                    StateT state = state_factory();
 
-                    if (std::holds_alternative<PoolShutdownSentinel>(item))
-                        break;
+                    while (true)
+                    {
+                        WorkItem item = task_queue_.pop();
 
-                    TaskT const& task = std::get<TaskT>(item);
-                    ResultT result = track_fn(state, task);
-                    result_queue_.push(std::move(result));
+                        if (std::holds_alternative<PoolShutdownSentinel>(item))
+                            break;
+
+                        TaskT const& task = std::get<TaskT>(item);
+                        ResultT result = track_fn(state, task);
+                        result_queue_.push(std::move(result));
+                    }
                 }
+
+                // Last, with the state gone and this thread's TLS still alive (ADR-0079).
+                ReleaseThreadMpfrCaches();
             });
         }
     }

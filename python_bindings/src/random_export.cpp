@@ -7,6 +7,24 @@
 namespace bertini{
 namespace python{
 
+    // a RandomState pickles as its versioned text, so an unpickle of another version is refused
+    struct RandomStateTextPickle : boost::python::pickle_suite
+    {
+        static boost::python::tuple getinitargs(bertini::RandomState const&)
+        {
+            return boost::python::make_tuple();
+        }
+
+        static boost::python::object getstate(bertini::RandomState const& state)
+        {
+            return boost::python::str(state.ToText());
+        }
+
+        static void setstate(bertini::RandomState& state, boost::python::object text)
+        {
+            state = bertini::RandomState::FromText(boost::python::extract<std::string>(text)());
+        }
+    };
 
 
 void ExportRandom(){
@@ -92,12 +110,54 @@ void ExportRandom(){
     def("get_random_seed", &bertini::GetGlobalSeed,
         "Return the global RNG seed in effect.  If none has been set, draws one from entropy "
         "on the first call and keeps it.");
-    def("derive_solve_seed", &bertini::DeriveSolveSeed,
-        "Capture the session stream's current position as an effective per-solve seed: "
-        "one draw off the current stream (advancing it), nonzero, 32-bit portable. "
-        "bertini.solve uses this when no explicit seed is given, so a recorded run's "
-        "seed reproduces that run standalone -- deterministic from the session master "
-        "when one was set, random for a never-seeded session.");
+    def("advance_solve_seed", &bertini::AdvanceSolveSeed,
+        "Advance the solve-seed chain one step and return its new seed: the seed for the next "
+        "seedless solve, nonzero and 32-bit portable.  The chain is rooted at the global seed "
+        "(set_random_seed restarts it), and each call takes the next link, so the call after "
+        "returns the next seed; it draws no random numbers.  bertini.solve uses this when no "
+        "explicit seed is given, so a recorded run's seed reproduces that run standalone.");
+    using bertini::records::DrawStream;
+    class_<DrawStream>("DrawStream",
+        "A b2rand/1 draw stream at a position: the source of every random draw.  Compared with ==; "
+        "written and read as one line of text.",
+        init<>())
+        .def("to_text", &DrawStream::ToText, "The stream as one line of text, which from_text reads back.")
+        .def("from_text", &DrawStream::FromText, arg("text"),
+             "The stream a to_text line describes.  Raises ValueError if the text is not such a line.")
+        .staticmethod("from_text")
+        .def(self == self)
+        .def(self != self);
+
+    class_<bertini::RandomState>("RandomState",
+        "The random state of a thread: everything its next draws depend on.  get_random_state() "
+        "returns the calling thread's, and set_random_state(state) returns the thread to one, so "
+        "the draws after setting a state are the draws that followed getting it -- a computation "
+        "written out between its stages continues with the numbers an uninterrupted run would "
+        "have drawn.  Per-path and per-worker streams are reseeded from the seed at each use, so "
+        "they are not part of it.  Pickles as its to_text() text.",
+        init<>())
+        .def_readwrite("global_seed", &bertini::RandomState::global_seed, "The global seed.")
+        .def_readwrite("seed_chosen", &bertini::RandomState::seed_chosen,
+                       "Whether a global seed has been chosen yet.")
+        .def_readwrite("solve_ordinal", &bertini::RandomState::solve_ordinal,
+                       "The ordinal the next advance_solve_seed() takes.")
+        .def_readwrite("draw_stream", &bertini::RandomState::draw_stream,
+                       "The thread's draw stream, the source of every draw.")
+        .def("to_text", &bertini::RandomState::ToText,
+             "The state as versioned plaintext, lines beginning b2randstate/1, which from_text reads back.")
+        .def("from_text", &bertini::RandomState::FromText, arg("text"),
+             "The state a to_text text describes.  Raises ValueError if the text is not such a text, "
+             "of this version.")
+        .staticmethod("from_text")
+        .def(self == self)
+        .def(self != self)
+        .def_pickle(RandomStateTextPickle());
+
+    def("get_random_state", &bertini::GetRandomState,
+        "Return the calling thread's random state, a RandomState.");
+    def("set_random_state", &bertini::SetRandomState, arg("state"),
+        "Set the calling thread's random state, so its next draws are the ones that followed "
+        "getting state.");
 }
 
 
