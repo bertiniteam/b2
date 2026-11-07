@@ -325,7 +325,7 @@ jobs:
 
       - name: Versions of the main conda packages
         shell: pwsh
-        run: conda list -n b2-windows '^(python|clang|libboost-devel|libboost-headers|gmp|mpfr|mpc|eigen|eigenpy|numpy|scipy|libblas|cmake|ninja|ccache|msmpi|vs2022_win-64|vc14_runtime|ucrt)$'
+        run: conda list -n b2-windows '^(python|clang|libboost-devel|libboost-headers|gmp|mpfr|mpc|libflint|eigen|eigenpy|numpy|scipy|libblas|cmake|ninja|ccache|msmpi|vs2022_win-64|vc14_runtime|ucrt)$'
 
       # Persist the compiler cache for the C++ test build (mirrors the Unix test jobs and the
       # Windows wheel job).  Loose key -- always save fresh, restore newest; ccache self-invalidates.
@@ -802,7 +802,7 @@ jobs:
       - name: Versions of the main conda packages
         if: ${{ !cancelled() }}
         shell: pwsh
-        run: conda list -n b2-windows '^(python|clang|libboost-devel|eigen|eigenpy|numpy|scipy|libblas|cmake|ninja|ccache|msmpi|vs2022_win-64)$'
+        run: conda list -n b2-windows '^(python|clang|libboost-devel|gmp|mpfr|mpc|libflint|eigen|eigenpy|numpy|scipy|libblas|cmake|ninja|ccache|msmpi|vs2022_win-64)$'
 
       - uses: actions/upload-artifact@v6
         with:
