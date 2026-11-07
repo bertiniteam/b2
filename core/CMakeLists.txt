@@ -483,6 +483,12 @@ if(WIN32)
   target_compile_definitions(bertini2 PUBLIC "HAVE_SNPRINTF")
 endif()
 
+# Boost.JSON is used header-only (records/output_directory.cpp includes <boost/json/src.hpp>), so
+# no boost_json library is linked.  Without this, Boost's auto-linking on Windows asks the linker
+# for boost_json.lib by name in every translation unit that includes <boost/json.hpp>, and the link
+# fails wherever the linker does not happen to search a folder holding one.
+target_compile_definitions(bertini2 PUBLIC BOOST_JSON_NO_LIB)
+
 # The full PEP 440 version (e.g. 3.0.0.dev6), including any .devN/rc suffix.
 # jrl-cmakemodules' generated config.hpp bakes in the *stripped* numeric
 # BERTINI2_VERSION (for cmake/SOVERSION semantics); this carries the complete

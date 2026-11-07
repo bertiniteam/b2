@@ -960,7 +960,8 @@ BOOST_AUTO_TEST_CASE(the_accuracy_estimates_are_recorded_under_names_that_say_th
 
     // an earlier record: the same value, under the key it was written with
     auto earlier = encoded;
-    earlier["accuracy_estimate"] = earlier.at("accuracy_estimate_internal_coords");
+    boost::json::value const internal_coords = earlier.at("accuracy_estimate_internal_coords");   // a copy: the insert below reallocates the object
+    earlier["accuracy_estimate"] = internal_coords;
     earlier.erase("accuracy_estimate_internal_coords");
     auto const from_earlier = records::DecodeFullPathResult<complex_dbl>(earlier, 3);
     BOOST_CHECK_EQUAL(from_earlier.accuracy_estimate_internal_coords, 3.5e-12);

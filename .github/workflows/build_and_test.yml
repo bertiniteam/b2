@@ -308,20 +308,12 @@ jobs:
                           # warm, but a cache-cold rerun on a slow runner legitimately
                           # needs ~40 (observed 2026-07-05: all tests PASSED, then the
                           # 40-min axe fell during post-job cache packing)
-    env:
-      CONDA_PKGS_DIRS: ${{ github.workspace }}\conda_pkgs
     steps:
       - uses: actions/checkout@v5
 
-      - name: Cache conda packages
-        uses: actions/cache@v5
-        with:
-          path: ${{ github.workspace }}\conda_pkgs
-          key: windows-conda-cpp-${{ hashFiles('environment-win.yml', '.github/workflows/build_and_test.yml') }}
-          restore-keys: |
-            windows-conda-cpp-
-            windows-conda-
-
+      # The conda environment is not cached (ADR-0078): measured, a restored cache of its package
+      # archives saved no time (conda fetched every package again), and downloading the whole
+      # ~325 MB environment from conda-forge takes about as long as restoring a cache of it.
       - uses: conda-incubator/setup-miniconda@v4
         with:
           activate-environment: b2-windows
@@ -329,10 +321,14 @@ jobs:
           auto-activate: false
           channel-priority: strict
 
+      - name: Versions of the main conda packages
+        shell: pwsh
+        run: conda list -n b2-windows '^(python|clang|libboost-devel|libboost-headers|gmp|mpfr|mpc|eigen|eigenpy|numpy|scipy|libblas|cmake|ninja|ccache|msmpi|vs2022_win-64|vc14_runtime|ucrt)$'
+
       # Persist the compiler cache for the C++ test build (mirrors the Unix test jobs and the
       # Windows wheel job).  Loose key -- always save fresh, restore newest; ccache self-invalidates.
-      - name: Cache ccache (Windows C++ tests)
-        uses: actions/cache@v5
+      - name: Restore ccache (Windows C++ tests)
+        uses: actions/cache/restore@v5
         with:
           path: ${{ github.workspace }}\.ccache
           key: ccache-win-cpp-${{ github.sha }}
@@ -349,12 +345,8 @@ jobs:
           $env:CMAKE_GENERATOR_TOOLSET = ''
           $env:CMAKE_PREFIX_PATH = "$env:CONDA_PREFIX\Library"
 
-          # The GitHub Windows runner now ships Visual Studio 2026 (MSVC 14.51), whose STL
-          # <yvals_core.h> hard-asserts (STL1000) that the compiler is Clang >= 20; the conda
-          # clang-cl is older.  The only errors are that version gate -- the C++17 code compiles
-          # fine -- so we opt out of the gate.  (Proper fix: ship a clang >= 20 toolchain.)
-          $env:CXXFLAGS = '-D_ALLOW_COMPILER_AND_STL_VERSION_MISMATCH'
-          $env:CFLAGS = '-D_ALLOW_COMPILER_AND_STL_VERSION_MISMATCH'
+          # The runner's Visual Studio 2026 STL (<yvals_core.h>, STL1000) requires Clang >= 20, so
+          # environment-win.yml asks for clang >=20.
 
           $boostHeader = "$env:CONDA_PREFIX\Library\include\boost\archive\archive_exception.hpp"
           (Get-Content $boostHeader).Replace('public virtual std::exception', 'public std::exception') | Set-Content $boostHeader
@@ -376,16 +368,39 @@ jobs:
           $env:CCACHE_COMPILERTYPE = 'clang-cl'
           ccache --zero-stats 2>$null
 
+          # Link with the Visual Studio the STL comes from, not the runner's own LLVM, which CMake
+          # takes otherwise (ADR-0078; tools/msvc_link_tools.ps1 says how they are found).
+          $msvcTools = & "${{ github.workspace }}\tools\msvc_link_tools.ps1"
+          $msvcToolArgs = $msvcTools.GetEnumerator() | ForEach-Object { "-D$($_.Key)=$($_.Value.Replace('\', '/'))" }
+          Get-Command cmake, ninja, clang-cl, ccache | ForEach-Object { "$($_.Name) = $($_.Source)" }
+
           cmake -B build `
+            @msvcToolArgs `
             -DCMAKE_PREFIX_PATH="$env:CONDA_PREFIX\Library" `
             -DBUILD_PYTHON_BINDINGS=OFF `
             -DENABLE_UNIT_TESTING=ON `
             -DINSTALL_DOCUMENTATION=OFF `
             -DCMAKE_DISABLE_FIND_PACKAGE_Doxygen=ON `
             -DCMAKE_BUILD_TYPE=Release
+          # What the build was configured with: the compiler and the four link tools CMake will use.
+          clang-cl --version
+          Select-String -Path build\CMakeCache.txt -Pattern '^CMAKE_(C|CXX)_COMPILER:|^CMAKE_(LINKER|AR|RC_COMPILER|MT):' | ForEach-Object Line
           cmake --build build --parallel
+          # A native command's exit code does not stop a pwsh step: keep the build's, print the
+          # stats, then fail here rather than as "Not Run" in the test step.
+          $buildExitCode = $LASTEXITCODE
           ccache --show-stats -v
           ccache --version
+          if ($buildExitCode -ne 0) { Write-Error "the build failed (exit code $buildExitCode)"; exit $buildExitCode }
+
+      # Saved here rather than in actions/cache's post step, which a failed job skips: what compiled
+      # is worth keeping when a test then fails, or the next attempt compiles cold again.
+      - name: Save ccache (Windows C++ tests)
+        if: ${{ !cancelled() }}
+        uses: actions/cache/save@v5
+        with:
+          path: ${{ github.workspace }}\.ccache
+          key: ccache-win-cpp-${{ github.sha }}
 
       # Run under both per-solve thread settings (see the unix C++ test job for the rationale).
       - name: Test (threaded + BERTINI_NUM_THREADS=1)
@@ -402,6 +417,68 @@ jobs:
           ctest --output-on-failure --timeout 600 --parallel
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
           Write-Host "::endgroup::"
+
+      # Windows reports a crash as a bare exit code (0xc0000374 is heap corruption), with no stack
+      # and with the test's buffered stdout lost.  When a suite failed, rerun it under cdb, Boost.Test
+      # naming each test case on stderr as it starts, under both thread settings, so the log says
+      # which test died and where; and list what the binary imports, in case two C runtimes meet.
+      # For names inside our own code, add /Z7 to the compile flags and /DEBUG to the link flags for
+      # one run: that is how ADR-0079's crash was found.  cdb runs under the debug heap, which fills
+      # freed memory, so a read of freed memory that normally goes unnoticed can fail here.
+      - name: On a failed suite, rerun it under cdb for the stack
+        if: ${{ failure() }}
+        timeout-minutes: 20
+        shell: pwsh
+        working-directory: build\core
+        run: |
+          $failedLog = '..\Testing\Temporary\LastTestsFailed.log'
+          if (-not (Test-Path $failedLog)) { Write-Host "no ${failedLog}: the failure was not a test"; exit 0 }
+          $failed = Select-String -Path $failedLog -Pattern '^\d+:(\S+)' | ForEach-Object { $_.Matches[0].Groups[1].Value }
+          Write-Host "failed suites: $failed"
+
+          $cdb = 'C:\Program Files (x86)\Windows Kits\10\Debuggers\x64\cdb.exe'
+          if (-not (Test-Path $cdb)) {
+            Write-Host "no cdb at $cdb; installing WinDbg with winget"
+            winget install --id Microsoft.WinDbg --exact --silent --accept-source-agreements --accept-package-agreements | Out-Host
+            $cdb = (Get-Command cdb.exe -ErrorAction SilentlyContinue).Source
+            if (-not $cdb) { Write-Host "no cdb after the install either; the suites run plainly" }
+          }
+          $env:_NT_SYMBOL_PATH = "srv*$env:TEMP\symbols*https://msdl.microsoft.com/download/symbols"
+
+          $msvcTools = & "${{ github.workspace }}\tools\msvc_link_tools.ps1"
+          $dumpbin = Join-Path (Split-Path $msvcTools.CMAKE_LINKER) 'dumpbin.exe'
+
+          foreach ($suite in $failed) {
+            $exe = Join-Path (Get-Location) "$suite.exe"
+            Write-Host "::group::$suite imports"
+            & $dumpbin /dependents $exe | Select-String -Pattern '\.dll' | ForEach-Object Line
+            Write-Host "::endgroup::"
+            foreach ($threads in @('', '1')) {
+              if ($threads) { $env:BERTINI_NUM_THREADS = $threads } else { Remove-Item Env:\BERTINI_NUM_THREADS -ErrorAction SilentlyContinue }
+              Write-Host "::group::$suite with BERTINI_NUM_THREADS='$threads'"
+              if ($cdb) {
+                & $cdb -g -G -lines -c '!analyze -v; ~*kv 40; q' $exe --log_level=test_suite --log_sink=stderr
+              } else {
+                & $exe --log_level=test_suite --log_sink=stderr
+              }
+              Write-Host "exit code $LASTEXITCODE"
+              Write-Host "::endgroup::"
+            }
+            # Heap corruption is reported when the heap next looks, often far from the bad write.
+            # Full page heap puts a guard page after every allocation, so the write itself faults.
+            if ($cdb) {
+              $imageOptions = "HKLM:\SOFTWARE\Microsoft\Windows NT\CurrentVersion\Image File Execution Options\$suite.exe"
+              New-Item -Path $imageOptions -Force | Out-Null
+              New-ItemProperty -Path $imageOptions -Name GlobalFlag -Value 0x02000000 -PropertyType DWord -Force | Out-Null
+              New-ItemProperty -Path $imageOptions -Name PageHeapFlags -Value 3 -PropertyType DWord -Force | Out-Null
+              Remove-Item Env:\BERTINI_NUM_THREADS -ErrorAction SilentlyContinue
+              Write-Host "::group::$suite under full page heap"
+              & $cdb -g -G -lines -c '!analyze -v; ~*kv 40; q' $exe --log_level=test_suite --log_sink=stderr
+              Write-Host "exit code $LASTEXITCODE"
+              Write-Host "::endgroup::"
+              Remove-Item -Path $imageOptions -Recurse
+            }
+          }
 
   # The wheel build is an INDEPENDENT full compile (prebuilt deps image/tarball +
   # cibuildwheel, ccache namespace ccache-wheels-*), sharing nothing with the C++
@@ -629,8 +706,6 @@ jobs:
     needs: [doc_lint]
     if: ${{ inputs.minimal != true && !failure() && !cancelled() && (inputs.os == '' || inputs.os == 'all' || inputs.os == 'windows') }}
     runs-on: windows-latest
-    env:
-      CONDA_PKGS_DIRS: ${{ github.workspace }}\conda_pkgs
     strategy:
       fail-fast: false
       matrix:
@@ -639,17 +714,7 @@ jobs:
       - uses: actions/checkout@v5
         with:
           persist-credentials: false
-      - name: Cache conda packages + pip
-        uses: actions/cache@v5
-        continue-on-error: true
-        with:
-          path: |
-            ${{ github.workspace }}\conda_pkgs
-            ~\AppData\Local\pip\Cache
-          key: windows-conda-${{ matrix.python-version }}-${{ hashFiles('environment-win.yml', '.github/workflows/build_and_test.yml') }}
-          restore-keys: |
-            windows-conda-${{ matrix.python-version }}-
-            windows-conda-
+      # Not cached, as in test_cpp_windows (see there; ADR-0078).
       - uses: conda-incubator/setup-miniconda@v4
         with:
           activate-environment: b2-windows
@@ -683,12 +748,8 @@ jobs:
           $env:CMAKE_GENERATOR_TOOLSET = ''
           $env:CMAKE_PREFIX_PATH = "$env:CONDA_PREFIX\Library"
 
-          # The GitHub Windows runner now ships Visual Studio 2026 (MSVC 14.51), whose STL
-          # <yvals_core.h> hard-asserts (STL1000) that the compiler is Clang >= 20; the conda
-          # clang-cl is older.  The only errors are that version gate -- the C++17 code compiles
-          # fine -- so we opt out of the gate.  (Proper fix: ship a clang >= 20 toolchain.)
-          $env:CXXFLAGS = '-D_ALLOW_COMPILER_AND_STL_VERSION_MISMATCH'
-          $env:CFLAGS = '-D_ALLOW_COMPILER_AND_STL_VERSION_MISMATCH'
+          # The runner's Visual Studio 2026 STL (<yvals_core.h>, STL1000) requires Clang >= 20, so
+          # environment-win.yml asks for clang >=20.
 
           $boostHeader = "$env:CONDA_PREFIX\Library\include\boost\archive\archive_exception.hpp"
           (Get-Content $boostHeader).Replace('public virtual std::exception', 'public std::exception') | Set-Content $boostHeader
@@ -706,18 +767,38 @@ jobs:
           # name any remaining refusal.
           $env:CCACHE_SLOPPINESS = 'pch_defines,time_macros'
           $env:CCACHE_COMPILERTYPE = 'clang-cl'
+
+          # Link with the Visual Studio the STL comes from, as test_cpp_windows does (see there).
+          # scikit-build-core splits CMAKE_ARGS as a POSIX shell would: forward slashes, quoted.
+          $msvcTools = & "${{ github.workspace }}\tools\msvc_link_tools.ps1"
+          $env:CMAKE_ARGS = ($msvcTools.GetEnumerator() | ForEach-Object { "-D$($_.Key)=`"$($_.Value.Replace('\', '/'))`"" }) -join ' '
+          Write-Host "CMAKE_ARGS=$env:CMAKE_ARGS"
+          Get-Command cmake, ninja, clang-cl, ccache | ForEach-Object { "$($_.Name) = $($_.Source)" }
           cd ${{ github.workspace }}
           pip install build delvewheel
           ccache --zero-stats 2>$null
           python -m build --wheel --no-isolation
+          # A native command's exit code does not stop a pwsh step: keep the build's, print what it
+          # was configured with and the cache stats, then fail.
+          $buildExitCode = $LASTEXITCODE
+          clang-cl --version
+          Select-String -Path bld\CMakeCache.txt -Pattern '^CMAKE_(C|CXX)_COMPILER:|^CMAKE_(LINKER|AR|RC_COMPILER|MT):' -ErrorAction Continue | ForEach-Object Line
           ccache --show-stats -v
           ccache --version
+          if ($buildExitCode -ne 0) { Write-Error "the wheel build failed (exit code $buildExitCode)"; exit $buildExitCode }
 
           $wheelPath = (Get-ChildItem dist/*.whl | Select-Object -First 1).FullName
           if (-not $wheelPath) { Write-Error "No wheel found in dist/"; exit 1 }
           delvewheel repair $wheelPath -w repaired/ --add-path "$env:CONDA_PREFIX\Library\bin"
           Remove-Item dist/*.whl
           Move-Item repaired/*.whl dist/
+
+      # After the build, whose `conda install python=... --update-deps` can change the environment;
+      # also when the build failed.
+      - name: Versions of the main conda packages
+        if: ${{ !cancelled() }}
+        shell: pwsh
+        run: conda list -n b2-windows '^(python|clang|libboost-devel|eigen|eigenpy|numpy|scipy|libblas|cmake|ninja|ccache|msmpi|vs2022_win-64)$'
 
       - uses: actions/upload-artifact@v6
         with:
