@@ -30,6 +30,7 @@ on every platform (no MPI required), which is what gives us cross-OS threading c
 
 #include <algorithm>
 #include <atomic>
+#include <cmath>
 #include <cstdlib>
 #include <map>
 #include <memory>
@@ -86,6 +87,37 @@ BOOST_AUTO_TEST_CASE(thread_pool_runs_every_task_once)
         expected += static_cast<long long>(i) * i;
 
     BOOST_CHECK_EQUAL(got, expected);
+}
+
+// A worker that filled MPFR's per-thread caches must exit cleanly.  On Windows, freeing them from
+// a thread_local destructor read freed memory and corrupted the heap (ADR-0079).  lgamma fills the
+// Bernoulli cache, the first one MPFR frees, and acos of a negative fills the pi cache.
+BOOST_AUTO_TEST_CASE(thread_pool_workers_that_filled_mpfr_caches_exit_cleanly)
+{
+    using bertini::parallel::WorkerThreadPool;
+    using bertini::real_mp;
+
+    auto factory = []() { return std::unique_ptr<int>(new int(0)); };
+    auto track   = [](std::unique_ptr<int>& state, int const& task) {
+        ++(*state);
+        bertini::SetThreadPrecision(50);
+        real_mp const log_of_factorial_plus_pi = lgamma(real_mp(task + 1)) + acos(real_mp(-1));
+        return log_of_factorial_plus_pi.convert_to<double>();
+    };
+
+    WorkerThreadPool<int, double, decltype(factory), decltype(track)> pool(4, factory, track);
+
+    const int num_tasks = 40;
+    for (int i = 0; i < num_tasks; ++i)
+        pool.submit(4);
+
+    double total = 0;
+    for (int k = 0; k < num_tasks; ++k)
+        total += pool.collect();
+
+    pool.shutdown();   // the workers exit here: the crash this test guards against was at thread exit
+
+    BOOST_CHECK_CLOSE(total, num_tasks * (std::log(24.0) + std::acos(-1.0)), 1e-10);
 }
 
 // Each thread builds its own state via the factory; states must not be shared.  We hand each
